@@ -1,0 +1,6 @@
+{
+  "name": "Neon & Ether",
+  "description": "Scalable monorepo architecture and runtime skeleton for Neon & Ether tactical RPG and editor tooling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fac_ether_syndicate",
+    "name": "Ether Syndicate",
+    "description": "An underground network of technomancers and smugglers controlling raw ether distribution throughout the lower sectors.",
+    "tags": ["Underworld", "Technomancy", "Smugglers"],
+    "ideology": "TechnoMysticism",
+    "defaultPlayerReputation": 15,
+    "headquartersMapId": "map_slums_sec09",
+    "leaderNpcId": "npc_kaelen_rourke",
+    "colorHex": "#bc13fe",
+    "crestIcon": "Zap",
+    "techTier": 3
+  },
+  {
+    "id": "fac_omnicorp",
+    "name": "OmniCorp Security Dynamics",
+    "description": "Mega-corporation enforcing private martial law and monopolizing cyberware synthesis across the upper citadel.",
+    "tags": ["Corporate", "Security", "HighTech"],
+    "ideology": "CorporateAuthoritarianism",
+    "defaultPlayerReputation": -20,
+    "rivalFactionIds": ["fac_ether_syndicate"],
+    "colorHex": "#00f2ff",
+    "crestIcon": "Shield",
+    "techTier": 4
+  },
+  {
+    "id": "fac_undercity_drifters",
+    "name": "Undercity Drifters",
+    "description": "Independent scavengers, bio-hackers, and mercs surviving between corporate turf wars.",
+    "tags": ["Neutral", "Scavengers", "Mercenaries"],
+    "ideology": "MercenaryPragmatism",
+    "defaultPlayerReputation": 0,
+    "colorHex": "#94a3b8",
+    "crestIcon": "User",
+    "techTier": 2
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./*"],
+      "@neon-ether/engine": ["./packages/engine/src/index.ts"],
+      "@neon-ether/engine/*": ["./packages/engine/src/*"],
+      "@neon-ether/game-schema": ["./packages/game-schema/src/index.ts"],
+      "@neon-ether/game-schema/*": ["./packages/game-schema/src/*"],
+      "@neon-ether/game-runtime": ["./packages/game-runtime/src/index.ts"],
+      "@neon-ether/game-runtime/*": ["./packages/game-runtime/src/*"],
+      "@neon-ether/shared-ui": ["./packages/shared-ui/src/index.ts"],
+      "@neon-ether/shared-ui/*": ["./packages/shared-ui/src/*"],
+      "@neon-ether/content": ["./content/index.ts"],
+      "@neon-ether/content/*": ["./content/*"],
+      "@apps/game/*": ["./apps/game/src/*"],
+      "@apps/editor/*": ["./apps/editor/src/*"]
+    },
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  }
+}

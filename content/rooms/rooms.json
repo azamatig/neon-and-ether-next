@@ -1,0 +1,23 @@
+[
+  {
+    "id": "room_subgrid_vault_terminal",
+    "name": "Sub-Grid Terminal Hub",
+    "description": "Reinforced vault chamber housing quantum mainframe nodes and ether shielding relays.",
+    "tags": ["Vault", "ServerRoom", "HighSecurity"],
+    "roomType": "ServerRoom",
+    "width": 6,
+    "height": 6,
+    "doorways": [
+      {
+        "position": { "x": 0, "y": 3 },
+        "facing": "West",
+        "doorType": "Reinforced"
+      }
+    ],
+    "recommendedEnemies": ["enm_omnicorp_patrol", "enm_combat_drone_mk2"],
+    "recommendedPois": ["poi_sec09_terminal"],
+    "minSecurityLevel": 3,
+    "isHazardous": false,
+    "ambientEtherBonus": 10
+  }
+]

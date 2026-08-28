@@ -1,0 +1,98 @@
+[
+  {
+    "id": "enc_omnicorp_patrol_sector09",
+    "name": "OmniCorp Sector Enforcers",
+    "description": "A rapid-response security squad equipped with shock carbines, kinetic ballistic shielding, and suppression protocols.",
+    "tags": ["OmniCorp", "Enforcers", "Sector09", "Patrol"],
+    "mapId": "map_slums_sec09",
+    "enemyGroups": [
+      {
+        "enemyId": "enm_omnicorp_patrol",
+        "count": 2,
+        "spawnPosition": { "x": 6, "y": 4 }
+      }
+    ],
+    "environment": {
+      "ambientEtherLevel": 35,
+      "lighting": "LowLight",
+      "hazardDescription": "Ruptured high-voltage neon cables sparking on wet asphalt."
+    },
+    "threatLevel": 2,
+    "escapeRules": {
+      "allowed": true,
+      "conditions": [],
+      "check": {
+        "stat": "reflexes",
+        "difficulty": 12,
+        "apCost": 2
+      }
+    },
+    "lootTable": [
+      {
+        "itemId": "con_ether_vial",
+        "chance": 0.9,
+        "minQuantity": 1,
+        "maxQuantity": 3
+      },
+      {
+        "itemId": "itm_cyberware_fiber",
+        "chance": 0.6,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemId": "wpn_plasma_pistol",
+        "chance": 0.35,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ],
+    "xpReward": 150,
+    "creditsReward": 220
+  },
+  {
+    "id": "enc_subgrid_defense_automata",
+    "name": "Sub-Grid Defense Automata",
+    "description": "Autonomous security droids guarding the optical terminal vault with heavy ether-pulse blasters.",
+    "tags": ["Automata", "SubGrid", "Vault", "Boss"],
+    "mapId": "map_slums_sec09",
+    "enemyGroups": [
+      {
+        "enemyId": "enm_omnicorp_patrol",
+        "count": 1,
+        "spawnPosition": { "x": 5, "y": 3 }
+      }
+    ],
+    "environment": {
+      "ambientEtherLevel": 60,
+      "lighting": "Dark",
+      "hazardDescription": "Pulsing ether nodes emit sporadic EMP shocks."
+    },
+    "threatLevel": 3,
+    "escapeRules": {
+      "allowed": true,
+      "conditions": [],
+      "check": {
+        "stat": "mind",
+        "difficulty": 13,
+        "apCost": 3
+      }
+    },
+    "lootTable": [
+      {
+        "itemId": "cyb_neural_jack_v1",
+        "chance": 0.8,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemId": "con_ether_vial",
+        "chance": 1.0,
+        "minQuantity": 2,
+        "maxQuantity": 4
+      }
+    ],
+    "xpReward": 250,
+    "creditsReward": 400
+  }
+]

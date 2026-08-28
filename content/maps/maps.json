@@ -1,0 +1,44 @@
+[
+  {
+    "id": "map_slums_sec09",
+    "name": "Sector-09 Neon Slums",
+    "description": "A sprawling labyrinth of decaying tenements, neon-lit alleys, and leaking ether conduits in the shadow of OmniCorp mega-structures.",
+    "tags": ["Slums", "Undercity", "Sector09", "Neon"],
+    "district": "Sector-09 Undercity",
+    "subregion": "Lower Conduits",
+    "backgroundImage": "bg_sector09_slums",
+    "poiIds": [
+      "poi_sec09_hideout",
+      "poi_sec09_market",
+      "poi_sec09_terminal",
+      "poi_ether_fissure",
+      "poi_omnicorp_checkpoint"
+    ],
+    "defaultPoiId": "poi_sec09_hideout",
+    "connectedMapIds": [],
+    "ambientEtherLevel": 40,
+    "securityLevel": 2,
+    "controllingFactionId": "fac_ether_syndicate",
+    "recommendedLevel": 1,
+    "regions": [
+      {
+        "id": "reg_residential",
+        "name": "Tenement Sprawl",
+        "description": "Dense residential stacks connected by precarious sky-bridges.",
+        "securityLevel": 1
+      },
+      {
+        "id": "reg_commercial",
+        "name": "Red Circuit District",
+        "description": "Black markets and syndicate-controlled speakeasies.",
+        "securityLevel": 2
+      },
+      {
+        "id": "reg_industrial",
+        "name": "Sub-Grid Conduits",
+        "description": "Heavily guarded high-voltage ether distribution grid.",
+        "securityLevel": 4
+      }
+    ]
+  }
+]

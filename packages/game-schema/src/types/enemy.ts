@@ -1,0 +1,51 @@
+import { z } from 'zod';
+import { BaseEntitySchema } from './base.ts';
+import { CharacterAttributesSchema, DerivedVitalsSchema } from './stats.ts';
+
+export const EnemyTierSchema = z.enum([
+  'Minion',
+  'Standard',
+  'Elite',
+  'Boss',
+  'CyberAbomination',
+  'CombatDrone',
+]);
+
+export type EnemyTier = z.infer<typeof EnemyTierSchema>;
+
+export const AIArchetypeSchema = z.enum([
+  'MeleeRusher',
+  'RangedFlanker',
+  'EtherCaster',
+  'HeavyTank',
+  'SupportBuffer',
+  'PatrolGuard',
+]);
+
+export type AIArchetype = z.infer<typeof AIArchetypeSchema>;
+
+export const LootDropSchema = z.object({
+  itemId: z.string().min(1),
+  dropRate: z.number().min(0).max(1).default(1.0), // Probability 0.0 - 1.0
+  minQuantity: z.number().int().min(1).default(1),
+  maxQuantity: z.number().int().min(1).default(1),
+});
+
+export type LootDrop = z.infer<typeof LootDropSchema>;
+
+export const EnemySchema = BaseEntitySchema.extend({
+  factionId: z.string().default('Hostile'),
+  level: z.number().int().min(1).default(1),
+  tier: EnemyTierSchema.default('Standard'),
+  attributes: CharacterAttributesSchema,
+  vitals: DerivedVitalsSchema,
+  aiArchetype: AIArchetypeSchema.default('MeleeRusher'),
+  equippedWeaponId: z.string().optional(),
+  lootTable: z.array(LootDropSchema).default([]),
+  grantedXp: z.number().int().min(0).default(25),
+  bountyCredits: z.number().int().min(0).default(50),
+  behaviorFlags: z.array(z.string()).default([]),
+  portraitIcon: z.string().default('Skull'),
+});
+
+export type Enemy = z.infer<typeof EnemySchema>;

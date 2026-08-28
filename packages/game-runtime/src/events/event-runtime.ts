@@ -1,0 +1,343 @@
+/**
+ * @neon-ether/game-runtime
+ * Unified GameEvent Runtime.
+ * Orchestrates Flavor, Choice, Dialogue, Scene, and Encounter events through a unified data-driven step machine.
+ */
+
+import {
+  EventChoice,
+  EventSpeaker,
+  EventStep,
+  GameEvent,
+  GameplayOutcome,
+  OriginContext,
+} from '@neon-ether/game-schema';
+import { DiceRoller } from '@neon-ether/engine';
+import { GameState } from '../state/game-state.ts';
+import { ContentRegistry } from '../content/content-registry.ts';
+import { BatchConditionResult, evaluateConditions } from '../conditions/condition-evaluator.ts';
+import { ConditionRegistry, defaultConditionRegistry } from '../conditions/condition-registry.ts';
+import { BatchEffectExecutionResult, EffectExecutor, defaultEffectExecutor } from '../effects/effect-executor.ts';
+import { GameplayOutcomeEngine, defaultGameplayOutcomeEngine } from '../resolution/gameplay-outcome-engine.ts';
+import { resolveStatCheck, StatCheckResolution } from '../resolution/stat-check.ts';
+
+export interface ResolvedEventChoice extends EventChoice {
+  isAvailable: boolean;
+  isVisible: boolean;
+  unmetReason?: string;
+  statCheckInfo?: {
+    stat: string;
+    difficulty: number;
+  };
+}
+
+export interface ResolvedEventStep extends EventStep {
+  resolvedSpeaker?: {
+    type: 'npc' | 'player' | 'system' | 'companion' | 'narrator';
+    name: string;
+    title?: string;
+    portrait?: string;
+  };
+  resolvedChoices: ResolvedEventChoice[];
+  isFinalStep: boolean;
+}
+
+export interface ResolvedEventState {
+  event: GameEvent;
+  currentStep: ResolvedEventStep;
+  stepIndex: number;
+  totalSteps: number;
+  originContext?: OriginContext | null;
+  historyLog: Array<{ speaker?: string; text: string }>;
+}
+
+export class EventRuntime {
+  private conditionRegistry: ConditionRegistry;
+  private effectExecutor: EffectExecutor;
+  private outcomeEngine: GameplayOutcomeEngine;
+  private diceRoller: DiceRoller;
+
+  constructor(
+    conditionRegistry: ConditionRegistry = defaultConditionRegistry,
+    effectExecutor: EffectExecutor = defaultEffectExecutor,
+    outcomeEngine: GameplayOutcomeEngine = defaultGameplayOutcomeEngine,
+    diceRoller: DiceRoller = new DiceRoller(777)
+  ) {
+    this.conditionRegistry = conditionRegistry;
+    this.effectExecutor = effectExecutor;
+    this.outcomeEngine = outcomeEngine;
+    this.diceRoller = diceRoller;
+  }
+
+  /**
+   * Initializes and starts a GameEvent.
+   */
+  public startEvent(
+    eventId: string,
+    state: GameState,
+    contentRegistry: ContentRegistry,
+    originContext?: OriginContext,
+    logJournal?: (category: any, text: string) => void
+  ): boolean {
+    const event = contentRegistry.getEvent(eventId);
+    if (!event) {
+      if (logJournal) logJournal('System', `Failed to start event [${eventId}]: Event not found.`);
+      return false;
+    }
+
+    // Set origin context if provided
+    if (originContext) {
+      state.world.activeOriginContext = originContext;
+    }
+
+    state.world.activeEventId = eventId;
+    state.world.activeEventStepId = event.steps[0]?.id ?? 'step_01';
+    state.world.mode = 'Event';
+
+    // Execute entry effects
+    if (event.entryEffects && event.entryEffects.length > 0) {
+      this.effectExecutor.executeBatch(event.entryEffects, { state, contentRegistry, logJournal });
+    }
+
+    if (logJournal) {
+      logJournal('World', `Event triggered: ${event.name} (${event.type.toUpperCase()}).`);
+    }
+
+    return true;
+  }
+
+  /**
+   * Resolves the current active event state and active step presentation data.
+   */
+  public getResolvedEventState(
+    state: GameState,
+    contentRegistry: ContentRegistry
+  ): ResolvedEventState | undefined {
+    const eventId = state.world.activeEventId;
+    if (!eventId) return undefined;
+
+    const event = contentRegistry.getEvent(eventId);
+    if (!event || !event.steps || event.steps.length === 0) return undefined;
+
+    const stepId = state.world.activeEventStepId ?? event.steps[0].id;
+    const stepIndex = event.steps.findIndex((s) => s.id === stepId);
+    const currentStep = stepIndex >= 0 ? event.steps[stepIndex] : event.steps[0];
+    const actualIndex = stepIndex >= 0 ? stepIndex : 0;
+    const isFinalStep = actualIndex >= event.steps.length - 1 && (!currentStep.choices || currentStep.choices.length === 0);
+
+    // Resolve speaker
+    let resolvedSpeaker: ResolvedEventStep['resolvedSpeaker'] = undefined;
+    if (currentStep.speaker) {
+      const spk = currentStep.speaker;
+      let name = spk.name ?? 'Unknown';
+      let title = spk.title;
+      let portrait = spk.portrait;
+
+      if (spk.type === 'npc' && spk.npcId) {
+        const npcDef = contentRegistry.getNPC(spk.npcId);
+        if (npcDef) {
+          name = npcDef.name;
+          title = npcDef.title ?? title;
+          portrait = portrait ?? npcDef.portraitIcon;
+        }
+      } else if (spk.type === 'player') {
+        name = state.player.name;
+        title = state.player.title;
+        portrait = 'User';
+      }
+
+      resolvedSpeaker = {
+        type: spk.type,
+        name,
+        title,
+        portrait,
+      };
+    }
+
+    // Resolve choices
+    const resolvedChoices: ResolvedEventChoice[] = (currentStep.choices ?? []).map((choice) => {
+      const condResult = evaluateConditions(
+        choice.conditions ?? [],
+        { state, contentRegistry },
+        this.conditionRegistry
+      );
+
+      const isAvailable = condResult.allMet;
+      const isVisible = !choice.hideIfUnavailable || isAvailable;
+      const unmetReason = condResult.allMet ? undefined : choice.disabledReason ?? condResult.failedConditions[0]?.reason;
+
+      return {
+        ...choice,
+        isAvailable,
+        isVisible,
+        unmetReason,
+        statCheckInfo: choice.check
+          ? {
+              stat: choice.check.stat.toUpperCase(),
+              difficulty: choice.check.difficulty,
+            }
+          : undefined,
+      };
+    });
+
+    return {
+      event,
+      currentStep: {
+        ...currentStep,
+        resolvedSpeaker,
+        resolvedChoices,
+        isFinalStep,
+      },
+      stepIndex: actualIndex,
+      totalSteps: event.steps.length,
+      originContext: state.world.activeOriginContext,
+      historyLog: [],
+    };
+  }
+
+  /**
+   * Advances a simple step or flavor event to the next step or completion.
+   */
+  public advanceStep(
+    state: GameState,
+    contentRegistry: ContentRegistry,
+    logJournal?: (category: any, text: string) => void
+  ): boolean {
+    const eventId = state.world.activeEventId;
+    if (!eventId) return false;
+
+    const event = contentRegistry.getEvent(eventId);
+    if (!event) return false;
+
+    const currentStepId = state.world.activeEventStepId ?? event.steps[0]?.id;
+    const currentIndex = event.steps.findIndex((s) => s.id === currentStepId);
+    const currentStep = currentIndex >= 0 ? event.steps[currentIndex] : event.steps[0];
+
+    // Execute step effects if any
+    if (currentStep?.effects && currentStep.effects.length > 0) {
+      this.effectExecutor.executeBatch(currentStep.effects, { state, contentRegistry, logJournal });
+    }
+
+    // If step specifies an explicit step outcome
+    if (currentStep?.outcome) {
+      this.outcomeEngine.resolveOutcome(currentStep.outcome, state, contentRegistry);
+      return true;
+    }
+
+    // If step has an explicit nextStepId
+    if (currentStep?.nextStepId) {
+      state.world.activeEventStepId = currentStep.nextStepId;
+      return true;
+    }
+
+    // Check if next step in array exists
+    if (currentIndex >= 0 && currentIndex + 1 < event.steps.length) {
+      const nextStep = event.steps[currentIndex + 1];
+      state.world.activeEventStepId = nextStep.id;
+      return true;
+    }
+
+    // Otherwise complete event
+    return this.completeEvent(event, state, contentRegistry, logJournal);
+  }
+
+  /**
+   * Selects a choice on the current event step.
+   */
+  public chooseOption(
+    choiceId: string,
+    state: GameState,
+    contentRegistry: ContentRegistry,
+    logJournal?: (category: any, text: string) => void
+  ): boolean {
+    const resolved = this.getResolvedEventState(state, contentRegistry);
+    if (!resolved) return false;
+
+    const choice = resolved.currentStep.resolvedChoices.find((c) => c.id === choiceId);
+    if (!choice || !choice.isAvailable) {
+      if (logJournal) logJournal('System', `Choice not available: ${choice?.unmetReason ?? 'Conditions unmet'}`);
+      return false;
+    }
+
+    let effectsToRun = [...(choice.effects ?? [])];
+    let nextOutcome = choice.outcome;
+    let nextStepId = choice.nextStepId;
+
+    // 1. If choice includes a stat check
+    if (choice.check) {
+      const checkDef = choice.check;
+      if (['body', 'reflexes', 'mind', 'etherTech', 'presence'].includes(checkDef.stat)) {
+        const rollRes = resolveStatCheck(
+          checkDef.stat.toUpperCase() as any,
+          state.player.attributes,
+          'Moderate',
+          this.diceRoller,
+          checkDef.difficulty,
+          choice.text
+        );
+
+        if (logJournal) {
+          logJournal('SkillCheck', rollRes.logSummary);
+        }
+
+        if (rollRes.isPassed) {
+          effectsToRun = [...effectsToRun, ...(checkDef.passEffects ?? [])];
+          if (checkDef.passOutcome) nextOutcome = checkDef.passOutcome;
+        } else {
+          effectsToRun = [...(checkDef.failEffects ?? [])];
+          if (checkDef.failOutcome) nextOutcome = checkDef.failOutcome;
+        }
+      }
+    }
+
+    // 2. Execute Effects
+    if (effectsToRun.length > 0) {
+      this.effectExecutor.executeBatch(effectsToRun, { state, contentRegistry, logJournal });
+    }
+
+    // 3. Resolve transition
+    if (nextOutcome) {
+      this.outcomeEngine.resolveOutcome(nextOutcome, state, contentRegistry);
+      return true;
+    }
+
+    if (nextStepId) {
+      state.world.activeEventStepId = nextStepId;
+      return true;
+    }
+
+    // If no explicit outcome or next step, advance or complete
+    return this.advanceStep(state, contentRegistry, logJournal);
+  }
+
+  /**
+   * Completes the event, applying completion effects and resolving completion outcome.
+   */
+  public completeEvent(
+    event: GameEvent,
+    state: GameState,
+    contentRegistry: ContentRegistry,
+    logJournal?: (category: any, text: string) => void
+  ): boolean {
+    // 1. Run completion effects
+    if (event.completionEffects && event.completionEffects.length > 0) {
+      this.effectExecutor.executeBatch(event.completionEffects, { state, contentRegistry, logJournal });
+    }
+
+    // 2. Clear active event
+    state.world.activeEventId = null;
+    state.world.activeEventStepId = null;
+
+    // 3. Resolve completion outcome
+    const outcome = event.completionOutcome ?? { type: 'returnToOrigin' };
+    this.outcomeEngine.resolveOutcome(outcome, state, contentRegistry);
+
+    if (logJournal) {
+      logJournal('World', `Event completed: ${event.name}.`);
+    }
+
+    return true;
+  }
+}
+
+export const defaultEventRuntime = new EventRuntime();

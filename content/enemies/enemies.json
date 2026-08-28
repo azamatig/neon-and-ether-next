@@ -1,0 +1,82 @@
+[
+  {
+    "id": "enm_omnicorp_patrol",
+    "name": "OmniCorp Enforcer Sentry",
+    "description": "Sub-dermal armor reinforced guard unit with targeting implants and tactical suppression protocols.",
+    "tags": ["OmniCorp", "Security", "Humanoid"],
+    "factionId": "fac_omnicorp",
+    "level": 2,
+    "tier": "Standard",
+    "attributes": {
+      "body": 13,
+      "reflexes": 12,
+      "mind": 10,
+      "etherTech": 8,
+      "presence": 11
+    },
+    "vitals": {
+      "maxHp": 42,
+      "currentHp": 42,
+      "maxEther": 0,
+      "currentEther": 0,
+      "actionPointsMax": 6,
+      "actionPointsCurrent": 6,
+      "initiative": 11,
+      "armorRating": 4,
+      "etherResistance": 5
+    },
+    "aiArchetype": "RangedFlanker",
+    "equippedWeaponId": "wpn_thermal_pistol",
+    "lootTable": [
+      {
+        "itemId": "con_ether_vial",
+        "dropRate": 0.6,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ],
+    "grantedXp": 45,
+    "bountyCredits": 80,
+    "portraitIcon": "Crosshair"
+  },
+  {
+    "id": "enm_combat_drone_mk2",
+    "name": "Arachnid Combat Drone Mk.II",
+    "description": "Autonomous security crawler armed with high-voltage arc cutters and optical cloaking.",
+    "tags": ["Robot", "Drone", "OmniCorp"],
+    "factionId": "fac_omnicorp",
+    "level": 3,
+    "tier": "CombatDrone",
+    "attributes": {
+      "body": 10,
+      "reflexes": 15,
+      "mind": 12,
+      "etherTech": 14,
+      "presence": 6
+    },
+    "vitals": {
+      "maxHp": 30,
+      "currentHp": 30,
+      "maxEther": 25,
+      "currentEther": 25,
+      "actionPointsMax": 8,
+      "actionPointsCurrent": 8,
+      "initiative": 16,
+      "armorRating": 2,
+      "etherResistance": 20
+    },
+    "aiArchetype": "MeleeRusher",
+    "equippedWeaponId": "wpn_ether_baton",
+    "lootTable": [
+      {
+        "itemId": "cyb_neural_jack_v1",
+        "dropRate": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ],
+    "grantedXp": 60,
+    "bountyCredits": 120,
+    "portraitIcon": "Cpu"
+  }
+]

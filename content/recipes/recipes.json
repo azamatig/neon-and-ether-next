@@ -1,0 +1,25 @@
+[
+  {
+    "id": "rcp_ether_vial_refinement",
+    "name": "Stabilized Ether Vial Synthesis",
+    "description": "Refines raw ether residue into injectable stim vials using standard field laboratory catalysts.",
+    "tags": ["Synthesis", "Medical", "Consumable"],
+    "category": "ChemSynthesis",
+    "requiredStationType": "FieldCrafting",
+    "ingredients": [
+      {
+        "itemId": "con_ether_vial",
+        "quantity": 1
+      }
+    ],
+    "resultItemId": "con_ether_vial",
+    "resultQuantity": 2,
+    "craftingTimeTurns": 2,
+    "etherCost": 5,
+    "requiredSkill": {
+      "stat": "EtherTech",
+      "minLevel": 12
+    },
+    "discoveredByDefault": true
+  }
+]

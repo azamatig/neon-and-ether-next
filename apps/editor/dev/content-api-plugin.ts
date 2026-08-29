@@ -10,6 +10,7 @@ const EDITABLE_FILES = {
   pois: 'content/pois/pois.json',
   events: 'content/events/events.json',
   quests: 'content/quests/quests.json',
+  maps: 'content/maps/maps.json',
 } as const;
 
 type EditableCategory = keyof typeof EDITABLE_FILES;
@@ -19,10 +20,10 @@ async function readJson(root: string, category: EditableCategory): Promise<unkno
 }
 
 async function readEditableContent(root: string, gameContent: Record<string, unknown>) {
-  const [items, npcs, enemies, pois, events, quests] = await Promise.all([
-    readJson(root, 'items'), readJson(root, 'npcs'), readJson(root, 'enemies'), readJson(root, 'pois'), readJson(root, 'events'), readJson(root, 'quests'),
+  const [items, npcs, enemies, pois, events, quests, maps] = await Promise.all([
+    readJson(root, 'items'), readJson(root, 'npcs'), readJson(root, 'enemies'), readJson(root, 'pois'), readJson(root, 'events'), readJson(root, 'quests'), readJson(root, 'maps'),
   ]);
-  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests };
+  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps };
 }
 
 async function readBody(request: IncomingMessage): Promise<unknown> {

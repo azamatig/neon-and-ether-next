@@ -82,7 +82,8 @@
         "isRepeatable": true
       }
     ],
-    "encounterIds": []
+    "encounterIds": [],
+    "regionId": "reg_residential"
   },
   {
     "id": "poi_sec09_market",
@@ -179,7 +180,8 @@
         "isRepeatable": false
       }
     ],
-    "encounterIds": []
+    "encounterIds": [],
+    "regionId": "reg_residential"
   },
   {
     "id": "poi_sec09_terminal",
@@ -306,6 +308,7 @@
     ],
     "encounterIds": [
       "enc_omnicorp_patrol_sector09"
-    ]
+    ],
+    "regionId": "reg_residential"
   }
 ]

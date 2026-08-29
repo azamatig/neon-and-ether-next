@@ -493,6 +493,18 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
         });
       }
     }
+    const regionIds = new Set((map.regions ?? []).map((region) => region.id));
+    for (const poiId of map.poiIds ?? []) {
+      const poi = (content.pois ?? []).find((candidate) => candidate.id === poiId);
+      if (poi?.regionId && !regionIds.has(poi.regionId)) {
+        issues.push({ severity: 'error', category: 'Map', targetId: map.id, field: `poiIds.${poiId}.regionId`, message: `POI '${poiId}' references missing regionId '${poi.regionId}' on map '${map.id}'` });
+      }
+    }
+    for (const route of map.routes ?? []) {
+      if (!map.poiIds.includes(route.fromPoiId)) issues.push({ severity: 'error', category: 'Map', targetId: map.id, field: `routes.${route.id}.fromPoiId`, message: `Route '${route.id}' starts at POI '${route.fromPoiId}' outside map '${map.id}'` });
+      if (!map.poiIds.includes(route.toPoiId)) issues.push({ severity: 'error', category: 'Map', targetId: map.id, field: `routes.${route.id}.toPoiId`, message: `Route '${route.id}' ends at POI '${route.toPoiId}' outside map '${map.id}'` });
+      if (route.fromPoiId === route.toPoiId) issues.push({ severity: 'error', category: 'Map', targetId: map.id, field: `routes.${route.id}`, message: `Route '${route.id}' must connect two different POIs` });
+    }
     if (map.defaultPoiId && !poiIds.has(map.defaultPoiId)) {
       issues.push({
         severity: 'warning',

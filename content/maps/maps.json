@@ -28,7 +28,39 @@
         "id": "reg_residential",
         "name": "Tenement Sprawl",
         "description": "Dense residential stacks connected by precarious sky-bridges.",
-        "securityLevel": 1
+        "securityLevel": 1,
+        "bounds": {
+          "x": 5,
+          "y": 8,
+          "width": 42,
+          "height": 40
+        },
+        "metadata": {}
+      }
+    ],
+    "metadata": {
+      "visualTheme": "neon-slums"
+    },
+    "routes": [
+      {
+        "id": "route_hideout_market",
+        "fromPoiId": "poi_sec09_hideout",
+        "toPoiId": "poi_sec09_market",
+        "bidirectional": true,
+        "travelCost": 1,
+        "metadata": {
+          "routeType": "alley"
+        }
+      },
+      {
+        "id": "route_market_terminal",
+        "fromPoiId": "poi_sec09_market",
+        "toPoiId": "poi_sec09_terminal",
+        "bidirectional": true,
+        "travelCost": 2,
+        "metadata": {
+          "routeType": "service-tunnel"
+        }
       }
     ]
   }

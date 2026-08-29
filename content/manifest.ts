@@ -17,6 +17,14 @@ import recipesData from './recipes/recipes.json';
 import roomsData from './rooms/rooms.json';
 import factionsData from './factions/factions.json';
 import dialoguesData from './dialogues/dialogues.json';
+import abilitiesData from './combat/abilities.json';
+import statusEffectsData from './combat/status-effects.json';
+import combatAIProfilesData from './combat/ai-profiles.json';
+import characterManagementRulesData from './character-management/rules.json';
+import baseJobsData from './character-management/jobs.json';
+import partySlotsData from './character-management/party-slots.json';
+import basesData from './bases/bases.json';
+import baseUpgradesData from './bases/upgrades.json';
 
 export const gameContent: GameContent = GameContentSchema.parse({
   version: '1.0.0',
@@ -25,6 +33,14 @@ export const gameContent: GameContent = GameContentSchema.parse({
   characters: charactersData,
   enemies: enemiesData,
   encounters: encountersData,
+  abilities: abilitiesData,
+  statusEffects: statusEffectsData,
+  combatAIProfiles: combatAIProfilesData,
+  characterManagementRules: characterManagementRulesData,
+  baseJobs: baseJobsData,
+  partySlots: partySlotsData,
+  bases: basesData,
+  baseUpgrades: baseUpgradesData,
   pois: poisData,
   quests: questsData,
   events: eventsData,

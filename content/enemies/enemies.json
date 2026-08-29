@@ -3,7 +3,11 @@
     "id": "enm_omnicorp_patrol",
     "name": "OmniCorp Enforcer Sentry",
     "description": "Sub-dermal armor reinforced guard unit with targeting implants and tactical suppression protocols.",
-    "tags": ["OmniCorp", "Security", "Humanoid"],
+    "tags": [
+      "OmniCorp",
+      "Security",
+      "Humanoid"
+    ],
     "factionId": "fac_omnicorp",
     "level": 2,
     "tier": "Standard",
@@ -37,13 +41,21 @@
     ],
     "grantedXp": 45,
     "bountyCredits": 80,
-    "portraitIcon": "Crosshair"
+    "portraitIcon": "Crosshair",
+    "combatAIProfileId": "ai_flanker",
+    "abilityIds": [
+      "ability_thermal_burst"
+    ]
   },
   {
     "id": "enm_combat_drone_mk2",
     "name": "Arachnid Combat Drone Mk.II",
     "description": "Autonomous security crawler armed with high-voltage arc cutters and optical cloaking.",
-    "tags": ["Robot", "Drone", "OmniCorp"],
+    "tags": [
+      "Robot",
+      "Drone",
+      "OmniCorp"
+    ],
     "factionId": "fac_omnicorp",
     "level": 3,
     "tier": "CombatDrone",
@@ -77,6 +89,63 @@
     ],
     "grantedXp": 60,
     "bountyCredits": 120,
-    "portraitIcon": "Cpu"
+    "portraitIcon": "Cpu",
+    "combatAIProfileId": "ai_aggressive",
+    "abilityIds": [
+      "ability_arc_strike"
+    ]
+  },
+  {
+    "id": "enm_omnicorp_ether_adept",
+    "name": "OmniCorp Ether Adept",
+    "description": "A field technician who redirects ether currents to shield allied security units.",
+    "tags": [
+      "OmniCorp",
+      "Security",
+      "EtherTech"
+    ],
+    "factionId": "fac_omnicorp",
+    "level": 2,
+    "tier": "Elite",
+    "attributes": {
+      "body": 9,
+      "reflexes": 11,
+      "mind": 14,
+      "etherTech": 16,
+      "presence": 10
+    },
+    "vitals": {
+      "maxHp": 34,
+      "currentHp": 34,
+      "maxEther": 45,
+      "currentEther": 45,
+      "actionPointsMax": 6,
+      "actionPointsCurrent": 6,
+      "initiative": 12,
+      "armorRating": 2,
+      "etherResistance": 22
+    },
+    "aiArchetype": "SupportBuffer",
+    "equippedWeaponId": "wpn_ether_baton",
+    "lootTable": [
+      {
+        "itemId": "itm_cyberware_fiber",
+        "dropRate": 0.7,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ],
+    "grantedXp": 55,
+    "bountyCredits": 95,
+    "behaviorFlags": [
+      "MaintainDistance",
+      "ShieldAllies"
+    ],
+    "portraitIcon": "Sparkles",
+    "combatAIProfileId": "ai_support",
+    "abilityIds": [
+      "ability_ether_patch",
+      "ability_arc_strike"
+    ]
   }
 ]

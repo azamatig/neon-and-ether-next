@@ -3,7 +3,11 @@
     "id": "char_protagonist",
     "name": "Vane",
     "description": "Technomancer drifter with sub-dermal neural taps and an affinity for forbidden ether frequencies.",
-    "tags": ["Protagonist", "Player", "Technomancer"],
+    "tags": [
+      "Protagonist",
+      "Player",
+      "Technomancer"
+    ],
     "title": "Technomancer Drifter",
     "factionId": "fac_undercity_drifters",
     "isPlayer": true,
@@ -28,21 +32,48 @@
       "armorRating": 3,
       "etherResistance": 15
     },
-    "position": { "x": 3, "y": 3 },
+    "position": {
+      "x": 3,
+      "y": 3
+    },
     "facing": "South",
     "inventory": [
-      { "itemId": "wpn_thermal_pistol", "quantity": 1, "isEquipped": true },
-      { "itemId": "cyb_neural_jack_v1", "quantity": 1, "isEquipped": true },
-      { "itemId": "con_ether_vial", "quantity": 3, "isEquipped": false }
+      {
+        "itemId": "wpn_thermal_pistol",
+        "quantity": 1,
+        "isEquipped": true
+      },
+      {
+        "itemId": "cyb_neural_jack_v1",
+        "quantity": 1,
+        "isEquipped": true
+      },
+      {
+        "itemId": "con_ether_vial",
+        "quantity": 3,
+        "isEquipped": false
+      }
     ],
     "portraitIcon": "User",
-    "defaultBehavior": "Idle"
+    "defaultBehavior": "Idle",
+    "abilityIds": [
+      "ability_thermal_burst"
+    ],
+    "traits": [
+      "Technical",
+      "Medical"
+    ]
   },
   {
     "id": "npc_kaelen_rourke",
     "name": "Kaelen Rourke",
     "description": "Seasoned Syndicate broker who survived three OmniCorp purges and controls Sector 09's illicit data trade.",
-    "tags": ["NPC", "Fixer", "Broker", "Syndicate"],
+    "tags": [
+      "NPC",
+      "Fixer",
+      "Broker",
+      "Syndicate"
+    ],
     "title": "Sector-09 Fixer",
     "factionId": "fac_ether_syndicate",
     "isPlayer": false,
@@ -67,13 +98,33 @@
       "armorRating": 5,
       "etherResistance": 8
     },
-    "position": { "x": 6, "y": 3 },
+    "position": {
+      "x": 6,
+      "y": 3
+    },
     "facing": "West",
     "inventory": [
-      { "itemId": "wpn_thermal_pistol", "quantity": 1, "isEquipped": true }
+      {
+        "itemId": "wpn_thermal_pistol",
+        "quantity": 1,
+        "isEquipped": true
+      }
     ],
     "dialogueTreeId": "dlg_rourke_first_contact",
     "portraitIcon": "Shield",
-    "defaultBehavior": "Idle"
+    "defaultBehavior": "Idle",
+    "abilityIds": [],
+    "traits": [
+      "Technical",
+      "Negotiator",
+      "Detainable"
+    ],
+    "initialRelationship": {
+      "status": "independent",
+      "affinity": 25,
+      "trust": 15,
+      "fear": 0,
+      "loyalty": 5
+    }
   }
 ]

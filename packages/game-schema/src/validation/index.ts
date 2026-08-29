@@ -26,6 +26,14 @@ export interface ValidationIssue {
     | 'Quest'
     | 'GameEvent'
     | 'CombatEncounter'
+    | 'Ability'
+    | 'StatusEffect'
+    | 'CombatAI'
+    | 'CharacterManagementRule'
+    | 'BaseJob'
+    | 'PartySlot'
+    | 'PlayerBase'
+    | 'BaseUpgrade'
     | 'Map'
     | 'Recipe'
     | 'Room'
@@ -105,6 +113,14 @@ export function validateDuplicateIds(content: GameContent): ValidationIssue[] {
   checkCollection(content.rooms ?? [], 'Room');
   checkCollection(content.factions ?? [], 'Faction');
   checkCollection(content.dialogues ?? [], 'Dialogue');
+  checkCollection(content.abilities ?? [], 'Ability');
+  checkCollection(content.statusEffects ?? [], 'StatusEffect');
+  checkCollection(content.combatAIProfiles ?? [], 'CombatAI');
+  checkCollection(content.characterManagementRules ?? [], 'CharacterManagementRule');
+  checkCollection(content.baseJobs ?? [], 'BaseJob');
+  checkCollection(content.partySlots ?? [], 'PartySlot');
+  checkCollection(content.bases ?? [], 'PlayerBase');
+  checkCollection(content.baseUpgrades ?? [], 'BaseUpgrade');
 
   return issues;
 }
@@ -124,6 +140,12 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
   const questIds = new Set((content.quests ?? []).map((q) => q.id));
   const dialogueIds = new Set((content.dialogues ?? []).map((d) => d.id));
   const poiIds = new Set((content.pois ?? []).map((p) => p.id));
+  const abilityIds = new Set((content.abilities ?? []).map((ability) => ability.id));
+  const statusEffectIds = new Set((content.statusEffects ?? []).map((effect) => effect.id));
+  const aiProfileIds = new Set((content.combatAIProfiles ?? []).map((profile) => profile.id));
+  const roomIds = new Set((content.rooms ?? []).map((room) => room.id));
+  const eventIds = new Set((content.events ?? []).map((event) => event.id));
+  const encounterIds = new Set((content.encounters ?? []).map((encounter) => encounter.id));
 
   // 1. Validate NPC references
   for (const npc of npcList) {
@@ -160,6 +182,15 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
         }
       }
     }
+    for (const abilityId of npc.abilityIds ?? []) {
+      if (!abilityIds.has(abilityId)) issues.push({ severity: 'error', category: 'NPC', targetId: npc.id, field: 'abilityIds', message: `NPC '${npc.name}' references missing abilityId '${abilityId}'` });
+    }
+  }
+
+  for (const item of content.items ?? []) {
+    for (const abilityId of item.grantedAbilityIds ?? []) {
+      if (!abilityIds.has(abilityId)) issues.push({ severity: 'error', category: 'Item', targetId: item.id, field: 'grantedAbilityIds', message: `Item '${item.name}' references missing abilityId '${abilityId}'` });
+    }
   }
 
   // 2. Validate Enemy references
@@ -194,6 +225,34 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
           message: `Enemy '${enemy.name}' loot table contains missing itemId '${loot.itemId}'`,
         });
       }
+    }
+    for (const abilityId of enemy.abilityIds ?? []) {
+      if (!abilityIds.has(abilityId)) issues.push({ severity: 'error', category: 'Enemy', targetId: enemy.id, field: 'abilityIds', message: `Enemy '${enemy.name}' references missing abilityId '${abilityId}'` });
+    }
+    if (enemy.combatAIProfileId && !aiProfileIds.has(enemy.combatAIProfileId)) {
+      issues.push({ severity: 'error', category: 'Enemy', targetId: enemy.id, field: 'combatAIProfileId', message: `Enemy '${enemy.name}' references missing combatAIProfileId '${enemy.combatAIProfileId}'` });
+    }
+  }
+
+  for (const ability of content.abilities ?? []) {
+    for (const effect of ability.effects) {
+      if (effect.statusEffectId && !statusEffectIds.has(effect.statusEffectId)) {
+        issues.push({ severity: 'error', category: 'Ability', targetId: ability.id, field: 'effects.statusEffectId', message: `Ability '${ability.name}' references missing statusEffectId '${effect.statusEffectId}'` });
+      }
+    }
+  }
+  for (const profile of content.combatAIProfiles ?? []) {
+    for (const abilityId of profile.abilityPriority) {
+      if (!abilityIds.has(abilityId)) issues.push({ severity: 'error', category: 'CombatAI', targetId: profile.id, field: 'abilityPriority', message: `Combat AI '${profile.name}' references missing abilityId '${abilityId}'` });
+    }
+  }
+
+  for (const base of content.bases ?? []) {
+    const slotIds = new Set(base.roomSlots.map((slot) => slot.id));
+    if (base.poiId && !poiIds.has(base.poiId)) issues.push({ severity: 'error', category: 'PlayerBase', targetId: base.id, field: 'poiId', message: `Base '${base.name}' references missing poiId '${base.poiId}'` });
+    for (const startingRoom of base.startingRooms) {
+      if (!slotIds.has(startingRoom.slotId)) issues.push({ severity: 'error', category: 'PlayerBase', targetId: base.id, field: 'startingRooms.slotId', message: `Base '${base.name}' references missing slotId '${startingRoom.slotId}'` });
+      if (!roomIds.has(startingRoom.roomDefinitionId)) issues.push({ severity: 'error', category: 'PlayerBase', targetId: base.id, field: 'startingRooms.roomDefinitionId', message: `Base '${base.name}' references missing roomDefinitionId '${startingRoom.roomDefinitionId}'` });
     }
   }
 
@@ -232,6 +291,12 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
         });
       }
     }
+    for (const eventId of poi.eventIds ?? []) {
+      if (!eventIds.has(eventId)) issues.push({ severity: 'error', category: 'POI', targetId: poi.id, field: 'eventIds', message: `POI '${poi.name}' references missing eventId '${eventId}'` });
+    }
+    for (const encounterId of poi.encounterIds ?? []) {
+      if (!encounterIds.has(encounterId)) issues.push({ severity: 'error', category: 'POI', targetId: poi.id, field: 'encounterIds', message: `POI '${poi.name}' references missing encounterId '${encounterId}'` });
+    }
 
     for (const action of poi.actions ?? []) {
       if (action.dialogueTreeId && !dialogueIds.has(action.dialogueTreeId)) {
@@ -261,6 +326,8 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
           message: `POI action '${action.label}' references missing questId '${action.questId}'`,
         });
       }
+      if (action.eventId && !eventIds.has(action.eventId)) issues.push({ severity: 'error', category: 'POI', targetId: `${poi.id}#${action.id}`, field: 'action.eventId', message: `POI action '${action.label}' references missing eventId '${action.eventId}'` });
+      if (action.targetPoiId && !poiIds.has(action.targetPoiId)) issues.push({ severity: 'error', category: 'POI', targetId: `${poi.id}#${action.id}`, field: 'action.targetPoiId', message: `POI action '${action.label}' references missing targetPoiId '${action.targetPoiId}'` });
     }
   }
 
@@ -288,6 +355,9 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
     }
 
     for (const stage of Object.values(quest.stages ?? {})) {
+      if (quest.stages[stage.id] !== stage) {
+        issues.push({ severity: 'error', category: 'Quest', targetId: quest.id, field: `stages.${stage.id}.id`, message: `Quest stage record key must match stage id '${stage.id}'` });
+      }
       if (stage.nextStageId && !quest.stages[stage.nextStageId]) {
         issues.push({
           severity: 'error',
@@ -296,6 +366,16 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
           field: `stages.${stage.id}.nextStageId`,
           message: `Quest stage '${stage.id}' references missing nextStageId '${stage.nextStageId}'`,
         });
+      }
+      for (const action of stage.actions ?? []) {
+        if (action.targetStageId && !quest.stages[action.targetStageId]) {
+          issues.push({ severity: 'error', category: 'Quest', targetId: quest.id, field: `stages.${stage.id}.actions.${action.id}.targetStageId`, message: `Quest action '${action.id}' references missing targetStageId '${action.targetStageId}'` });
+        }
+      }
+      for (const branch of stage.branches ?? []) {
+        if (!quest.stages[branch.targetStageId]) {
+          issues.push({ severity: 'error', category: 'Quest', targetId: quest.id, field: `stages.${stage.id}.branches.${branch.id}.targetStageId`, message: `Quest branch '${branch.id}' references missing targetStageId '${branch.targetStageId}'` });
+        }
       }
     }
 
@@ -535,6 +615,14 @@ export function validateGameContent(rawContent: unknown): ContentValidationRepor
     quests: [],
     events: [],
     encounters: [],
+    abilities: [],
+    statusEffects: [],
+    combatAIProfiles: [],
+    characterManagementRules: [],
+    baseJobs: [],
+    partySlots: [],
+    bases: [],
+    baseUpgrades: [],
     maps: [],
     recipes: [],
     rooms: [],

@@ -90,6 +90,7 @@ export const MapEditor: React.FC = () => {
       npcIds: [],
       questIds: [],
       eventIds: [],
+      encounterIds: [],
       visibilityConditions: [],
       availabilityConditions: [],
       actions: [

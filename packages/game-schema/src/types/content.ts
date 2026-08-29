@@ -11,6 +11,9 @@ import { BaseRoomDefinitionSchema } from './room.ts';
 import { FactionSchema } from './faction.ts';
 import { DialogueTreeSchema } from './dialogue.ts';
 import { CombatEncounterSchema } from './combat-encounter.ts';
+import { AbilitySchema, CombatAIProfileSchema, StatusEffectDefinitionSchema } from './combat.ts';
+import { BaseJobDefinitionSchema, CharacterManagementRuleSchema, PartySlotDefinitionSchema } from './character-management.ts';
+import { BaseUpgradeDefinitionSchema, PlayerBaseDefinitionSchema } from './base-management.ts';
 
 export const GameContentSchema = z.object({
   version: z.string().default('1.0.0'),
@@ -18,6 +21,14 @@ export const GameContentSchema = z.object({
   npcs: z.array(NPCSchema).default([]),
   enemies: z.array(EnemySchema).default([]),
   encounters: z.array(CombatEncounterSchema).default([]),
+  abilities: z.array(AbilitySchema).default([]),
+  statusEffects: z.array(StatusEffectDefinitionSchema).default([]),
+  combatAIProfiles: z.array(CombatAIProfileSchema).default([]),
+  characterManagementRules: z.array(CharacterManagementRuleSchema).default([]),
+  baseJobs: z.array(BaseJobDefinitionSchema).default([]),
+  partySlots: z.array(PartySlotDefinitionSchema).default([]),
+  bases: z.array(PlayerBaseDefinitionSchema).default([]),
+  baseUpgrades: z.array(BaseUpgradeDefinitionSchema).default([]),
   pois: z.array(POISchema).default([]),
   quests: z.array(QuestSchema).default([]),
   events: z.array(GameEventSchema).default([]),

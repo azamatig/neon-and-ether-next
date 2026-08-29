@@ -69,6 +69,15 @@ export class EventRuntime {
     this.diceRoller = diceRoller;
   }
 
+  /** Resolves authored trigger and availability rules without starting an event. */
+  public canTriggerEvent(event: GameEvent, state: GameState, contentRegistry: ContentRegistry): BatchConditionResult {
+    return evaluateConditions(
+      [...(event.conditions ?? []), ...(event.triggerConditions ?? []), ...(event.availabilityConditions ?? [])],
+      { state, contentRegistry },
+      this.conditionRegistry
+    );
+  }
+
   /**
    * Initializes and starts a GameEvent.
    */
@@ -82,6 +91,11 @@ export class EventRuntime {
     const event = contentRegistry.getEvent(eventId);
     if (!event) {
       if (logJournal) logJournal('System', `Failed to start event [${eventId}]: Event not found.`);
+      return false;
+    }
+    const availability = this.canTriggerEvent(event, state, contentRegistry);
+    if (!availability.allMet) {
+      if (logJournal) logJournal('System', `Event [${eventId}] is unavailable: ${availability.failedConditions[0]?.reason ?? 'conditions unmet'}.`);
       return false;
     }
 

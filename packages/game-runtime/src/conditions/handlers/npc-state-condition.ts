@@ -45,7 +45,7 @@ export const handleNpcStateCondition: ConditionHandler<NpcStateCondition> = (
 
   // 3. Companion check
   if (condition.isCompanion !== undefined) {
-    const isCompanion = npc.isCompanion || (context.state.companions?.includes(condition.npcId) ?? false);
+    const isCompanion = npc.relationship.status === 'companion';
     if (isCompanion !== condition.isCompanion) {
       return {
         isMet: false,

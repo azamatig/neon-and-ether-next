@@ -105,6 +105,8 @@ export const GameEventSchema = BaseEntitySchema.extend({
   type: GameEventTypeSchema.default('flavor'),
   tags: z.array(z.string()).default([]),
   conditions: z.array(ConditionSchema).default([]),
+  triggerConditions: z.array(ConditionSchema).default([]),
+  availabilityConditions: z.array(ConditionSchema).default([]),
   presentation: EventPresentationSchema.default({ layoutStyle: 'standard', ambientGlow: 'cyan' }),
   steps: z.array(EventStepSchema).min(1, 'Event must contain at least one step'),
   entryEffects: z.array(EffectSchema).default([]),

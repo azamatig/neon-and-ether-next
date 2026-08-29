@@ -1,0 +1,22 @@
+[
+  {
+    "id": "base_job_technician",
+    "name": "Base Technician",
+    "description": "Maintains crafting equipment and ether conduits.",
+    "tags": ["Technical"],
+    "allowedStatuses": ["companion", "employee", "servant"],
+    "requiredTraits": ["Technical"],
+    "roomTypes": ["Armory", "ServerRoom", "EtherLaboratory"],
+    "maxWorkers": 2
+  },
+  {
+    "id": "base_job_medic",
+    "name": "Base Medic",
+    "description": "Operates recovery equipment and treats residents.",
+    "tags": ["Medical"],
+    "allowedStatuses": ["companion", "employee", "servant"],
+    "requiredTraits": ["Medical"],
+    "roomTypes": ["MedBay"],
+    "maxWorkers": 1
+  }
+]

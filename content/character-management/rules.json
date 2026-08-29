@@ -1,0 +1,46 @@
+[
+  {
+    "id": "character_action_recruit",
+    "name": "Recruit as Companion",
+    "actionLabel": "Invite to the party",
+    "tags": ["Recruitment"],
+    "allowedFromStatuses": ["independent", "employee"],
+    "resultStatus": "companion",
+    "minAffinity": 20,
+    "minTrust": 10,
+    "loyaltyDelta": 10
+  },
+  {
+    "id": "character_action_hire",
+    "name": "Hire Employee",
+    "actionLabel": "Offer employment",
+    "tags": ["Employment"],
+    "allowedFromStatuses": ["independent"],
+    "resultStatus": "employee",
+    "minTrust": 0,
+    "affinityDelta": 5
+  },
+  {
+    "id": "character_action_release",
+    "name": "Release Character",
+    "actionLabel": "Restore independence",
+    "tags": ["Release"],
+    "allowedFromStatuses": ["companion", "employee", "servant", "prisoner", "enslaved"],
+    "resultStatus": "independent",
+    "trustDelta": 10,
+    "fearDelta": -20,
+    "clearsAssignments": true
+  },
+  {
+    "id": "character_action_detain",
+    "name": "Detain Prisoner",
+    "actionLabel": "Place in custody",
+    "tags": ["Custody"],
+    "allowedFromStatuses": ["independent"],
+    "resultStatus": "prisoner",
+    "requiredTraits": ["Detainable"],
+    "affinityDelta": -20,
+    "fearDelta": 15,
+    "clearsAssignments": true
+  }
+]

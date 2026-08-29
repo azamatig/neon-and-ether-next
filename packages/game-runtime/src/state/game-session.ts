@@ -9,11 +9,17 @@ import {
   ActionResolution,
   CharacterDefinition,
   CombatResolution,
+  CombatAction,
+  CharacterManagementCommand,
+  BaseManagementCommand,
+  BaseRoomDefinition,
+  BaseUpgradeDefinition,
   Condition,
   DialogueChoice,
   DialogueNode,
   Effect,
   GameplayOutcome,
+  GameEvent,
   OriginContext,
   POI,
   PoiAction,
@@ -34,11 +40,13 @@ import {
   SaveGame,
   TimeState,
   WorldState,
-  createInitialGameState,
+  createInitialGameStateFromContent,
 } from './game-state.ts';
 import { ContentRegistry } from '../content/content-registry.ts';
 import { resolveStatCheck, StatCheckResolution } from '../resolution/stat-check.ts';
-import { TurnManager } from '../combat/turn-manager.ts';
+import { TurnBasedCombatEngine, CombatCommandResult } from '../combat/turn-based-combat-engine.ts';
+import { CharacterManagementResult, CharacterManagementSystem, ResolvedCharacterAction } from '../characters/character-management-system.ts';
+import { BaseManagementResult, BaseManagementSystem, BaseOption } from '../base/base-management-system.ts';
 import { ConditionRegistry } from '../conditions/condition-registry.ts';
 import { BatchConditionResult, evaluateCondition, evaluateConditions } from '../conditions/condition-evaluator.ts';
 import { ConditionEvaluationResult } from '../conditions/condition-handler.ts';
@@ -49,6 +57,7 @@ import { ActionExecutionResult, ActionExecutor } from '../actions/action-executo
 import { GameplayOutcomeEngine } from '../resolution/gameplay-outcome-engine.ts';
 import { PoiActionPipeline, PoiActionPipelineResult } from '../actions/poi-action-pipeline.ts';
 import { EventRuntime, ResolvedEventState } from '../events/event-runtime.ts';
+import { QuestRuntime, QuestCommandResult, ResolvedQuestState } from '../quests/quest-runtime.ts';
 import { CombatEncounterEngine, ResolvedCombatPreview } from '../combat/combat-encounter-engine.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
@@ -93,7 +102,9 @@ export class GameSession {
   private state: GameState;
   private contentRegistry: ContentRegistry;
   private diceRoller: DiceRoller;
-  private turnManager: TurnManager;
+  private turnBasedCombatEngine: TurnBasedCombatEngine;
+  private characterManagementSystem: CharacterManagementSystem;
+  private baseManagementSystem: BaseManagementSystem;
   private conditionRegistry: ConditionRegistry;
   private effectRegistry: EffectRegistry;
   private effectExecutor: EffectExecutor;
@@ -101,6 +112,7 @@ export class GameSession {
   private outcomeEngine: GameplayOutcomeEngine;
   private poiActionPipeline: PoiActionPipeline;
   private eventRuntime: EventRuntime;
+  private questRuntime: QuestRuntime;
   private combatEncounterEngine: CombatEncounterEngine;
   public events: TypedEventEmitter<GameRuntimeEvents>;
 
@@ -113,20 +125,22 @@ export class GameSession {
     this.contentRegistry = contentRegistry;
     this.diceRoller = new DiceRoller(seed);
     this.events = new TypedEventEmitter<GameRuntimeEvents>();
-    this.turnManager = new TurnManager();
-
+    this.turnBasedCombatEngine = new TurnBasedCombatEngine(contentRegistry, this.diceRoller);
+    this.characterManagementSystem = new CharacterManagementSystem(contentRegistry);
     // Initialize registries and executors
     this.conditionRegistry = conditionRegistry ?? new ConditionRegistry(true);
     this.effectRegistry = effectRegistry ?? new EffectRegistry(true);
     this.effectExecutor = new EffectExecutor(this.effectRegistry);
+    this.baseManagementSystem = new BaseManagementSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.actionExecutor = new ActionExecutor(this.conditionRegistry, this.effectExecutor);
     this.outcomeEngine = new GameplayOutcomeEngine();
     this.poiActionPipeline = new PoiActionPipeline(this.conditionRegistry, this.effectExecutor, this.outcomeEngine, this.diceRoller);
     this.eventRuntime = new EventRuntime(this.conditionRegistry, this.effectExecutor, this.outcomeEngine, this.diceRoller);
+    this.questRuntime = new QuestRuntime(this.conditionRegistry, this.effectExecutor);
     this.combatEncounterEngine = new CombatEncounterEngine(this.conditionRegistry, this.effectExecutor, this.outcomeEngine, this.diceRoller);
 
     // Initial modular state
-    this.state = createInitialGameState();
+    this.state = createInitialGameStateFromContent(this.contentRegistry.exportSnapshot());
   }
 
   // --- State Accessors ---
@@ -151,12 +165,67 @@ export class GameSession {
     return this.state.quests[questId];
   }
 
+  public getResolvedQuestState(questId: string): ResolvedQuestState | undefined {
+    return this.questRuntime.resolve(questId, this.state, this.contentRegistry);
+  }
+
+  public startQuest(questId: string): QuestCommandResult {
+    return this.emitQuestResult(this.questRuntime.startQuest(questId, this.state, this.contentRegistry));
+  }
+
+  public progressQuestObjective(questId: string, objectiveId: string, amount = 1): QuestCommandResult {
+    return this.emitQuestResult(this.questRuntime.progressObjective(questId, objectiveId, amount, this.state, this.contentRegistry));
+  }
+
+  public executeQuestAction(questId: string, actionId: string): QuestCommandResult {
+    return this.emitQuestResult(this.questRuntime.executeAction(questId, actionId, this.state, this.contentRegistry));
+  }
+
+  public completeQuestStage(questId: string, branchId?: string): QuestCommandResult {
+    return this.emitQuestResult(this.questRuntime.completeStage(questId, this.state, this.contentRegistry, branchId));
+  }
+
+  private emitQuestResult(result: QuestCommandResult): QuestCommandResult {
+    if (result.success) this.events.emit('STATE_CHANGED', this.state);
+    return result;
+  }
+
   public getFactionRuntimeState(factionId: string): FactionRuntimeState | undefined {
     return this.state.factions[factionId];
   }
 
   public getBaseState(): BaseState {
     return this.state.base;
+  }
+
+  public getCharacterManagementActions(npcId: string): ResolvedCharacterAction[] {
+    return this.characterManagementSystem.getAvailableActions(npcId, this.state);
+  }
+
+  public executeCharacterManagementCommand(command: CharacterManagementCommand): CharacterManagementResult {
+    const result = this.characterManagementSystem.execute(command, this.state);
+    if (result.success) {
+      this.logJournal('World', `Character management command '${command.type}' applied to '${command.npcId}'.`);
+      this.events.emit('STATE_CHANGED', this.state);
+    }
+    return result;
+  }
+
+  public getBaseRoomOptions(slotId: string): BaseOption<BaseRoomDefinition>[] {
+    return this.baseManagementSystem.getRoomOptions(slotId, this.state);
+  }
+
+  public getBaseUpgradeOptions(roomInstanceId: string): BaseOption<BaseUpgradeDefinition>[] {
+    return this.baseManagementSystem.getUpgradeOptions(roomInstanceId, this.state);
+  }
+
+  public executeBaseManagementCommand(command: BaseManagementCommand): BaseManagementResult {
+    const result = this.baseManagementSystem.execute(command, this.state);
+    if (result.success) {
+      this.logJournal('World', `Base management command '${command.type}' completed.`);
+      this.events.emit('STATE_CHANGED', this.state);
+    }
+    return result;
   }
 
   public getTimeState(): TimeState {
@@ -208,6 +277,8 @@ export class GameSession {
       inventory: p.inventory.items.map((slot) => ({ ...slot })),
       portraitIcon: 'User',
       defaultBehavior: 'Idle',
+      abilityIds: this.contentRegistry.getCharacter(p.characterId)?.abilityIds ?? [],
+      traits: this.contentRegistry.getCharacter(p.characterId)?.traits ?? [],
     };
   }
 
@@ -226,7 +297,7 @@ export class GameSession {
       description: 'Sector resident.',
       tags: ['NPC'],
       title: 'Resident',
-      factionId: 'fac_undercity_drifters',
+      factionId: 'Neutral',
       isPlayer: false,
       isMerchant: runtime?.isMerchant ?? false,
       isCompanion: runtime?.isCompanion ?? false,
@@ -248,6 +319,8 @@ export class GameSession {
       inventory: [],
       portraitIcon: 'User',
       defaultBehavior: (runtime?.behaviorOverride as any) ?? 'Idle',
+      abilityIds: [],
+      traits: [],
     };
 
     if (!runtime) return base;
@@ -585,6 +658,12 @@ export class GameSession {
     return ok;
   }
 
+  public getAvailableEvents(): GameEvent[] {
+    return this.contentRegistry.getAllEvents().filter((event) =>
+      this.eventRuntime.canTriggerEvent(event, this.state, this.contentRegistry).allMet
+    );
+  }
+
   public getResolvedEventState(): ResolvedEventState | undefined {
     return this.eventRuntime.getResolvedEventState(this.state, this.contentRegistry);
   }
@@ -646,12 +725,51 @@ export class GameSession {
   public startTacticalCombat(encounterId?: string): boolean {
     const id = encounterId ?? this.state.world.activeEncounterId;
     if (!id) return false;
-    const ok = this.combatEncounterEngine.startCombat(id, this.state, this.contentRegistry);
+    const combat = this.turnBasedCombatEngine.createEncounter(id, this.state);
+    const ok = combat !== undefined;
+    if (combat) {
+      this.state.world.activeEncounterId = id;
+      this.state.world.mode = 'TacticalCombat';
+      this.state.combat = combat;
+      this.resolvePendingAiTurns();
+    }
     if (ok) {
       this.events.emit('COMBAT_STATE_CHANGED', undefined);
       this.events.emit('STATE_CHANGED', this.state);
     }
     return ok;
+  }
+
+  public executeCombatAction(action: CombatAction): CombatCommandResult {
+    let result = this.turnBasedCombatEngine.execute(this.state.combat, action);
+    if (!result.success) return result;
+    this.state.combat = result.state;
+
+    // AI turns are resolved by the runtime; presentation never makes AI decisions.
+    this.resolvePendingAiTurns();
+
+    this.state.player.vitals.currentHp = this.state.combat.combatants[this.state.player.characterId]?.currentHp ?? this.state.player.vitals.currentHp;
+    this.state.player.vitals.currentEther = this.state.combat.combatants[this.state.player.characterId]?.currentEther ?? this.state.player.vitals.currentEther;
+    const outcome = this.state.combat.outcome;
+    if (outcome === 'Victory') this.resolveCombatVictory(undefined, this.state.combat.roundNumber);
+    if (outcome === 'Defeat') this.resolveCombatDefeat();
+    this.events.emit('COMBAT_STATE_CHANGED', undefined);
+    this.events.emit('STATE_CHANGED', this.state);
+    return result;
+  }
+
+  private resolvePendingAiTurns(): void {
+    let guard = 0;
+    while (this.state.combat.isActive && guard < 50) {
+      const activeId = this.state.combat.turnOrder[this.state.combat.activeTurnIndex];
+      if (this.state.combat.combatants[activeId]?.team !== 'Enemy') break;
+      const aiAction = this.turnBasedCombatEngine.chooseAIAction(this.state.combat);
+      if (!aiAction) break;
+      const aiResult = this.turnBasedCombatEngine.execute(this.state.combat, aiAction);
+      if (!aiResult.success) break;
+      this.state.combat = aiResult.state;
+      guard += 1;
+    }
   }
 
   public resolveCombatVictory(encounterId?: string, rounds: number = 3): CombatResolution | undefined {

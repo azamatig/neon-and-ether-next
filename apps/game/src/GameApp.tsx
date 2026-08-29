@@ -12,6 +12,7 @@ import { ActionResultModal } from './components/ActionResultModal.tsx';
 import { EventContainer } from './components/EventContainer.tsx';
 import { CombatPreviewContainer } from './components/CombatPreviewContainer.tsx';
 import { CombatResultContainer } from './components/CombatResultContainer.tsx';
+import { TurnBasedCombatScreen } from './components/TurnBasedCombatScreen.tsx';
 import { Badge, Button, Panel, PoiScreen, TacticalGridCanvas, TerminalLog, WorldMapView } from '@neon-ether/shared-ui';
 import {
   Clock,
@@ -46,6 +47,7 @@ export const GameApp: React.FC = () => {
     activeEventState,
     activeCombatPreview,
     activeCombatResolution,
+    combatAbilities,
     saveStatus,
     openPoi,
     travelToPoi,
@@ -64,6 +66,7 @@ export const GameApp: React.FC = () => {
     resolveCombatDefeat,
     takeLoot,
     executePostCombatAction,
+    executeCombatAction,
     dismissCombatResult,
     spendEther,
     resetTurnAp,
@@ -144,48 +147,11 @@ export const GameApp: React.FC = () => {
               onDismiss={dismissCombatResult}
             />
           ) : isTacticalCombatMode ? (
-            <Panel
-              title="TACTICAL COMBAT PROTOCOL // ENGAGEMENT"
-              subtitle="TURN-BASED COMBAT SIMULATION"
-              glow="rose"
-              className="h-full flex flex-col"
-              headerRight={
-                <Badge variant="rose" size="xs">
-                  IN COMBAT
-                </Badge>
-              }
-            >
-              <div className="flex-1 flex flex-col justify-between p-4 bg-zinc-950 rounded-xl gap-4 font-mono">
-                <div className="flex-1 flex flex-col items-center justify-center p-8 border border-dashed border-rose-500/40 rounded-xl bg-rose-950/20 text-center gap-3">
-                  <Swords className="w-12 h-12 text-rose-400 animate-pulse" />
-                  <div className="text-lg font-bold text-white uppercase tracking-wider">
-                    Grid Combat In Progress
-                  </div>
-                  <p className="text-xs text-zinc-400 font-sans max-w-md">
-                    Turn-based tactical positioning, action point management, and cover mechanics.
-                    Execute squad orders or trigger tactical battle conclusions:
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-2 border-t border-zinc-800">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={resolveCombatDefeat}
-                  >
-                    Simulate Tactical Defeat
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => resolveCombatVictory(3)}
-                    leftIcon={<Swords className="w-4 h-4 text-emerald-400" />}
-                  >
-                    Simulate Tactical Victory (3 Rounds)
-                  </Button>
-                </div>
-              </div>
-            </Panel>
+            <TurnBasedCombatScreen
+              state={gameState.combat}
+              abilities={combatAbilities}
+              onCommand={executeCombatAction}
+            />
           ) : (
             <Panel
               title={

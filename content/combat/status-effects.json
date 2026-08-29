@@ -1,0 +1,13 @@
+[
+  {
+    "id": "status_burning",
+    "name": "Burning",
+    "description": "Thermal residue continues to damage the target.",
+    "tags": ["DamageOverTime", "Thermal"],
+    "tickTiming": "TurnEnd",
+    "damagePerTick": 3,
+    "healingPerTick": 0,
+    "armorModifier": 0,
+    "icon": "Flame"
+  }
+]

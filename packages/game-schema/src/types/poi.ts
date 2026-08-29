@@ -143,6 +143,7 @@ export const POISchema = BaseEntitySchema.extend({
   // Linked Quests / Events connected to this location
   questIds: z.array(z.string()).default([]),
   eventIds: z.array(z.string()).default([]),
+  encounterIds: z.array(z.string()).default([]),
 
   // Environmental Metrics
   dangerLevel: z.number().int().min(0).max(5).default(1),

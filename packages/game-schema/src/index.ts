@@ -25,5 +25,8 @@ export * from './types/actions.ts';
 export * from './types/outcomes.ts';
 export * from './types/resolutions.ts';
 export * from './types/combat-encounter.ts';
+export * from './types/combat.ts';
+export * from './types/character-management.ts';
+export * from './types/base-management.ts';
 export * from './types/runtime-state.ts';
 export * from './validation/index.ts';

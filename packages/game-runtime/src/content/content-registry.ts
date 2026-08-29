@@ -7,6 +7,11 @@
 
 import {
   BaseRoomDefinition,
+  Ability,
+  BaseJobDefinition,
+  BaseUpgradeDefinition,
+  CharacterManagementRule,
+  CombatAI,
   CombatEncounter,
   ContentValidationReport,
   DialogueTree,
@@ -19,8 +24,11 @@ import {
   Item,
   NPC,
   POI,
+  PartySlotDefinition,
+  PlayerBaseDefinition,
   Quest,
   Recipe,
+  StatusEffectDefinition,
   ValidationIssue,
   validateGameContent,
 } from '@neon-ether/game-schema';
@@ -110,6 +118,14 @@ export class ContentRegistry {
   public readonly npcs = new RegistryCollection<NPC>('NPC');
   public readonly enemies = new RegistryCollection<Enemy>('Enemy');
   public readonly encounters = new RegistryCollection<CombatEncounter>('CombatEncounter');
+  public readonly abilities = new RegistryCollection<Ability>('Ability');
+  public readonly statusEffects = new RegistryCollection<StatusEffectDefinition>('StatusEffect');
+  public readonly combatAIProfiles = new RegistryCollection<CombatAI>('CombatAI');
+  public readonly characterManagementRules = new RegistryCollection<CharacterManagementRule>('CharacterManagementRule');
+  public readonly baseJobs = new RegistryCollection<BaseJobDefinition>('BaseJob');
+  public readonly partySlots = new RegistryCollection<PartySlotDefinition>('PartySlot');
+  public readonly bases = new RegistryCollection<PlayerBaseDefinition>('PlayerBase');
+  public readonly baseUpgrades = new RegistryCollection<BaseUpgradeDefinition>('BaseUpgrade');
   public readonly pois = new RegistryCollection<POI>('POI');
   public readonly quests = new RegistryCollection<Quest>('Quest');
   public readonly events = new RegistryCollection<GameEvent>('GameEvent');
@@ -170,6 +186,14 @@ export class ContentRegistry {
     for (const encounter of content.encounters ?? []) {
       this.encounters.set(encounter.id, encounter);
     }
+    for (const ability of content.abilities ?? []) this.abilities.set(ability.id, ability);
+    for (const effect of content.statusEffects ?? []) this.statusEffects.set(effect.id, effect);
+    for (const profile of content.combatAIProfiles ?? []) this.combatAIProfiles.set(profile.id, profile);
+    for (const rule of content.characterManagementRules ?? []) this.characterManagementRules.set(rule.id, rule);
+    for (const job of content.baseJobs ?? []) this.baseJobs.set(job.id, job);
+    for (const slot of content.partySlots ?? []) this.partySlots.set(slot.id, slot);
+    for (const base of content.bases ?? []) this.bases.set(base.id, base);
+    for (const upgrade of content.baseUpgrades ?? []) this.baseUpgrades.set(upgrade.id, upgrade);
 
     // Index POIs
     for (const poi of content.pois ?? []) {
@@ -242,6 +266,14 @@ export class ContentRegistry {
       npcs: this.npcs.getAll(),
       enemies: this.enemies.getAll(),
       encounters: this.encounters.getAll(),
+      abilities: this.abilities.getAll(),
+      statusEffects: this.statusEffects.getAll(),
+      combatAIProfiles: this.combatAIProfiles.getAll(),
+      characterManagementRules: this.characterManagementRules.getAll(),
+      baseJobs: this.baseJobs.getAll(),
+      partySlots: this.partySlots.getAll(),
+      bases: this.bases.getAll(),
+      baseUpgrades: this.baseUpgrades.getAll(),
       pois: this.pois.getAll(),
       quests: this.quests.getAll(),
       events: this.events.getAll(),
@@ -262,6 +294,14 @@ export class ContentRegistry {
     this.npcs.clear();
     this.enemies.clear();
     this.encounters.clear();
+    this.abilities.clear();
+    this.statusEffects.clear();
+    this.combatAIProfiles.clear();
+    this.characterManagementRules.clear();
+    this.baseJobs.clear();
+    this.partySlots.clear();
+    this.bases.clear();
+    this.baseUpgrades.clear();
     this.pois.clear();
     this.quests.clear();
     this.events.clear();
@@ -280,6 +320,14 @@ export class ContentRegistry {
       npcsCount: this.npcs.size,
       enemiesCount: this.enemies.size,
       encountersCount: this.encounters.size,
+      abilitiesCount: this.abilities.size,
+      statusEffectsCount: this.statusEffects.size,
+      combatAIProfilesCount: this.combatAIProfiles.size,
+      characterManagementRulesCount: this.characterManagementRules.size,
+      baseJobsCount: this.baseJobs.size,
+      partySlotsCount: this.partySlots.size,
+      basesCount: this.bases.size,
+      baseUpgradesCount: this.baseUpgrades.size,
       poisCount: this.pois.size,
       questsCount: this.quests.size,
       eventsCount: this.events.size,
@@ -293,6 +341,9 @@ export class ContentRegistry {
         this.npcs.size +
         this.enemies.size +
         this.encounters.size +
+        this.abilities.size + this.statusEffects.size + this.combatAIProfiles.size +
+        this.characterManagementRules.size + this.baseJobs.size + this.partySlots.size +
+        this.bases.size + this.baseUpgrades.size +
         this.pois.size +
         this.quests.size +
         this.events.size +
@@ -408,4 +459,13 @@ export class ContentRegistry {
   public getAllEncounters(): CombatEncounter[] {
     return this.encounters.getAll();
   }
+
+  public getAbility(id: string): Ability | undefined { return this.abilities.get(id); }
+  public getStatusEffect(id: string): StatusEffectDefinition | undefined { return this.statusEffects.get(id); }
+  public getCombatAIProfile(id: string): CombatAI | undefined { return this.combatAIProfiles.get(id); }
+  public getCharacterManagementRule(id: string): CharacterManagementRule | undefined { return this.characterManagementRules.get(id); }
+  public getBaseJob(id: string): BaseJobDefinition | undefined { return this.baseJobs.get(id); }
+  public getPartySlot(id: string): PartySlotDefinition | undefined { return this.partySlots.get(id); }
+  public getBase(id: string): PlayerBaseDefinition | undefined { return this.bases.get(id); }
+  public getBaseUpgrade(id: string): BaseUpgradeDefinition | undefined { return this.baseUpgrades.get(id); }
 }

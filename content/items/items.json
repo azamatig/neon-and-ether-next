@@ -3,43 +3,70 @@
     "id": "wpn_thermal_pistol",
     "name": "Korp-9 Heavy Thermal Pistol",
     "description": "A customized semi-automatic hand cannon chambered with superheated plasma-jacket slugs.",
-    "tags": ["Weapon", "Firearm", "Pistol", "Plasma"],
+    "tags": [
+      "Weapon",
+      "Firearm",
+      "Pistol",
+      "Plasma"
+    ],
     "category": "Firearm",
     "rarity": "StreetGrade",
     "weightKg": 1.4,
     "valueCredits": 450,
     "apUseCost": 3,
-    "damageRange": [12, 18],
+    "damageRange": [
+      12,
+      18
+    ],
     "rangeTiles": 7,
     "statRequirements": {
       "Reflexes": 12
     },
-    "icon": "Crosshair"
+    "icon": "Crosshair",
+    "grantedAbilityIds": [
+      "ability_thermal_burst"
+    ]
   },
   {
     "id": "wpn_ether_baton",
     "name": "Resonance Shock Baton",
     "description": "Emits high-frequency ether pulses that disrupt bio-neural circuitry and overload shield matrices.",
-    "tags": ["Weapon", "Melee", "Ether", "Shock"],
+    "tags": [
+      "Weapon",
+      "Melee",
+      "Ether",
+      "Shock"
+    ],
     "category": "Melee",
     "rarity": "MilitarySpec",
     "weightKg": 2.1,
     "valueCredits": 620,
     "apUseCost": 2,
     "etherCost": 5,
-    "damageRange": [15, 22],
+    "damageRange": [
+      15,
+      22
+    ],
     "rangeTiles": 1,
     "statRequirements": {
       "Body": 11,
       "EtherTech": 13
     },
-    "icon": "Zap"
+    "icon": "Zap",
+    "grantedAbilityIds": [
+      "ability_arc_strike"
+    ]
   },
   {
     "id": "cyb_neural_jack_v1",
     "name": "Cortex-Link Neuro-Sleeve",
     "description": "Sub-dermal spinal tap granting direct neural interfacing with encrypted terminal nodes.",
-    "tags": ["Cyberware", "Implants", "Mind", "Hacking"],
+    "tags": [
+      "Cyberware",
+      "Implants",
+      "Mind",
+      "Hacking"
+    ],
     "category": "Cyberware",
     "rarity": "Prototype",
     "weightKg": 0.3,
@@ -48,46 +75,50 @@
       "Mind": 14
     },
     "modifiers": [
-      { "stat": "Mind", "value": 2 },
-      { "stat": "EtherTech", "value": 1 }
+      {
+        "stat": "Mind",
+        "value": 2
+      },
+      {
+        "stat": "EtherTech",
+        "value": 1
+      }
     ],
-    "icon": "Cpu"
+    "icon": "Cpu",
+    "grantedAbilityIds": []
   },
   {
     "id": "con_ether_vial",
     "name": "Stabilized Ether Injector",
     "description": "Direct vein stimulant restoring 25 points of raw ether channel reserves.",
-    "tags": ["Consumable", "Ether", "Medical", "Stim"],
+    "tags": [
+      "Consumable",
+      "Ether",
+      "Medical",
+      "Stim"
+    ],
     "category": "Consumable",
     "rarity": "Common",
     "weightKg": 0.2,
     "valueCredits": 75,
     "apUseCost": 1,
-    "icon": "Activity"
+    "icon": "Activity",
+    "grantedAbilityIds": []
   },
   {
     "id": "itm_cyberware_fiber",
     "name": "High-Grade Neuro-Optical Fiber",
     "description": "Refined conductive fiber bundles used for military-grade neural cyberware and terminal splicing.",
-    "tags": ["CraftingMaterial", "Cyberware", "Tech"],
+    "tags": [
+      "CraftingMaterial",
+      "Cyberware",
+      "Tech"
+    ],
     "category": "CraftingMaterial",
     "rarity": "StreetGrade",
     "weightKg": 0.1,
     "valueCredits": 110,
-    "icon": "Layers"
-  },
-  {
-    "id": "wpn_plasma_pistol",
-    "name": "Korp-X Pulse Plasma Pistol",
-    "description": "Heavy-duty officer sidearm emitting superheated blue plasma bursts.",
-    "tags": ["Weapon", "Firearm", "Plasma"],
-    "category": "Firearm",
-    "rarity": "MilitarySpec",
-    "weightKg": 1.6,
-    "valueCredits": 850,
-    "apUseCost": 3,
-    "damageRange": [16, 24],
-    "rangeTiles": 6,
-    "icon": "Crosshair"
+    "icon": "Layers",
+    "grantedAbilityIds": []
   }
 ]

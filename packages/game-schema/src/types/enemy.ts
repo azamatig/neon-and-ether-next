@@ -45,6 +45,8 @@ export const EnemySchema = BaseEntitySchema.extend({
   grantedXp: z.number().int().min(0).default(25),
   bountyCredits: z.number().int().min(0).default(50),
   behaviorFlags: z.array(z.string()).default([]),
+  abilityIds: z.array(z.string()).default([]),
+  combatAIProfileId: z.string().optional(),
   portraitIcon: z.string().default('Skull'),
 });
 

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "party_slot_1",
+    "name": "Party Slot 1",
+    "tags": ["ActiveParty"],
+    "allowedStatuses": ["companion"],
+    "requiredTraits": []
+  },
+  {
+    "id": "party_slot_2",
+    "name": "Party Slot 2",
+    "tags": ["ActiveParty"],
+    "allowedStatuses": ["companion"],
+    "requiredTraits": []
+  }
+]

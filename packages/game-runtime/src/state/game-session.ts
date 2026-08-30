@@ -98,6 +98,14 @@ export interface GameRuntimeEvents {
   POI_ACTION_EXECUTED: { poiId: string; actionId: string; actionLabel: string; resolution: ActionResolution };
 }
 
+export interface PlayerResourceCommandResult {
+  success: boolean;
+  resource: 'actionPoints' | 'ether';
+  previous: number;
+  current: number;
+  error?: 'INVALID_AMOUNT' | 'INSUFFICIENT_RESOURCE';
+}
+
 export class GameSession {
   private state: GameState;
   private contentRegistry: ContentRegistry;
@@ -146,23 +154,45 @@ export class GameSession {
   // --- State Accessors ---
 
   public getState(): GameState {
-    return this.state;
+    return structuredClone(this.state);
   }
 
   public getPlayerState(): PlayerState {
-    return this.state.player;
+    return structuredClone(this.state.player);
+  }
+
+  /** Applies HUD resource commands inside the runtime rather than mutating React snapshots. */
+  public spendPlayerResource(resource: 'actionPoints' | 'ether', amount: number): PlayerResourceCommandResult {
+    const field = resource === 'actionPoints' ? 'actionPointsCurrent' : 'currentEther';
+    const previous = this.state.player.vitals[field];
+    if (!Number.isFinite(amount) || amount <= 0) return { success: false, resource, previous, current: previous, error: 'INVALID_AMOUNT' };
+    if (previous < amount) return { success: false, resource, previous, current: previous, error: 'INSUFFICIENT_RESOURCE' };
+    const current = previous - amount;
+    this.state.player.vitals[field] = current;
+    this.logJournal(resource === 'actionPoints' ? 'Combat' : 'EtherTech', resource === 'actionPoints' ? `Spent ${amount} AP. Remaining: ${current}` : `Channelled ${amount} Ether resonance.`);
+    return { success: true, resource, previous, current };
+  }
+
+  public resetPlayerActionPoints(): PlayerResourceCommandResult {
+    const previous = this.state.player.vitals.actionPointsCurrent;
+    const current = this.state.player.vitals.actionPointsMax;
+    this.state.player.vitals.actionPointsCurrent = current;
+    this.logJournal('Combat', `Turn refreshed. AP restored to ${current}.`);
+    return { success: true, resource: 'actionPoints', previous, current };
   }
 
   public getWorldState(): WorldState {
-    return this.state.world;
+    return structuredClone(this.state.world);
   }
 
   public getNpcRuntimeState(npcId: string): NpcRuntimeState | undefined {
-    return this.state.npcs[npcId];
+    const state = this.state.npcs[npcId];
+    return state ? structuredClone(state) : undefined;
   }
 
   public getQuestRuntimeState(questId: string): QuestRuntimeState | undefined {
-    return this.state.quests[questId];
+    const state = this.state.quests[questId];
+    return state ? structuredClone(state) : undefined;
   }
 
   public getResolvedQuestState(questId: string): ResolvedQuestState | undefined {
@@ -191,11 +221,12 @@ export class GameSession {
   }
 
   public getFactionRuntimeState(factionId: string): FactionRuntimeState | undefined {
-    return this.state.factions[factionId];
+    const state = this.state.factions[factionId];
+    return state ? structuredClone(state) : undefined;
   }
 
   public getBaseState(): BaseState {
-    return this.state.base;
+    return structuredClone(this.state.base);
   }
 
   public getCharacterManagementActions(npcId: string): ResolvedCharacterAction[] {

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Vector2DSchema } from './grid.ts';
-import { PoiStatusSchema } from './runtime-state.ts';
+import { PoiStatusSchema } from './world.ts';
 
 /**
  * 1. setFlag Effect: Sets a persistent global or local game state flag.

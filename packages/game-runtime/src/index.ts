@@ -10,7 +10,6 @@ export * from './state/game-session.ts';
 export * from './content/content-registry.ts';
 export * from './resolution/stat-check.ts';
 export * from './resolution/gameplay-outcome-engine.ts';
-export * from './combat/turn-manager.ts';
 export * from './combat/turn-based-combat-engine.ts';
 export * from './characters/character-management-system.ts';
 export * from './base/base-management-system.ts';

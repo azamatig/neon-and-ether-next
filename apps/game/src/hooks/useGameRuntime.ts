@@ -30,7 +30,7 @@ export function useGameRuntime() {
   useEffect(() => {
     const unsubs = [
       session.events.on('STATE_CHANGED', (newState) => {
-        setGameState({ ...newState });
+        setGameState(structuredClone(newState));
       }),
       session.events.on('STAT_CHECK_TRIGGERED', (resolution) => {
         setLastCheck(resolution);
@@ -171,8 +171,6 @@ export function useGameRuntime() {
       session.startCombatEncounter(encounterId, previewFirst),
     attemptCombatEscape: () => session.attemptCombatEscape(),
     startTacticalCombat: () => session.startTacticalCombat(),
-    resolveCombatVictory: (rounds?: number) => session.resolveCombatVictory(undefined, rounds),
-    resolveCombatDefeat: () => session.resolveCombatDefeat(),
     takeLoot: (itemIds: string[], takeCredits?: boolean) => session.takeLoot(itemIds, takeCredits),
     executePostCombatAction: (
       enemyId: string,
@@ -191,24 +189,8 @@ export function useGameRuntime() {
     loadFromLocalSlot,
     exportSaveJson,
     importSaveJson,
-    spendAp: (amount: number) => {
-      if (gameState.player.vitals.actionPointsCurrent >= amount) {
-        gameState.player.vitals.actionPointsCurrent -= amount;
-        session.logJournal('Combat', `Spent ${amount} AP. Remaining: ${gameState.player.vitals.actionPointsCurrent}`);
-        setGameState({ ...gameState });
-      }
-    },
-    spendEther: (amount: number) => {
-      if (gameState.player.vitals.currentEther >= amount) {
-        gameState.player.vitals.currentEther -= amount;
-        session.logJournal('EtherTech', `Channelled ${amount} Ether resonance.`);
-        setGameState({ ...gameState });
-      }
-    },
-    resetTurnAp: () => {
-      gameState.player.vitals.actionPointsCurrent = gameState.player.vitals.actionPointsMax;
-      session.logJournal('Combat', `Turn refreshed. AP restored to ${gameState.player.vitals.actionPointsMax}.`);
-      setGameState({ ...gameState });
-    },
+    spendAp: (amount: number) => session.spendPlayerResource('actionPoints', amount),
+    spendEther: (amount: number) => session.spendPlayerResource('ether', amount),
+    resetTurnAp: () => session.resetPlayerActionPoints(),
   };
 }

@@ -4,6 +4,7 @@
  */
 
 export * from './types/base.ts';
+export * from './types/world.ts';
 export * from './types/stats.ts';
 export * from './types/grid.ts';
 export * from './types/items.ts';

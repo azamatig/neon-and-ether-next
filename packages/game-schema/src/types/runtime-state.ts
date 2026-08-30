@@ -10,6 +10,7 @@ import { CharacterAttributesSchema, DerivedVitalsSchema } from './stats.ts';
 import { QuestStatusSchema } from './quest.ts';
 import { CombatStateSchema } from './combat.ts';
 import { CharacterAssignmentSchema, CharacterRelationshipSchema } from './character-management.ts';
+import { PoiStatusSchema } from './world.ts';
 
 export const DirectionSchema = z.enum(['North', 'South', 'East', 'West']);
 export type Direction = z.infer<typeof DirectionSchema>;
@@ -210,9 +211,6 @@ export type TimeState = z.infer<typeof TimeStateSchema>;
 // -----------------------------------------------------------------------------
 // 8. World Runtime State (Map, POIs, World Flags)
 // -----------------------------------------------------------------------------
-
-export const PoiStatusSchema = z.enum(['Hidden', 'Locked', 'Discovered', 'Visited', 'Completed']);
-export type PoiStatus = z.infer<typeof PoiStatusSchema>;
 
 export const PoiRuntimeStateSchema = z.object({
   poiId: z.string().min(1),

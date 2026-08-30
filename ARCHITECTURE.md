@@ -1,4 +1,4 @@
-# Neon & Ether // Architectural Rules & System Contracts
+# Neon & Ether // Architecture & System Contracts
 
 This document establishes the mandatory architectural rules and constraints for the **Neon & Ether** codebase. Every developer, system designer, and AI agent must adhere strictly to these principles across all packages and applications.
 
@@ -18,7 +18,7 @@ This document establishes the mandatory architectural rules and constraints for 
 
 ## 4. Separation of Static Content from Runtime State
 - Static manifests (blueprints, items, quest definitions, dialogue trees) are immutable definitions located in `content/`.
-- Runtime state (current player health, active inventory instance, resolved dialogue node, quest step status) is managed separately in session state models (`packages/game-runtime/src/models/*`).
+- Runtime state (current player health, active inventory instance, resolved dialogue node, quest step status) is managed separately by `packages/game-runtime/src/state/*` and validated by `packages/game-schema/src/types/runtime-state.ts`.
 
 ## 5. Stable String IDs for All Game Entities
 - Every entity (Item, Character, Quest, QuestStage, DialogueNode, SectorMap, Skill, POI) must have a deterministic, stable string identifier (e.g., `item_monoblade_proto_01`, `dlg_arundhati_root`).
@@ -41,4 +41,43 @@ This document establishes the mandatory architectural rules and constraints for 
 
 ## 10. Modular Architecture Over Monolithic / God Objects
 - Avoid creating giant monolithic "Managers" or "Services" that handle everything.
-- Break systems into focused, single-responsibility units (e.g., `SpatialSystem`, `DiceRoller`, `StatCheckResolver`, `TurnManager`, `DialogueRunner`, `ContentRegistry`).
+- Break systems into focused, single-responsibility units (for example `DiceRoller`, condition/effect registries, `TurnBasedCombatEngine`, `QuestRuntime`, `EventRuntime`, and `ContentRegistry`). `GameSession` is the application facade and delegates mechanics to these focused modules.
+
+---
+
+## Current package boundaries
+
+### `@neon-ether/game-schema`
+- Owns serializable content and runtime-state schemas only.
+- Low-level shared enums that are referenced by both authored effects and runtime state live in dependency-neutral schema modules such as `types/world.ts`; authored schemas must not import aggregate runtime-state schemas.
+- Contains no React, filesystem, concrete content, or state transition code.
+
+### `@neon-ether/game-runtime`
+- Receives content through `ContentRegistry`; it never imports `content/`.
+- Owns all gameplay mutations, including player resource commands, navigation, dialogue, quests, events, combat, character management, and base management.
+- `GameSession` exposes snapshots and typed commands. Public snapshot accessors return copies so presentation code cannot mutate live session state.
+- Conditions, effects, and outcomes use the shared registries/executors rather than feature-local evaluators.
+
+### `apps/game`
+- `useGameRuntime` is the composition root: it injects the content manifest into `ContentRegistry`, owns one `GameSession`, clones emitted state snapshots, and exposes typed command callbacks.
+- React components render snapshots and dispatch commands. They must not directly modify `GameState`.
+- Browser persistence and file download controls are presentation/application concerns; save serialization and migration remain in runtime.
+
+### `apps/editor`
+- Is a separate development application built from `editor.html`.
+- Inspector, Quest Graph, and Map Editor are alternative projections over the same `@neon-ether/game-schema` definitions. They do not own parallel content formats.
+- The filesystem bridge is a Vite `serve`-only plugin under `apps/editor/dev`; it must never be imported by the Game application or included in the production Game bundle.
+
+### `content/`
+- Contains immutable authored definitions consumed by both Game and Editor.
+- Cross-entity relations and graph/map connections are stable string IDs validated before save or registry load.
+
+## Runtime flow
+
+1. The Game composition root loads `content/manifest.ts` into `ContentRegistry`.
+2. `GameSession` creates runtime state from the injected registry snapshot.
+3. React receives copied state snapshots and resolved presentation models.
+4. UI input dispatches a typed `GameSession` command.
+5. A focused runtime module evaluates shared conditions, executes shared effects/outcomes, mutates session state, and emits `STATE_CHANGED`.
+
+Editor builds follow a separate entry point and never participate in this runtime flow.

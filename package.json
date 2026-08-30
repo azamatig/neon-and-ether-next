@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "check:architecture": "bun scripts/check-architecture.ts"
+    "check:architecture": "bun scripts/check-architecture.ts",
+    "validate:content": "bun scripts/validate-content.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

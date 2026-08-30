@@ -34,9 +34,9 @@
             "text": "Take tactical cover behind ferroconcrete pillars and engage",
             "conditions": [],
             "outcome": {
-              "type": "Combat",
+              "type": "combat",
               "encounterId": "enc_omnicorp_patrol_sector09",
-              "logMessage": "You draw weapons and engage the OmniCorp patrol team!"
+              "previewFirst": true
             }
           },
           {
@@ -49,28 +49,29 @@
               "passText": "You discharge an ether wave into the high-voltage breaker, blinding their optical suites and escaping!",
               "failText": "The breaker sparks harmlessly; the enforcers advance on your position!"
             },
-            "outcome": {
-              "type": "ActionResult",
-              "actionResolution": {
-                "status": "Success",
-                "title": "Conduit Overload",
-                "actionLabel": "EtherTech Discharge",
-                "resultText": "You unleash an ether arc into the high-voltage breaker, blinding the enforcers and shorting their optical suites! You slip away into the shadows with salvaged parts.",
-                "gainedItems": [
-                  {
-                    "itemId": "itm_cyberware_fiber",
-                    "quantity": 2
-                  }
-                ],
-                "creditsDelta": 120,
-                "statChanges": [
-                  {
-                    "stat": "currentEther",
-                    "label": "Ether",
-                    "delta": -10
-                  }
-                ]
+            "effects": [
+              {
+                "type": "addItem",
+                "itemId": "itm_cyberware_fiber",
+                "quantity": 2
+              },
+              {
+                "type": "changeMoney",
+                "amount": 120,
+                "mode": "add"
+              },
+              {
+                "type": "changeStat",
+                "stat": "currentEther",
+                "delta": -10,
+                "mode": "add"
               }
+            ],
+            "outcome": {
+              "type": "showResult",
+              "title": "Conduit Overload",
+              "resultText": "You unleash an ether arc into the high-voltage breaker, blinding the enforcers and shorting their optical suites! You slip away into the shadows with salvaged parts.",
+              "status": "Success"
             }
           },
           {
@@ -82,11 +83,17 @@
               "difficulty": 11
             },
             "outcome": {
-              "type": "LocationJump",
-              "targetMapId": "map_slums_sec09",
-              "targetPoiId": "poi_sec09_hideout",
-              "logMessage": "You sprint through the drainage tunnels back to your fortified hideout!"
-            }
+              "type": "poi",
+              "mapId": "map_slums_sec09",
+              "poiId": "poi_sec09_hideout"
+            },
+            "effects": [
+              {
+                "type": "movePlayer",
+                "mapId": "map_slums_sec09",
+                "poiId": "poi_sec09_hideout"
+              }
+            ]
           }
         ]
       }

@@ -1,20 +1,21 @@
 /** Development-only schema-driven content editor. */
 import React, { useEffect, useMemo, useState } from 'react';
 import { ContentRegistry } from '@neon-ether/game-runtime';
-import { EnemySchema, GameContent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, POISchema, Quest, QuestSchema } from '@neon-ether/game-schema';
+import { BaseRoomDefinitionSchema, CombatEncounterSchema, EnemySchema, GameContent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, PlayerBaseDefinitionSchema, POISchema, Quest, QuestSchema, ValidationIssue } from '@neon-ether/game-schema';
 import { AlertTriangle, CheckCircle2, Copy, ListTree, Network, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { SchemaPropertyEditor } from './components/SchemaPropertyEditor.tsx';
 import { QuestGraphEditor } from './components/QuestGraphEditor.tsx';
 import { MapEditor } from './components/MapEditor.tsx';
+import { ValidationPanel } from './components/ValidationPanel.tsx';
 
-type Category = 'items' | 'npcs' | 'enemies' | 'pois' | 'events' | 'quests' | 'maps';
+type Category = 'items' | 'npcs' | 'enemies' | 'pois' | 'events' | 'quests' | 'maps' | 'encounters' | 'rooms' | 'bases';
 type EditableEntity = GameContent[Category][number];
 
-const CATEGORY_LABELS: Record<Category, string> = { items: 'Items', npcs: 'NPCs', enemies: 'Enemies', pois: 'POIs', events: 'Events', quests: 'Quests', maps: 'Maps' };
-const CATEGORY_SCHEMAS = { items: ItemSchema, npcs: NPCSchema, enemies: EnemySchema, pois: POISchema, events: GameEventSchema, quests: QuestSchema, maps: GameMapSchema } as const;
+const CATEGORY_LABELS: Record<Category, string> = { items: 'Items', npcs: 'NPCs', enemies: 'Enemies', pois: 'POIs', events: 'Events', quests: 'Quests', maps: 'Maps', encounters: 'Encounters', rooms: 'Rooms', bases: 'Bases' };
+const CATEGORY_SCHEMAS = { items: ItemSchema, npcs: NPCSchema, enemies: EnemySchema, pois: POISchema, events: GameEventSchema, quests: QuestSchema, maps: GameMapSchema, encounters: CombatEncounterSchema, rooms: BaseRoomDefinitionSchema, bases: PlayerBaseDefinitionSchema } as const;
 
 function nextId(category: Category, entities: EditableEntity[]): string {
-  const prefix = category === 'items' ? 'item_editor' : category === 'npcs' ? 'npc_editor' : category === 'enemies' ? 'enemy_editor' : category === 'pois' ? 'poi_editor' : category === 'events' ? 'event_editor' : category === 'quests' ? 'quest_editor' : 'map_editor';
+  const prefix = `${category.replace(/s$/, '')}_editor`;
   let index = entities.length + 1;
   while (entities.some((entity) => entity.id === `${prefix}_${String(index).padStart(3, '0')}`)) index += 1;
   return `${prefix}_${String(index).padStart(3, '0')}`;
@@ -29,7 +30,10 @@ function createTemplate(category: Category, id: string): EditableEntity {
   if (category === 'pois') return { id, name: 'New POI', description: '', tags: [], mapId: '', mapPosition: { x: 50, y: 50 }, icon: 'MapPin', category: 'Landmark', visibilityConditions: [], availabilityConditions: [], actions: [], npcIds: [], questIds: [], eventIds: [], encounterIds: [], dangerLevel: 1, ambientEtherLevel: 20 } as EditableEntity;
   if (category === 'events') return { id, name: 'New Game Event', description: '', tags: [], type: 'choice', conditions: [], triggerConditions: [], availabilityConditions: [], presentation: { layoutStyle: 'standard', ambientGlow: 'cyan' }, steps: [{ id: 'step_01', type: 'choice', text: '', conditions: [], effects: [], choices: [] }], entryEffects: [], completionEffects: [], isOneShot: false } as EditableEntity;
   if (category === 'quests') return { id, name: 'New Quest', description: '', tags: [], factionId: 'Neutral', recommendedLevel: 1, initialStageId: 'stage_01', stages: { stage_01: { id: 'stage_01', stageNumber: 1, title: 'First Stage', journalEntry: '', objectives: [], entryConditions: [], completionConditions: [], actions: [], entryEffects: [], completionEffects: [], branches: [] } }, rewardCredits: 0, rewardXp: 0, rewardItemIds: [], isMainQuest: false, isRepeatable: false } as EditableEntity;
-  return { id, name: 'New Map', description: '', tags: [], district: 'New District', backgroundImage: '', poiIds: [], connectedMapIds: [], ambientEtherLevel: 25, securityLevel: 1, regions: [], routes: [], metadata: {}, recommendedLevel: 1 } as EditableEntity;
+  if (category === 'maps') return { id, name: 'New Map', description: '', tags: [], district: 'New District', backgroundImage: '', poiIds: [], connectedMapIds: [], ambientEtherLevel: 25, securityLevel: 1, regions: [], routes: [], metadata: {}, recommendedLevel: 1 } as EditableEntity;
+  if (category === 'encounters') return { id, name: 'New Encounter', description: '', tags: [], enemyGroups: [], environment: { ambientEtherLevel: 20, lighting: 'Normal' }, threatLevel: 1, escapeRules: { allowed: true, conditions: [] }, lootTable: [], creditsReward: { min: 0, max: 0 }, xpReward: 0, survivingEnemyActions: [] } as EditableEntity;
+  if (category === 'rooms') return { id, name: 'New Room', description: '', tags: [], roomType: 'Corridor', width: 6, height: 6, doorways: [], recommendedEnemies: [], recommendedPois: [], minSecurityLevel: 1, isHazardous: false, ambientEtherBonus: 0, buildCost: {}, requirements: [], capacity: { residents: 0, workers: 0, storage: 0 }, effects: [], allowedSlotTypes: ['Standard'], maxInstances: 1 } as EditableEntity;
+  return { id, name: 'New Base', description: '', tags: [], roomSlots: [{ id: 'slot_01', slotType: 'Standard', allowedRoomTypes: [] }], startingRooms: [], startingResources: {}, storageCapacity: 20 } as EditableEntity;
 }
 
 export const EditorApp: React.FC = () => {
@@ -41,13 +45,16 @@ export const EditorApp: React.FC = () => {
   const [status, setStatus] = useState('Loading content files…');
   const [questView, setQuestView] = useState<'inspector' | 'graph'>('inspector');
   const [mapView, setMapView] = useState<'inspector' | 'visual'>('visual');
+  const [validationOpen, setValidationOpen] = useState(false);
+  const [knownAssets, setKnownAssets] = useState<string[]>([]);
+  const [validationPreview, setValidationPreview] = useState<{ issue: ValidationIssue; entity: unknown } | null>(null);
 
   useEffect(() => {
     fetch('/__editor/content').then(async (response) => {
       if (!response.ok) throw new Error((await response.json()).error ?? 'Unable to load content.');
       return response.json();
-    }).then(({ content: loaded }: { content: GameContent }) => {
-      setContent(loaded); setSelectedId(loaded.items[0]?.id ?? ''); setStatus('Content files loaded.');
+    }).then(({ content: loaded, knownAssets: assets = [] }: { content: GameContent; knownAssets?: string[] }) => {
+      setContent(loaded); setKnownAssets(assets); setSelectedId(loaded.items[0]?.id ?? ''); setStatus('Content files loaded.');
     }).catch((error) => setStatus(`API error: ${error.message}`));
   }, []);
 
@@ -57,8 +64,8 @@ export const EditorApp: React.FC = () => {
   const report = useMemo(() => {
     if (!content) return null;
     const registry = new ContentRegistry();
-    return registry.loadContent(content);
-  }, [content]);
+    return registry.loadContent(content, { validation: { knownAssets: new Set(knownAssets) } });
+  }, [content, knownAssets]);
 
   const markDirty = (target: Category) => setDirty((current) => new Set(current).add(target));
   const updateCollection = (target: Category, next: EditableEntity[]) => {
@@ -100,6 +107,17 @@ export const EditorApp: React.FC = () => {
       setDirty(new Set()); setStatus('Saved to physical content JSON files.');
     } catch (error) { setStatus(`Save failed: ${error instanceof Error ? error.message : String(error)}`); }
   };
+  const navigateToIssue = (issue: ValidationIssue) => {
+    if (!content) return;
+    const targetId = issue.targetId.split('#')[0];
+    const target = (Object.keys(CATEGORY_LABELS) as Category[]).find((candidate) => content[candidate].some((entity) => entity.id === targetId));
+    if (!target) {
+      const entity = Object.values(content).filter(Array.isArray).flatMap((collection) => collection).find((candidate) => candidate && typeof candidate === 'object' && 'id' in candidate && candidate.id === targetId);
+      if (entity) { setValidationPreview({ issue, entity }); setValidationOpen(false); return; }
+      setStatus(`Validation target '${targetId}' is not an entity.`); return;
+    }
+    setCategory(target); setSelectedId(targetId); setValidationOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#050713] p-4 text-zinc-200 font-mono">
@@ -109,7 +127,7 @@ export const EditorApp: React.FC = () => {
       </header>
       <div className="grid min-h-[680px] grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
         <aside className="rounded-xl border border-zinc-800 bg-black/40 p-3">
-          <div className="mb-3 grid grid-cols-4 gap-1">{(['items','npcs','enemies','pois','events','quests','maps'] as Category[]).map((target) => <button key={target} onClick={() => selectCategory(target)} className={`rounded border p-2 text-[9px] uppercase ${category === target ? 'border-purple-400 bg-purple-500/15 text-purple-300' : 'border-zinc-800 text-zinc-500'}`}>{CATEGORY_LABELS[target]} <span className="block text-sm">{content?.[target].length ?? 0}</span></button>)}</div>
+          <div className="mb-3 grid grid-cols-5 gap-1">{(['items','npcs','enemies','pois','events','quests','maps','encounters','rooms','bases'] as Category[]).map((target) => <button key={target} onClick={() => selectCategory(target)} className={`rounded border p-2 text-[9px] uppercase ${category === target ? 'border-purple-400 bg-purple-500/15 text-purple-300' : 'border-zinc-800 text-zinc-500'}`}>{CATEGORY_LABELS[target]} <span className="block text-sm">{content?.[target].length ?? 0}</span></button>)}</div>
           <label className="mb-3 flex items-center gap-2 rounded border border-zinc-800 bg-zinc-950 px-3"><Search className="h-4 w-4 text-zinc-500"/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, ID, tags…" className="w-full bg-transparent py-2 text-xs outline-none"/></label>
           <div className="mb-3 grid grid-cols-2 gap-2"><button onClick={createEntity} className="flex items-center justify-center gap-1 rounded border border-cyan-500/40 p-2 text-xs text-cyan-300"><Plus className="h-3 w-3"/> Create</button><button onClick={duplicateEntity} disabled={!selected} className="flex items-center justify-center gap-1 rounded border border-zinc-700 p-2 text-xs disabled:opacity-40"><Copy className="h-3 w-3"/> Duplicate</button></div>
           <div className="max-h-[520px] space-y-1 overflow-auto">{filtered.map((entity) => <button key={entity.id} onClick={() => setSelectedId(entity.id)} className={`w-full rounded border p-2 text-left ${selectedId === entity.id ? 'border-purple-400 bg-purple-950/40' : 'border-zinc-800 bg-zinc-950/50'}`}><span className="block truncate text-xs text-white">{entity.name}</span><span className="block truncate text-[10px] text-zinc-500">{entity.id}</span></button>)}</div>
@@ -127,9 +145,11 @@ export const EditorApp: React.FC = () => {
             <div className="max-h-[570px] flex-1 overflow-auto pr-2">{category === 'quests' && questView === 'graph' ? <QuestGraphEditor quest={selected as Quest} onChange={editEntity}/> : category === 'maps' && mapView === 'visual' ? <MapEditor map={selected as GameMap} pois={content!.pois} onChangeMap={editEntity} onChangePois={(pois) => updateCollection('pois', pois)}/> : <SchemaPropertyEditor schema={CATEGORY_SCHEMAS[category]} value={selected} content={content!} onChange={editEntity}/>}</div>
             {selectedValidation && !selectedValidation.success && <div className="mt-2 rounded border border-rose-500/30 bg-rose-950/20 p-2 text-[10px] text-rose-300">{selectedValidation.error.issues.slice(0, 5).map((issue) => <div key={`${issue.path.join('.')}-${issue.message}`}>{issue.path.join('.')}: {issue.message}</div>)}</div>}
           </> : <div className="m-auto text-zinc-600">Select or create an entity.</div>}
-          <footer className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800 pt-3 text-xs"><span className="text-zinc-500">{status}</span><span className={`flex items-center gap-2 ${report?.errorsCount ? 'text-rose-400' : 'text-emerald-400'}`}>{report?.errorsCount ? <AlertTriangle className="h-4 w-4"/> : <CheckCircle2 className="h-4 w-4"/>} Validation: {report?.errorsCount ?? 0} errors · {report?.warningsCount ?? 0} warnings</span></footer>
+          <footer className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800 pt-3 text-xs"><span className="text-zinc-500">{status}</span><button type="button" onClick={() => setValidationOpen(true)} className={`flex items-center gap-2 ${report?.errorsCount ? 'text-rose-400' : 'text-emerald-400'}`}>{report?.errorsCount ? <AlertTriangle className="h-4 w-4"/> : <CheckCircle2 className="h-4 w-4"/>} Validation: {report?.errorsCount ?? 0} errors · {report?.warningsCount ?? 0} warnings · {report?.infoCount ?? 0} info</button></footer>
         </main>
       </div>
+      {validationOpen && report && <ValidationPanel report={report} onNavigate={navigateToIssue} onClose={() => setValidationOpen(false)}/>}
+      {validationPreview && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"><section className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl border border-cyan-500/30 bg-[#050713] p-4"><header className="mb-3 flex justify-between"><div><p className="text-[9px] uppercase text-cyan-400">{validationPreview.issue.category} · {validationPreview.issue.field}</p><h2 className="font-bold text-white">{validationPreview.issue.targetId}</h2></div><button type="button" onClick={() => setValidationPreview(null)}>×</button></header><p className="mb-3 text-xs text-rose-300">{validationPreview.issue.message}</p><pre className="rounded border border-zinc-800 bg-black/40 p-3 text-[10px] text-emerald-300">{JSON.stringify(validationPreview.entity, null, 2)}</pre></section></div>}
     </div>
   );
 };

@@ -14,6 +14,7 @@ import {
   CombatAI,
   CombatEncounter,
   ContentValidationReport,
+  ContentValidationOptions,
   DialogueTree,
   Enemy,
   Faction,
@@ -111,6 +112,7 @@ export class RegistryCollection<T extends { id: string; name?: string; tags?: st
 export interface ContentLoadingOptions {
   strict?: boolean;
   clearExisting?: boolean;
+  validation?: ContentValidationOptions;
 }
 
 export class ContentRegistry {
@@ -143,14 +145,14 @@ export class ContentRegistry {
    * and populates fast lookup maps.
    */
   public loadContent(rawContent: unknown, options: ContentLoadingOptions = {}): ContentValidationReport {
-    const { strict = false, clearExisting = true } = options;
+    const { strict = false, clearExisting = true, validation } = options;
 
     if (clearExisting) {
       this.clear();
     }
 
     // Run full schema & referential integrity validation
-    const report = validateGameContent(rawContent);
+    const report = validateGameContent(rawContent, validation);
     this.lastValidationReport = report;
 
     if (strict && !report.isValid) {
@@ -160,9 +162,8 @@ export class ContentRegistry {
 
     // Safe parse data with defaults
     const parsed = GameContentSchema.safeParse(rawContent);
-    const content: GameContent = parsed.success
-      ? parsed.data
-      : (rawContent as GameContent);
+    if (!parsed.success) return report;
+    const content: GameContent = parsed.data;
 
     this.version = content.version || '1.0.0';
 

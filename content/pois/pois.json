@@ -273,9 +273,9 @@
           }
         ],
         "outcome": {
-          "type": "Combat",
+          "type": "combat",
           "encounterId": "enc_omnicorp_patrol_sector09",
-          "logMessage": "The terminal alarm summons an OmniCorp response team."
+          "previewFirst": true
         },
         "isRepeatable": false
       },

@@ -11,6 +11,9 @@ const EDITABLE_FILES = {
   events: 'content/events/events.json',
   quests: 'content/quests/quests.json',
   maps: 'content/maps/maps.json',
+  encounters: 'content/encounters/encounters.json',
+  rooms: 'content/rooms/rooms.json',
+  bases: 'content/bases/bases.json',
 } as const;
 
 type EditableCategory = keyof typeof EDITABLE_FILES;
@@ -20,10 +23,21 @@ async function readJson(root: string, category: EditableCategory): Promise<unkno
 }
 
 async function readEditableContent(root: string, gameContent: Record<string, unknown>) {
-  const [items, npcs, enemies, pois, events, quests, maps] = await Promise.all([
+  const [items, npcs, enemies, pois, events, quests, maps, encounters, rooms, bases] = await Promise.all([
     readJson(root, 'items'), readJson(root, 'npcs'), readJson(root, 'enemies'), readJson(root, 'pois'), readJson(root, 'events'), readJson(root, 'quests'), readJson(root, 'maps'),
+    readJson(root, 'encounters'), readJson(root, 'rooms'), readJson(root, 'bases'),
   ]);
-  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps };
+  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps, encounters, rooms, bases };
+}
+
+async function readKnownAssets(root: string): Promise<string[]> {
+  const assetRoots = ['public', 'content/assets'];
+  const files: string[] = [];
+  const visit = async (directory: string): Promise<void> => {
+    try { for (const entry of await fs.readdir(directory, { withFileTypes: true })) { const target=path.join(directory,entry.name); if(entry.isDirectory()) await visit(target); else files.push(path.relative(root,target).replace(/^public\//,'').replaceAll('\\','/')); } } catch { /* Optional asset root. */ }
+  };
+  for (const directory of assetRoots) await visit(path.join(root,directory));
+  return files;
 }
 
 async function readBody(request: IncomingMessage): Promise<unknown> {
@@ -52,9 +66,10 @@ export function editorContentApiPlugin(root: string): Plugin {
           ]);
           if (request.method === 'GET') {
             const content = await readEditableContent(root, gameContent);
+            const knownAssets = await readKnownAssets(root);
             const registry = new ContentRegistry();
-            const report = registry.loadContent(content);
-            send(response, 200, { content, report });
+            const report = registry.loadContent(content, { validation: { knownAssets: new Set(knownAssets) } });
+            send(response, 200, { content, report, knownAssets });
             return;
           }
           if (request.method === 'PUT') {
@@ -65,10 +80,11 @@ export function editorContentApiPlugin(root: string): Plugin {
               return;
             }
             const content = await readEditableContent(root, gameContent);
+            const knownAssets = await readKnownAssets(root);
             for (const category of categories) content[category] = body.collections[category] as never;
             if (body.collections.npcs) content.characters = body.collections.npcs as never;
             const registry = new ContentRegistry();
-            const report = registry.loadContent(content);
+            const report = registry.loadContent(content, { validation: { knownAssets: new Set(knownAssets) } });
             if (!report.isValid) {
               send(response, 422, { error: 'Content validation failed.', report });
               return;

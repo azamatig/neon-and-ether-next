@@ -81,3 +81,11 @@ This document establishes the mandatory architectural rules and constraints for 
 5. A focused runtime module evaluates shared conditions, executes shared effects/outcomes, mutates session state, and emits `STATE_CHANGED`.
 
 Editor builds follow a separate entry point and never participate in this runtime flow.
+
+## Content validation contract
+
+- `@neon-ether/game-schema/validation` owns schema and full content-graph validation. Editor components only render its serializable `ContentValidationReport` and never implement validation rules.
+- Validation issues use `error`, `warning`, or `info`. Errors block Editor saves and production builds; warnings and informational diagnostics remain visible to authors.
+- The graph pass validates global and nested IDs, entity references, conditions, effects, outcomes, quest/event transitions, map membership/routes, combat encounters, base rooms, and host-provided asset paths.
+- `ContentRegistry` runs the same validator before indexing. Strict loads throw when the report contains errors.
+- The production Vite build invokes `scripts/validate-content.ts` before bundling and must fail on any validation error. The Editor remains buildable so authors can repair invalid drafts.

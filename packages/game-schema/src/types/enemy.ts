@@ -36,6 +36,7 @@ export type LootDrop = z.infer<typeof LootDropSchema>;
 export const EnemySchema = BaseEntitySchema.extend({
   factionId: z.string().default('Hostile'),
   level: z.number().int().min(1).default(1),
+  progressionDefinitionId: z.string().optional(),
   tier: EnemyTierSchema.default('Standard'),
   attributes: CharacterAttributesSchema,
   vitals: DerivedVitalsSchema,

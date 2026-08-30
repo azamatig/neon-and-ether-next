@@ -5,6 +5,7 @@
 
 import { GameContent, GameContentSchema } from '@neon-ether/game-schema';
 
+import progressionDefinitionsData from './progression/progression.json';
 import itemsData from './items/items.json';
 import charactersData from './characters/characters.json';
 import enemiesData from './enemies/enemies.json';
@@ -29,6 +30,7 @@ import baseUpgradesData from './bases/upgrades.json';
 export const gameContent: GameContent = GameContentSchema.parse({
   version: '1.0.0',
   items: itemsData,
+  progressionDefinitions: progressionDefinitionsData,
   npcs: charactersData,
   characters: charactersData,
   enemies: enemiesData,

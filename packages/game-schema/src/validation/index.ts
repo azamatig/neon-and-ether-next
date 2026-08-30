@@ -90,6 +90,7 @@ export function validateDuplicateIds(content: GameContent): ValidationIssue[] {
   checkCollection(content.partySlots ?? [], 'PartySlot');
   checkCollection(content.bases ?? [], 'PlayerBase');
   checkCollection(content.baseUpgrades ?? [], 'BaseUpgrade');
+  checkCollection(content.progressionDefinitions ?? [], 'ProgressionDefinition');
 
   return issues;
 }

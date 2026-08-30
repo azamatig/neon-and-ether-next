@@ -286,8 +286,8 @@ export class CombatEncounterEngine {
     const encounterName = encounter?.name ?? 'Hostile Encounter';
 
     // 1. Calculate XP
-    const xpReward = encounter?.xpReward ?? 120;
-    state.player.experience += xpReward;
+    const xpReward = encounter?.xpReward ?? 0;
+    this.effectExecutor.execute({ type:'grantRewards', xp:xpReward, credits:0, items:[], skillXp:{}, perkPoints:0 }, { state, contentRegistry, logJournal });
 
     // 2. Generate Loot from drops
     const availableLoot: InventoryItemSlot[] = [];
@@ -443,8 +443,9 @@ export class CombatEncounterEngine {
 
     // Transfer Credits
     if (takeAllCredits && activeRes.creditsFound > 0) {
-      state.player.inventory.credits = (state.player.inventory.credits ?? 0) + activeRes.creditsFound;
-      if (logJournal) logJournal('World', `Looted ${activeRes.creditsFound} credits.`);
+      const credits = activeRes.creditsFound;
+      this.effectExecutor.execute({ type:'grantRewards', xp:0, credits, items:[], skillXp:{}, perkPoints:0 }, { state, contentRegistry, logJournal });
+      if (logJournal) logJournal('World', `Looted ${credits} credits.`);
       activeRes.creditsFound = 0;
     }
 

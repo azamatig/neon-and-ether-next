@@ -19,6 +19,7 @@ export const NPCSchema = BaseEntitySchema.extend({
   isMerchant: z.boolean().default(false),
   isCompanion: z.boolean().default(false),
   level: z.number().int().min(1).default(1),
+  progressionDefinitionId: z.string().optional(),
   attributes: CharacterAttributesSchema,
   vitals: DerivedVitalsSchema,
   skills: SkillsSchema,

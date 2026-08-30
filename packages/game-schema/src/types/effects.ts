@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Vector2DSchema } from './grid.ts';
 import { PoiStatusSchema } from './world.ts';
+import { RewardDefinitionSchema } from './progression.ts';
 
 /**
  * 1. setFlag Effect: Sets a persistent global or local game state flag.
@@ -234,6 +235,9 @@ export const AdvanceTimeEffectSchema = z.object({
 
 export type AdvanceTimeEffect = z.infer<typeof AdvanceTimeEffectSchema>;
 
+export const GrantRewardsEffectSchema = RewardDefinitionSchema.extend({ type: z.literal('grantRewards') });
+export type GrantRewardsEffect = z.infer<typeof GrantRewardsEffectSchema>;
+
 /**
  * Universal Effect Discriminated Union.
  */
@@ -256,6 +260,7 @@ export const EffectSchema = z.discriminatedUnion('type', [
   ChangePoiStateEffectSchema,
   RecruitNpcEffectSchema,
   AdvanceTimeEffectSchema,
+  GrantRewardsEffectSchema,
 ]);
 
 export type Effect = z.infer<typeof EffectSchema>;

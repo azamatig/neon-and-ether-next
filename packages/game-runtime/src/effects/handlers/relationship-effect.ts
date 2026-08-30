@@ -9,6 +9,12 @@ export const handleChangeRelationshipEffect: EffectHandler<ChangeRelationshipEff
   if (!context.state.npcs[effect.npcId]) {
     context.state.npcs[effect.npcId] = {
       npcId: effect.npcId,
+      level: 1,
+      experience: 0,
+      skills: {},
+      skillExperience: {},
+      skillPointsUnspent: 0,
+      perkPointsUnspent: 0,
       mapId: context.state.world.currentMapId,
       isAlive: true,
       currentHp: 25,

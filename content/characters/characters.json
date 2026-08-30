@@ -69,7 +69,8 @@
     },
     "perks": [],
     "temporaryModifiers": [],
-    "statusEffects": []
+    "statusEffects": [],
+    "progressionDefinitionId": "progression_player"
   },
   {
     "id": "npc_kaelen_rourke",
@@ -138,6 +139,7 @@
     },
     "perks": [],
     "temporaryModifiers": [],
-    "statusEffects": []
+    "statusEffects": [],
+    "progressionDefinitionId": "progression_companion"
   }
 ]

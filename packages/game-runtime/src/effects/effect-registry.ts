@@ -18,6 +18,7 @@ import { handleTriggerEventEffect } from './handlers/event-effect.ts';
 import { handleMovePlayerEffect } from './handlers/player-effect.ts';
 import { handleAdvanceTimeEffect } from './handlers/time-effect.ts';
 import { handleChangePoiStateEffect, handleTravelPoiEffect } from './handlers/poi-effect.ts';
+import { handleGrantRewardsEffect } from './handlers/reward-effect.ts';
 
 export class EffectRegistry {
   private handlers = new Map<string, EffectHandler<any>>();
@@ -48,6 +49,7 @@ export class EffectRegistry {
     this.registerHandler('changePoiState', handleChangePoiStateEffect);
     this.registerHandler('recruitNpc', handleRecruitNpcEffect);
     this.registerHandler('advanceTime', handleAdvanceTimeEffect);
+    this.registerHandler('grantRewards', handleGrantRewardsEffect);
   }
 
   /**

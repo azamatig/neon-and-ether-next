@@ -4,6 +4,7 @@ export type ValidationCategory =
   | 'Item' | 'NPC' | 'Enemy' | 'POI' | 'Quest' | 'GameEvent' | 'CombatEncounter'
   | 'Ability' | 'StatusEffect' | 'CombatAI' | 'CharacterManagementRule' | 'BaseJob'
   | 'PartySlot' | 'PlayerBase' | 'BaseUpgrade' | 'Map' | 'Recipe' | 'Room'
+  | 'ProgressionDefinition'
   | 'Faction' | 'Dialogue' | 'Asset' | 'Integrity';
 
 export interface ValidationIssue {

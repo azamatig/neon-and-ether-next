@@ -71,6 +71,9 @@ export const PlayerStateSchema = z.object({
   experience: z.number().int().min(0).default(0),
   attributePointsUnspent: z.number().int().min(0).default(0),
   skillPointsUnspent: z.number().int().min(0).default(0),
+  perkPointsUnspent: z.number().int().min(0).default(0),
+  skillExperience: z.record(z.string(), z.number().int().min(0)).default({}),
+  progressionDefinitionId: z.string().optional(),
   factionId: z.string().default('Neutral'),
   attributes: CharacterAttributesSchema.default({
     body: 12,
@@ -115,6 +118,13 @@ export type PlayerState = z.infer<typeof PlayerStateSchema>;
 
 export const NpcRuntimeStateSchema = z.object({
   npcId: z.string().min(1),
+  level: z.number().int().min(1).default(1),
+  experience: z.number().int().min(0).default(0),
+  skills: SkillsSchema,
+  skillExperience: z.record(z.string(), z.number().int().min(0)).default({}),
+  skillPointsUnspent: z.number().int().min(0).default(0),
+  perkPointsUnspent: z.number().int().min(0).default(0),
+  progressionDefinitionId: z.string().optional(),
   mapId: z.string().min(1),
   poiId: z.string().optional(),
   isAlive: z.boolean().default(true),

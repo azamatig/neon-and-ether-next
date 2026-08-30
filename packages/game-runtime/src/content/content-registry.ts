@@ -27,6 +27,7 @@ import {
   POI,
   PartySlotDefinition,
   PlayerBaseDefinition,
+  ProgressionDefinition,
   Quest,
   Recipe,
   StatusEffectDefinition,
@@ -117,6 +118,7 @@ export interface ContentLoadingOptions {
 
 export class ContentRegistry {
   public readonly items = new RegistryCollection<Item>('Item');
+  public readonly progressionDefinitions = new RegistryCollection<ProgressionDefinition>('ProgressionDefinition');
   public readonly npcs = new RegistryCollection<NPC>('NPC');
   public readonly enemies = new RegistryCollection<Enemy>('Enemy');
   public readonly encounters = new RegistryCollection<CombatEncounter>('CombatEncounter');
@@ -171,6 +173,7 @@ export class ContentRegistry {
     for (const item of content.items ?? []) {
       this.items.set(item.id, item);
     }
+    for (const definition of content.progressionDefinitions ?? []) this.progressionDefinitions.set(definition.id, definition);
 
     // Index NPCs / Characters
     const npcList = content.npcs ?? content.characters ?? [];
@@ -264,6 +267,7 @@ export class ContentRegistry {
     return {
       version: this.version,
       items: this.items.getAll(),
+      progressionDefinitions: this.progressionDefinitions.getAll(),
       npcs: this.npcs.getAll(),
       enemies: this.enemies.getAll(),
       encounters: this.encounters.getAll(),
@@ -292,6 +296,7 @@ export class ContentRegistry {
 
   public clear(): void {
     this.items.clear();
+    this.progressionDefinitions.clear();
     this.npcs.clear();
     this.enemies.clear();
     this.encounters.clear();

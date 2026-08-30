@@ -116,3 +116,11 @@ produces effective snapshots without mutating base attributes. `SkillCheckSystem
 resolves authored attribute/skill/difficulty/modifier definitions into five generic
 outcomes. POI and Event runtimes consume the same check definition and never branch on
 named skills such as hacking, strength, or charisma.
+
+## Character progression and rewards
+
+Progression curves are injected content definitions selected per character. The
+framework-independent `ProgressionSystem` owns XP thresholds, level currency, and
+open-ended skill progression for players and companions. Combat, quest completion,
+events, and exploration use the same `grantRewards` effect; source systems do not
+implement their own XP mutations.

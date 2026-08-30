@@ -82,6 +82,9 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
     experience: overrides.experience ?? 0,
     attributePointsUnspent: overrides.attributePointsUnspent ?? 0,
     skillPointsUnspent: overrides.skillPointsUnspent ?? 0,
+    perkPointsUnspent: overrides.perkPointsUnspent ?? 0,
+    skillExperience: overrides.skillExperience ?? {},
+    progressionDefinitionId: overrides.progressionDefinitionId,
     factionId: overrides.factionId ?? 'Neutral',
     attributes: overrides.attributes ?? {
       body: 12,
@@ -142,6 +145,13 @@ export function createInitialNpcRuntimeState(
 ): NpcRuntimeState {
   return {
     npcId,
+    level: overrides.level ?? 1,
+    experience: overrides.experience ?? 0,
+    skills: overrides.skills ?? {},
+    skillExperience: overrides.skillExperience ?? {},
+    skillPointsUnspent: overrides.skillPointsUnspent ?? 0,
+    perkPointsUnspent: overrides.perkPointsUnspent ?? 0,
+    progressionDefinitionId: overrides.progressionDefinitionId,
     mapId,
     isAlive: overrides.isAlive ?? true,
     currentHp: overrides.currentHp ?? 30,
@@ -276,6 +286,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         name: playerBlueprint.name,
         title: playerBlueprint.title,
         level: playerBlueprint.level,
+        progressionDefinitionId: playerBlueprint.progressionDefinitionId,
         factionId: playerBlueprint.factionId,
         attributes: { ...playerBlueprint.attributes },
         skills: { ...playerBlueprint.skills },
@@ -302,10 +313,15 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
     disabledActionIds: [],
     flags: {},
   }]));
+  const progressionById = new Map(content.progressionDefinitions.map((definition) => [definition.id, definition]));
   const npcs = Object.fromEntries(content.npcs.filter((npc) => !npc.isPlayer).map((npc) => [
     npc.id,
     createInitialNpcRuntimeState(npc.id, initialMap?.id ?? '', {
       currentHp: npc.vitals.currentHp,
+      level: npc.level,
+      experience: progressionById.get(npc.progressionDefinitionId ?? '')?.levels.find((entry) => entry.level === npc.level)?.totalXp ?? 0,
+      skills: { ...npc.skills },
+      progressionDefinitionId: npc.progressionDefinitionId,
       maxHp: npc.vitals.maxHp,
       currentEther: npc.vitals.currentEther,
       position: { ...npc.position },

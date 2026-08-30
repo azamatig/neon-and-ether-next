@@ -25,3 +25,4 @@ export * from './observability/runtime-trace.ts';
 export * from './inventory/index.ts';
 
 export * from './stats/index.ts';
+export * from './progression/index.ts';

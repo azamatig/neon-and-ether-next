@@ -13,11 +13,13 @@ import { DialogueTreeSchema } from './dialogue.ts';
 import { CombatEncounterSchema } from './combat-encounter.ts';
 import { AbilitySchema, CombatAIProfileSchema, StatusEffectDefinitionSchema } from './combat.ts';
 import { BaseJobDefinitionSchema, CharacterManagementRuleSchema, PartySlotDefinitionSchema } from './character-management.ts';
+import { ProgressionDefinitionSchema } from './progression.ts';
 import { BaseUpgradeDefinitionSchema, PlayerBaseDefinitionSchema } from './base-management.ts';
 
 export const GameContentSchema = z.object({
   version: z.string().default('1.0.0'),
   items: z.array(ItemSchema).default([]),
+  progressionDefinitions: z.array(ProgressionDefinitionSchema).default([]),
   npcs: z.array(NPCSchema).default([]),
   enemies: z.array(EnemySchema).default([]),
   encounters: z.array(CombatEncounterSchema).default([]),

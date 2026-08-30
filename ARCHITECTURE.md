@@ -157,3 +157,11 @@ The Editor provides both a generic schema inspector and an ordered scene editor 
 `GameplayOutcome` objects consumed by `EventRuntime`; it has no graph DTO, conversion
 layer, or editor-only event format. Local step links and cross-event outcome links stay
 as stable string IDs and remain subject to the shared content-graph validator.
+
+## POI authoring
+
+The specialized POI Editor edits the canonical `POI` and `PoiAction` schemas directly.
+It composes the shared schema-driven Condition/Effect controls and the same reusable
+`GameplayOutcome` editor used by Event authoring. Its preview renders the production
+`PoiScreen` from `@neon-ether/shared-ui` with a presentation-only draft snapshot; it
+does not copy the screen or evaluate gameplay rules in React.

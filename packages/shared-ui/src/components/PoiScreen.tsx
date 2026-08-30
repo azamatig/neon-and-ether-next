@@ -158,6 +158,13 @@ export const PoiScreen: React.FC<PoiScreenProps> = ({
             glow={poi.category === 'EtherRift' ? 'purple' : 'cyan'}
           >
             <div className="flex flex-col gap-3">
+              {(poi.runtime.customImage || poi.image) && (
+                <img
+                  src={poi.runtime.customImage || poi.image}
+                  alt={`${poi.name} location artwork`}
+                  className="h-44 w-full rounded-lg border border-zinc-800 object-cover"
+                />
+              )}
               {/* Category Badges & Threat Indicators */}
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">

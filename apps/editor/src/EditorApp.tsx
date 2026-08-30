@@ -1,7 +1,7 @@
 /** Development-only schema-driven content editor. */
 import React, { useEffect, useMemo, useState } from 'react';
 import { ContentRegistry } from '@neon-ether/game-runtime';
-import { BaseRoomDefinitionSchema, CombatEncounterSchema, EnemySchema, GameContent, GameEvent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, PlayerBaseDefinitionSchema, POISchema, RecipeSchema, ShopDefinitionSchema, Quest, QuestSchema, ValidationIssue } from '@neon-ether/game-schema';
+import { BaseRoomDefinitionSchema, CombatEncounterSchema, EnemySchema, GameContent, GameEvent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, PlayerBaseDefinitionSchema, POI, POISchema, RecipeSchema, ShopDefinitionSchema, Quest, QuestSchema, ValidationIssue } from '@neon-ether/game-schema';
 import { AlertTriangle, Bug, CheckCircle2, Copy, ListTree, Network, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { SchemaPropertyEditor } from './components/SchemaPropertyEditor.tsx';
 import { QuestGraphEditor } from './components/QuestGraphEditor.tsx';
@@ -9,6 +9,7 @@ import { MapEditor } from './components/MapEditor.tsx';
 import { ValidationPanel } from './components/ValidationPanel.tsx';
 import { PlaytestPanel } from './components/PlaytestPanel.tsx';
 import { GameEventEditor } from './components/GameEventEditor.tsx';
+import { PoiEditor } from './components/PoiEditor.tsx';
 
 type Category = 'items' | 'npcs' | 'enemies' | 'pois' | 'events' | 'quests' | 'maps' | 'encounters' | 'rooms' | 'bases' | 'recipes' | 'shops';
 type EditableEntity = GameContent[Category][number];
@@ -149,7 +150,7 @@ export const EditorApp: React.FC = () => {
                 <button onClick={renameEntity} className="rounded border border-zinc-700 px-3 py-2 text-xs">Rename</button><button onClick={deleteEntity} className="flex items-center gap-1 rounded border border-rose-500/40 px-3 py-2 text-xs text-rose-300"><Trash2 className="h-3 w-3"/> Delete</button>
               </div>
             </div>
-            <div className="max-h-[570px] flex-1 overflow-auto pr-2">{category === 'quests' && questView === 'graph' ? <QuestGraphEditor quest={selected as Quest} onChange={editEntity}/> : category === 'maps' && mapView === 'visual' ? <MapEditor map={selected as GameMap} pois={content!.pois} onChangeMap={editEntity} onChangePois={(pois) => updateCollection('pois', pois)}/> : category === 'events' && eventView === 'scene' ? <GameEventEditor event={selected as GameEvent} content={content!} onChange={editEntity}/> : <SchemaPropertyEditor schema={CATEGORY_SCHEMAS[category]} value={selected} content={content!} onChange={editEntity}/>}</div>
+            <div className="max-h-[570px] flex-1 overflow-auto pr-2">{category === 'quests' && questView === 'graph' ? <QuestGraphEditor quest={selected as Quest} onChange={editEntity}/> : category === 'maps' && mapView === 'visual' ? <MapEditor map={selected as GameMap} pois={content!.pois} onChangeMap={editEntity} onChangePois={(pois) => updateCollection('pois', pois)}/> : category === 'events' && eventView === 'scene' ? <GameEventEditor event={selected as GameEvent} content={content!} onChange={editEntity}/> : category === 'pois' ? <PoiEditor poi={selected as POI} content={content!} onChange={editEntity}/> : <SchemaPropertyEditor schema={CATEGORY_SCHEMAS[category]} value={selected} content={content!} onChange={editEntity}/>}</div>
             {selectedValidation && !selectedValidation.success && <div className="mt-2 rounded border border-rose-500/30 bg-rose-950/20 p-2 text-[10px] text-rose-300">{selectedValidation.error.issues.slice(0, 5).map((issue) => <div key={`${issue.path.join('.')}-${issue.message}`}>{issue.path.join('.')}: {issue.message}</div>)}</div>}
           </> : <div className="m-auto text-zinc-600">Select or create an entity.</div>}
           <footer className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800 pt-3 text-xs"><span className="text-zinc-500">{status}</span><button type="button" onClick={() => setValidationOpen(true)} className={`flex items-center gap-2 ${report?.errorsCount ? 'text-rose-400' : 'text-emerald-400'}`}>{report?.errorsCount ? <AlertTriangle className="h-4 w-4"/> : <CheckCircle2 className="h-4 w-4"/>} Validation: {report?.errorsCount ?? 0} errors · {report?.warningsCount ?? 0} warnings · {report?.infoCount ?? 0} info</button></footer>

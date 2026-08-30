@@ -7,11 +7,10 @@ import {
   GameContent,
   GameEvent,
   GameEventTypeSchema,
-  GameplayOutcome,
-  GameplayOutcomeSchema,
 } from '@neon-ether/game-schema';
 import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
 import { EntityReferenceEditor, SchemaPropertyEditor } from './SchemaPropertyEditor.tsx';
+import { GameplayOutcomeEditor } from './GameplayOutcomeEditor.tsx';
 
 type Step = GameEvent['steps'][number];
 type Choice = Step['choices'][number];
@@ -33,29 +32,6 @@ function move<T>(values: T[], index: number, direction: -1 | 1): T[] {
   [next[index], next[target]] = [next[target], next[index]];
   return next;
 }
-
-const OutcomeEditor: React.FC<{
-  label: string;
-  value?: GameplayOutcome;
-  content: GameContent;
-  steps: Step[];
-  onChange: (value: GameplayOutcome | undefined) => void;
-}> = ({ label, value, content, steps, onChange }) => {
-  const targetSteps = value?.type === 'event' ? (content.events.find((candidate) => candidate.id === value.eventId)?.steps ?? []) : [];
-  const selectableSteps = targetSteps.length ? targetSteps : steps;
-  return <section className="rounded border border-zinc-800 bg-black/20 p-3">
-    <header className="mb-2 flex items-center justify-between">
-      <span className="text-[10px] uppercase tracking-wider text-amber-300">{label}</span>
-      {value && <button type="button" onClick={() => onChange(undefined)} className="text-rose-400"><Trash2 className="h-3.5 w-3.5"/></button>}
-    </header>
-    {value ? <>
-      <SchemaPropertyEditor schema={GameplayOutcomeSchema as any} value={value} content={content} onChange={(next) => onChange(next as GameplayOutcome)}/>
-      {value.type === 'event' && (
-        <label className="mt-2 block"><span className="mb-1 block text-[10px] uppercase text-zinc-500">Target event step</span><EntityReferenceEditor value={value.stepId ?? ''} entities={selectableSteps.map((step) => ({ id: step.id, name: step.title || step.text || step.id }))} optional onChange={(stepId) => onChange({ ...value, stepId })}/></label>
-      )}
-    </> : <button type="button" onClick={() => onChange({ type: 'noPresentation' })} className="rounded border border-dashed border-zinc-700 px-3 py-2 text-xs text-zinc-400">+ Add outcome / chain</button>}
-  </section>;
-};
 
 const StepTargetEditor: React.FC<{ value?: string | null; steps: Step[]; excludedId?: string; onChange: (value: string | undefined) => void }> = ({ value, steps, excludedId, onChange }) => (
   <EntityReferenceEditor value={value ?? ''} entities={steps.filter((step) => step.id !== excludedId).map((step) => ({ id: step.id, name: step.title || step.text || step.id }))} optional onChange={onChange}/>
@@ -90,6 +66,7 @@ export const GameEventEditor: React.FC<{ event: GameEvent; content: GameContent;
     setSelectedStepId(next[Math.min(selectedIndex, next.length - 1)].id);
   };
   const updateChoice = (choiceId: string, next: Choice) => selectedStep && updateStep({ ...selectedStep, choices: selectedStep.choices.map((choice) => choice.id === choiceId ? next : choice) });
+  const outcomeSteps = event.steps.map((step) => ({ id: step.id, name: step.title || step.text || step.id }));
 
   return <div className="space-y-4">
     <section className="grid gap-3 rounded-lg border border-purple-500/25 bg-purple-950/10 p-4 lg:grid-cols-2">
@@ -108,21 +85,21 @@ export const GameEventEditor: React.FC<{ event: GameEvent; content: GameContent;
         <header className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-[10px] uppercase text-cyan-400">Step {selectedIndex + 1}</p><h3 className="text-sm font-bold text-white">{selectedStep.title || selectedStep.id}</h3></div><div className="flex gap-1"><button type="button" title="Move up" onClick={() => onChange({ ...event, steps: move(event.steps, selectedIndex, -1) })} disabled={selectedIndex === 0} className="rounded border border-zinc-700 p-2 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5"/></button><button type="button" title="Move down" onClick={() => onChange({ ...event, steps: move(event.steps, selectedIndex, 1) })} disabled={selectedIndex === event.steps.length - 1} className="rounded border border-zinc-700 p-2 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5"/></button><button type="button" title="Duplicate" onClick={duplicateStep} className="rounded border border-zinc-700 p-2"><Copy className="h-3.5 w-3.5"/></button><button type="button" title="Delete" onClick={deleteStep} disabled={event.steps.length === 1} className="rounded border border-rose-500/30 p-2 text-rose-400 disabled:opacity-30"><Trash2 className="h-3.5 w-3.5"/></button></div></header>
         <SchemaPropertyEditor schema={stepFieldsSchema as any} value={selectedStep} content={content} onChange={(next) => updateStep({ ...(next as Step), choices: selectedStep.choices, nextStepId: selectedStep.nextStepId, outcome: selectedStep.outcome })}/>
         <label className="block"><span className="mb-1 block text-[10px] uppercase text-zinc-500">Automatic next step</span><StepTargetEditor value={selectedStep.nextStepId} steps={event.steps} excludedId={selectedStep.id} onChange={(nextStepId) => updateStep({ ...selectedStep, nextStepId })}/></label>
-        <OutcomeEditor label="Step outcome / event chaining" value={selectedStep.outcome} content={content} steps={event.steps} onChange={(outcome) => updateStep({ ...selectedStep, outcome })}/>
+        <GameplayOutcomeEditor label="Step outcome / event chaining" value={selectedStep.outcome} content={content} fallbackSteps={outcomeSteps} onChange={(outcome) => updateStep({ ...selectedStep, outcome })}/>
 
         <section className="space-y-3 border-t border-zinc-800 pt-3"><header className="flex items-center justify-between"><div><p className="text-[10px] uppercase text-purple-300">Choices</p><p className="text-[10px] text-zinc-500">Ordered options, checks, effects and outcomes</p></div><button type="button" onClick={() => { const id = uniqueId('choice', selectedStep.choices.map((choice) => choice.id)); updateStep({ ...selectedStep, choices: [...selectedStep.choices, { id, text: 'New choice', conditions: [], effects: [], hideIfUnavailable: false }] }); }} className="flex items-center gap-1 rounded border border-cyan-500/40 px-3 py-2 text-xs text-cyan-300"><Plus className="h-3.5 w-3.5"/> Choice</button></header>
           {selectedStep.choices.map((choice, choiceIndex) => <details key={choice.id} open={choiceIndex === 0} className="rounded border border-zinc-700 bg-zinc-950/40 p-3"><summary className="cursor-pointer text-xs font-bold text-white">{choiceIndex + 1}. {choice.text || choice.id}</summary><div className="mt-3 space-y-3">
             <SchemaPropertyEditor schema={choiceFieldsSchema as any} value={choice} content={content} onChange={(next) => updateChoice(choice.id, { ...(next as Choice), check: choice.check, outcome: choice.outcome, nextStepId: choice.nextStepId })}/>
             <label className="block"><span className="mb-1 block text-[10px] uppercase text-zinc-500">Next step</span><StepTargetEditor value={choice.nextStepId} steps={event.steps} excludedId={selectedStep.id} onChange={(nextStepId) => updateChoice(choice.id, { ...choice, nextStepId })}/></label>
-            <section className="rounded border border-zinc-800 p-3"><header className="mb-2 flex justify-between"><span className="text-[10px] uppercase text-amber-300">Skill check</span>{choice.check && <button type="button" onClick={() => updateChoice(choice.id, { ...choice, check: undefined })} className="text-rose-400"><Trash2 className="h-3.5 w-3.5"/></button>}</header>{choice.check ? <><SchemaPropertyEditor schema={checkFieldsSchema as any} value={choice.check} content={content} onChange={(check) => updateChoice(choice.id, { ...choice, check: { ...(check as NonNullable<Choice['check']>), passOutcome: choice.check?.passOutcome, partialOutcome: choice.check?.partialOutcome, failOutcome: choice.check?.failOutcome } })}/><div className="mt-3 grid gap-2 xl:grid-cols-3"><OutcomeEditor label="Success outcome" value={choice.check.passOutcome} content={content} steps={event.steps} onChange={(passOutcome) => updateChoice(choice.id, { ...choice, check: { ...choice.check!, passOutcome } })}/><OutcomeEditor label="Partial outcome" value={choice.check.partialOutcome} content={content} steps={event.steps} onChange={(partialOutcome) => updateChoice(choice.id, { ...choice, check: { ...choice.check!, partialOutcome } })}/><OutcomeEditor label="Failure outcome" value={choice.check.failOutcome} content={content} steps={event.steps} onChange={(failOutcome) => updateChoice(choice.id, { ...choice, check: { ...choice.check!, failOutcome } })}/></div></> : <button type="button" onClick={() => updateChoice(choice.id, { ...choice, check: { attribute: 'body', difficulty: 'Moderate', modifiers: [], passEffects: [], partialEffects: [], failEffects: [] } })} className="rounded border border-dashed border-zinc-700 px-3 py-2 text-xs text-zinc-400">+ Add data-driven check</button>}</section>
-            <OutcomeEditor label="Choice outcome / event chaining" value={choice.outcome} content={content} steps={event.steps} onChange={(outcome) => updateChoice(choice.id, { ...choice, outcome })}/>
+            <section className="rounded border border-zinc-800 p-3"><header className="mb-2 flex justify-between"><span className="text-[10px] uppercase text-amber-300">Skill check</span>{choice.check && <button type="button" onClick={() => updateChoice(choice.id, { ...choice, check: undefined })} className="text-rose-400"><Trash2 className="h-3.5 w-3.5"/></button>}</header>{choice.check ? <><SchemaPropertyEditor schema={checkFieldsSchema as any} value={choice.check} content={content} onChange={(check) => updateChoice(choice.id, { ...choice, check: { ...(check as NonNullable<Choice['check']>), passOutcome: choice.check?.passOutcome, partialOutcome: choice.check?.partialOutcome, failOutcome: choice.check?.failOutcome } })}/><div className="mt-3 grid gap-2 xl:grid-cols-3"><GameplayOutcomeEditor label="Success outcome" value={choice.check.passOutcome} content={content} fallbackSteps={outcomeSteps} onChange={(passOutcome) => updateChoice(choice.id, { ...choice, check: { ...choice.check!, passOutcome } })}/><GameplayOutcomeEditor label="Partial outcome" value={choice.check.partialOutcome} content={content} fallbackSteps={outcomeSteps} onChange={(partialOutcome) => updateChoice(choice.id, { ...choice, check: { ...choice.check!, partialOutcome } })}/><GameplayOutcomeEditor label="Failure outcome" value={choice.check.failOutcome} content={content} fallbackSteps={outcomeSteps} onChange={(failOutcome) => updateChoice(choice.id, { ...choice, check: { ...choice.check!, failOutcome } })}/></div></> : <button type="button" onClick={() => updateChoice(choice.id, { ...choice, check: { attribute: 'body', difficulty: 'Moderate', modifiers: [], passEffects: [], partialEffects: [], failEffects: [] } })} className="rounded border border-dashed border-zinc-700 px-3 py-2 text-xs text-zinc-400">+ Add data-driven check</button>}</section>
+            <GameplayOutcomeEditor label="Choice outcome / event chaining" value={choice.outcome} content={content} fallbackSteps={outcomeSteps} onChange={(outcome) => updateChoice(choice.id, { ...choice, outcome })}/>
             <div className="flex justify-end gap-1"><button type="button" onClick={() => updateStep({ ...selectedStep, choices: move(selectedStep.choices, choiceIndex, -1) })} disabled={choiceIndex === 0} className="rounded border border-zinc-700 p-2 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5"/></button><button type="button" onClick={() => updateStep({ ...selectedStep, choices: move(selectedStep.choices, choiceIndex, 1) })} disabled={choiceIndex === selectedStep.choices.length - 1} className="rounded border border-zinc-700 p-2 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5"/></button><button type="button" onClick={() => { const id = uniqueId('choice', selectedStep.choices.map((item) => item.id)); updateStep({ ...selectedStep, choices: [...selectedStep.choices, { ...structuredClone(choice), id }] }); }} className="rounded border border-zinc-700 p-2"><Copy className="h-3.5 w-3.5"/></button><button type="button" onClick={() => updateStep({ ...selectedStep, choices: selectedStep.choices.filter((item) => item.id !== choice.id) })} className="rounded border border-rose-500/30 p-2 text-rose-400"><Trash2 className="h-3.5 w-3.5"/></button></div>
           </div></details>)}
         </section>
       </article>}
     </section>
 
-    <details className="rounded-lg border border-zinc-800 bg-black/20 p-4"><summary className="cursor-pointer text-xs font-bold text-white">Event lifecycle conditions and effects</summary><div className="mt-3 grid gap-3 lg:grid-cols-2">{(['conditions','triggerConditions','availabilityConditions','entryEffects','completionEffects'] as const).map((field) => <label key={field}><span className="mb-1 block text-[10px] uppercase text-zinc-500">{field}</span><SchemaPropertyEditor schema={(GameEventSchemaShape[field] as any)} value={event[field]} content={content} onChange={(value) => onChange({ ...event, [field]: value })}/></label>)}</div><div className="mt-3"><OutcomeEditor label="Completion outcome / event chaining" value={event.completionOutcome} content={content} steps={event.steps} onChange={(completionOutcome) => onChange({ ...event, completionOutcome })}/></div></details>
+    <details className="rounded-lg border border-zinc-800 bg-black/20 p-4"><summary className="cursor-pointer text-xs font-bold text-white">Event lifecycle conditions and effects</summary><div className="mt-3 grid gap-3 lg:grid-cols-2">{(['conditions','triggerConditions','availabilityConditions','entryEffects','completionEffects'] as const).map((field) => <label key={field}><span className="mb-1 block text-[10px] uppercase text-zinc-500">{field}</span><SchemaPropertyEditor schema={(GameEventSchemaShape[field] as any)} value={event[field]} content={content} onChange={(value) => onChange({ ...event, [field]: value })}/></label>)}</div><div className="mt-3"><GameplayOutcomeEditor label="Completion outcome / event chaining" value={event.completionOutcome} content={content} fallbackSteps={outcomeSteps} onChange={(completionOutcome) => onChange({ ...event, completionOutcome })}/></div></details>
   </div>;
 };
 

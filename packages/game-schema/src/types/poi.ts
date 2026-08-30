@@ -120,6 +120,7 @@ export type PoiAction = z.infer<typeof PoiActionSchema>;
  */
 export const POISchema = BaseEntitySchema.extend({
   mapId: z.string().min(1, 'Map ID is required'),
+  travelTimeMinutes: z.number().int().min(0).optional(),
   mapPosition: POIPositionSchema.default({ x: 50, y: 50 }),
   district: z.string().optional(),
   regionId: z.string().optional(),

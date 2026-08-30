@@ -106,6 +106,19 @@
     ],
     "isOneShot": false,
     "triggerConditions": [],
-    "availabilityConditions": []
+    "availabilityConditions": [
+      {
+        "type": "time",
+        "field": "hour",
+        "operator": ">=",
+        "value": 8
+      },
+      {
+        "type": "time",
+        "field": "hour",
+        "operator": "<",
+        "value": 22
+      }
+    ]
   }
 ]

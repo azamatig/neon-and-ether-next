@@ -141,3 +141,11 @@ buy/sell eligibility, atomic inventory transfers, lazy restocking, and final pri
 Price modifiers are authored data combining shared conditions (including relationship,
 faction reputation, and event flags), player traits, and map/POI filters. Item base value
 remains in `ItemDefinition`; no merchant-specific logic exists in runtime or React.
+
+## World time
+
+`WorldTimeSystem` is the sole owner of calendar normalization, time-of-day phases,
+rest, and authored route/POI travel duration. The common `time` condition makes POI,
+Event, Shop, and NPC availability use the existing Condition pipeline. The common
+`advanceTime` effect supports turns, minutes, hours, and days. No per-NPC daily
+simulation or presentation-side clock logic is introduced.

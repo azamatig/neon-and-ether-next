@@ -141,6 +141,14 @@ export const RandomChanceConditionSchema = z.object({
 
 export type RandomChanceCondition = z.infer<typeof RandomChanceConditionSchema>;
 
+export const TimeConditionSchema = z.object({
+  type: z.literal('time'),
+  field: z.enum(['day','hour','minute','turnCount','timeOfDay']),
+  operator: ComparisonOperatorSchema.default('=='),
+  value: z.union([z.number(), z.enum(['Dawn','Day','Dusk','Night'])]),
+});
+export type TimeCondition = z.infer<typeof TimeConditionSchema>;
+
 /**
  * Base atomic condition types union.
  */
@@ -155,6 +163,7 @@ export const AtomicConditionSchema = z.discriminatedUnion('type', [
   CompanionPresentConditionSchema,
   BaseRoomExistsConditionSchema,
   RandomChanceConditionSchema,
+  TimeConditionSchema,
 ]);
 
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;

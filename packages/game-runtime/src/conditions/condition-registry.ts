@@ -17,6 +17,7 @@ import { handleBaseRoomExistsCondition } from './handlers/base-room-exists-condi
 import { handleRandomChanceCondition } from './handlers/random-chance-condition.ts';
 import { handleAndCondition, handleOrCondition, handleNotCondition } from './handlers/combinator-conditions.ts';
 import type { RuntimeTraceSink } from '../observability/runtime-trace.ts';
+import { handleTimeCondition } from './handlers/time-condition.ts';
 
 export class ConditionRegistry {
   private handlers = new Map<string, ConditionHandler<any>>();
@@ -43,6 +44,7 @@ export class ConditionRegistry {
     this.registerHandler('companionPresent', handleCompanionPresentCondition);
     this.registerHandler('baseRoomExists', handleBaseRoomExistsCondition);
     this.registerHandler('randomChance', handleRandomChanceCondition);
+    this.registerHandler('time', handleTimeCondition);
 
     // Combinators
     this.registerHandler('and', handleAndCondition);

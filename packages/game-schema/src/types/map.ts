@@ -30,6 +30,7 @@ export const MapRouteSchema = z.object({
   toPoiId: z.string().min(1),
   bidirectional: z.boolean().default(true),
   travelCost: z.number().min(0).default(1),
+  travelTimeMinutes: z.number().int().min(0).optional(),
   metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
 });
 
@@ -49,6 +50,7 @@ export const GameMapSchema = BaseEntitySchema.extend({
   routes: z.array(MapRouteSchema).default([]),
   metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
   recommendedLevel: z.number().int().min(1).default(1),
+  defaultTravelTimeMinutes: z.number().int().min(0).default(30),
 });
 
 export type GameMap = z.infer<typeof GameMapSchema>;

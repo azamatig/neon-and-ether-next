@@ -231,6 +231,8 @@ export const AdvanceTimeEffectSchema = z.object({
   type: z.literal('advanceTime'),
   turns: z.number().int().min(0).default(1),
   hours: z.number().int().min(0).optional(),
+  minutes: z.number().int().min(0).optional(),
+  days: z.number().int().min(0).optional(),
 });
 
 export type AdvanceTimeEffect = z.infer<typeof AdvanceTimeEffectSchema>;

@@ -1,10 +1,75 @@
 [
   {
-    "id":"shop_rourke_exchange","name":"Rourke Exchange","description":"A compact illicit gear counter.","tags":["BlackMarket"],"inventorySource":"stock",
-    "inventory":[{"itemId":"con_ether_vial","quantity":4,"maxQuantity":4},{"itemId":"itm_cyberware_fiber","quantity":8,"maxQuantity":8}],
-    "buyRules":{"enabled":true,"conditions":[],"categories":[],"requiredTags":[],"priceMultiplier":1.05},
-    "sellRules":{"enabled":true,"conditions":[],"categories":[],"requiredTags":[],"priceMultiplier":0.5},
-    "priceModifiers":[{"id":"trusted_customer","conditions":[{"type":"relationship","npcId":"npc_kaelen_rourke","operator":">=","value":40}],"requiredPlayerTraits":[],"mapIds":[],"poiIds":[],"buyMultiplier":0.9,"sellMultiplier":1.1,"flatAdjustment":0}],
-    "restock":{"enabled":true,"intervalTurns":24,"restoreToInitial":true},"availabilityConditions":[]
+    "id": "shop_rourke_exchange",
+    "name": "Rourke Exchange",
+    "description": "A compact illicit gear counter.",
+    "tags": [
+      "BlackMarket"
+    ],
+    "inventorySource": "stock",
+    "inventory": [
+      {
+        "itemId": "con_ether_vial",
+        "quantity": 4,
+        "maxQuantity": 4
+      },
+      {
+        "itemId": "itm_cyberware_fiber",
+        "quantity": 8,
+        "maxQuantity": 8
+      }
+    ],
+    "buyRules": {
+      "enabled": true,
+      "conditions": [],
+      "categories": [],
+      "requiredTags": [],
+      "priceMultiplier": 1.05
+    },
+    "sellRules": {
+      "enabled": true,
+      "conditions": [],
+      "categories": [],
+      "requiredTags": [],
+      "priceMultiplier": 0.5
+    },
+    "priceModifiers": [
+      {
+        "id": "trusted_customer",
+        "conditions": [
+          {
+            "type": "relationship",
+            "npcId": "npc_kaelen_rourke",
+            "operator": ">=",
+            "value": 40
+          }
+        ],
+        "requiredPlayerTraits": [],
+        "mapIds": [],
+        "poiIds": [],
+        "buyMultiplier": 0.9,
+        "sellMultiplier": 1.1,
+        "flatAdjustment": 0
+      }
+    ],
+    "restock": {
+      "enabled": true,
+      "intervalTurns": 24,
+      "restoreToInitial": true
+    },
+    "availabilityConditions": [
+      {
+        "type": "time",
+        "field": "hour",
+        "operator": ">=",
+        "value": 8
+      },
+      {
+        "type": "time",
+        "field": "hour",
+        "operator": "<",
+        "value": 22
+      }
+    ]
   }
 ]

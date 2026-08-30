@@ -65,6 +65,7 @@ import { InventorySystem, InventoryCommandResult } from '../inventory/inventory-
 import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
 import { CraftingSystem, type CraftingContext, type CraftingResult } from '../crafting/crafting-system.ts';
 import { EconomySystem, type ShopView, type TradeResult } from '../economy/economy-system.ts';
+import { WorldTimeSystem, type TimeAdvance, type TimeAdvanceResult } from '../time/world-time-system.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   deserializeSaveGame,
@@ -132,6 +133,7 @@ export class GameSession {
   private inventorySystem: InventorySystem;
   private craftingSystem: CraftingSystem;
   private economySystem: EconomySystem;
+  private worldTimeSystem: WorldTimeSystem;
   public events: TypedEventEmitter<GameRuntimeEvents>;
 
   constructor(
@@ -154,6 +156,7 @@ export class GameSession {
     this.inventorySystem = new InventorySystem(contentRegistry, (effects, state) => { this.effectExecutor.executeBatch(effects, { state, contentRegistry }); });
     this.craftingSystem = new CraftingSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.economySystem = new EconomySystem(contentRegistry, this.conditionRegistry);
+    this.worldTimeSystem = new WorldTimeSystem();
     this.baseManagementSystem = new BaseManagementSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.actionExecutor = new ActionExecutor(this.conditionRegistry, this.effectExecutor);
     this.outcomeEngine = new GameplayOutcomeEngine();
@@ -207,6 +210,8 @@ export class GameSession {
   public getShop(shopId: string): ShopView | undefined { return this.economySystem.getShop(shopId, this.state); }
   public buyFromShop(shopId: string, itemId: string, quantity = 1): TradeResult { const result=this.economySystem.buy(shopId,itemId,quantity,this.state);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result; }
   public sellToShop(shopId: string, itemId: string, quantity = 1): TradeResult { const result=this.economySystem.sell(shopId,itemId,quantity,this.state);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result; }
+  public advanceWorldTime(change: TimeAdvance): TimeAdvanceResult { const result=this.worldTimeSystem.advance(this.state.time,change);this.events.emit('STATE_CHANGED',this.state);return result; }
+  public rest(hours = 8): TimeAdvanceResult { const result=this.worldTimeSystem.rest(this.state.time,hours);this.events.emit('STATE_CHANGED',this.state);return result; }
 
   /** Applies HUD resource commands inside the runtime rather than mutating React snapshots. */
   public spendPlayerResource(resource: 'actionPoints' | 'ether', amount: number): PlayerResourceCommandResult {
@@ -310,7 +315,7 @@ export class GameSession {
   }
 
   public getTimeState(): TimeState {
-    return this.state.time;
+    return structuredClone(this.state.time);
   }
 
   public getContentRegistry(): ContentRegistry {
@@ -365,6 +370,7 @@ export class GameSession {
       defaultBehavior: 'Idle',
       abilityIds: this.contentRegistry.getCharacter(p.characterId)?.abilityIds ?? [],
       traits: this.contentRegistry.getCharacter(p.characterId)?.traits ?? [],
+      availabilityConditions: [],
     };
   }
 
@@ -376,6 +382,7 @@ export class GameSession {
     const blueprint = this.contentRegistry.getCharacter(npcId);
     const runtime = this.state.npcs[npcId];
     if (!blueprint && !runtime) return undefined;
+    if (blueprint?.availabilityConditions.length && !this.evaluateConditions(blueprint.availabilityConditions).allMet) return undefined;
 
     const base: CharacterDefinition = blueprint ?? {
       id: npcId,
@@ -411,6 +418,7 @@ export class GameSession {
       defaultBehavior: (runtime?.behaviorOverride as any) ?? 'Idle',
       abilityIds: [],
       traits: [],
+      availabilityConditions: [],
     };
 
     if (!runtime) return base;
@@ -579,9 +587,11 @@ export class GameSession {
       runtime.status = 'Visited';
     }
 
-    // Advance time if traveling from different location
+    // Resolve authored route/POI travel duration through the shared world clock.
     if (previousPoiId && previousPoiId !== poiId) {
-      this.state.time.turnCount += 1;
+      const map = this.contentRegistry.getMap(this.state.world.currentMapId);
+      const route = map?.routes.find((candidate) => (candidate.fromPoiId === previousPoiId && candidate.toPoiId === poiId) || (candidate.bidirectional && candidate.fromPoiId === poiId && candidate.toPoiId === previousPoiId));
+      this.worldTimeSystem.travel(this.state.time, route?.travelTimeMinutes ?? poi.travelTimeMinutes ?? map?.defaultTravelTimeMinutes ?? 30);
     }
 
     this.logJournal('World', `Arrived at ${poi.name} [${poi.district ?? 'Sector 09'}].`);

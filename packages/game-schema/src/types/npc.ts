@@ -3,6 +3,7 @@ import { BaseEntitySchema } from './base.ts';
 import { CharacterAttributesSchema, CharacterStatModifierSchema, CharacterStatusEffectSchema, DerivedVitalsSchema, SkillsSchema } from './stats.ts';
 import { Vector2DSchema } from './grid.ts';
 import { CharacterRelationshipSchema } from './character-management.ts';
+import { ConditionSchema } from './conditions.ts';
 
 export const CharacterInventorySlotSchema = z.object({
   itemId: z.string().min(1),
@@ -36,6 +37,7 @@ export const NPCSchema = BaseEntitySchema.extend({
   abilityIds: z.array(z.string()).default([]),
   traits: z.array(z.string()).default([]),
   initialRelationship: CharacterRelationshipSchema.optional(),
+  availabilityConditions: z.array(ConditionSchema).default([]),
 });
 
 export type NPC = z.infer<typeof NPCSchema>;

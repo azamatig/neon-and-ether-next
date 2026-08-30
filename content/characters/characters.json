@@ -70,7 +70,8 @@
     "perks": [],
     "temporaryModifiers": [],
     "statusEffects": [],
-    "progressionDefinitionId": "progression_player"
+    "progressionDefinitionId": "progression_player",
+    "availabilityConditions": []
   },
   {
     "id": "npc_kaelen_rourke",
@@ -141,6 +142,20 @@
     "temporaryModifiers": [],
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
-    "shopId": "shop_rourke_exchange"
+    "shopId": "shop_rourke_exchange",
+    "availabilityConditions": [
+      {
+        "type": "time",
+        "field": "hour",
+        "operator": ">=",
+        "value": 8
+      },
+      {
+        "type": "time",
+        "field": "hour",
+        "operator": "<",
+        "value": 22
+      }
+    ]
   }
 ]

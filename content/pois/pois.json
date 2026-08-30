@@ -113,7 +113,20 @@
     ],
     "eventIds": [],
     "visibilityConditions": [],
-    "availabilityConditions": [],
+    "availabilityConditions": [
+      {
+        "type": "time",
+        "field": "hour",
+        "operator": ">=",
+        "value": 8
+      },
+      {
+        "type": "time",
+        "field": "hour",
+        "operator": "<",
+        "value": 22
+      }
+    ],
     "actions": [
       {
         "id": "act_talk_rourke",

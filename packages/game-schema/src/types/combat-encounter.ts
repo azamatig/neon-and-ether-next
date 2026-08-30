@@ -49,6 +49,16 @@ export const CombatLootDropSchema = z.object({
 
 export type CombatLootDrop = z.infer<typeof CombatLootDropSchema>;
 
+export const EncounterModifierSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  description: z.string().optional(),
+  conditions: z.array(ConditionSchema).default([]),
+  effects: z.array(EffectSchema).default([]),
+});
+
+export type EncounterModifier = z.infer<typeof EncounterModifierSchema>;
+
 export const CombatEncounterSchema = BaseEntitySchema.extend({
   enemyGroups: z.array(EnemyGroupSetupSchema).min(1, 'Combat encounter must have at least one enemy group'),
   environment: z
@@ -59,6 +69,8 @@ export const CombatEncounterSchema = BaseEntitySchema.extend({
     })
     .default({ ambientEtherLevel: 20, lighting: 'Normal' }),
   threatLevel: z.number().int().min(1).max(5).default(1),
+  initialConditions: z.array(ConditionSchema).default([]),
+  modifiers: z.array(EncounterModifierSchema).default([]),
   escapeRules: EscapeRulesSchema.default({ allowed: true, conditions: [] }),
   victoryOutcome: z.custom<GameplayOutcome>().optional(),
   defeatOutcome: z.custom<GameplayOutcome>().optional(),

@@ -44,6 +44,7 @@ export class PlaytestController {
     this.record({ kind: 'QuestTransition', message: `Playtest quest stage: ${questId} / ${stageId}`, details: { questId, stageId } });
   }
   launchEncounter(encounterId: string): boolean { return this.session.startCombatEncounter(encounterId, false) && this.session.startTacticalCombat(encounterId); }
+  launchEncounterInGame(encounterId: string): boolean { const started=this.launchEncounter(encounterId);if(started)this.openGame();return started; }
   setPlayerValue(group: 'attributes' | 'vitals', key: string, value: number): void { this.mutate((state) => { (state.player[group] as unknown as Record<string, number>)[key] = value; }); }
   addItem(itemId: string, quantity: number): void { this.mutate((state) => { const slot = state.player.inventory.items.find((item) => item.itemId === itemId); if (slot) slot.quantity += quantity; else state.player.inventory.items.push({ itemId, quantity, isEquipped: false }); }); }
   setMoney(credits: number): void { this.mutate((state) => { state.player.inventory.credits = Math.max(0, Math.trunc(credits)); }); }

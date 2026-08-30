@@ -165,3 +165,11 @@ It composes the shared schema-driven Condition/Effect controls and the same reus
 `GameplayOutcome` editor used by Event authoring. Its preview renders the production
 `PoiScreen` from `@neon-ether/shared-ui` with a presentation-only draft snapshot; it
 does not copy the screen or evaluate gameplay rules in React.
+
+## Combat encounter authoring
+
+The Combat Encounter Editor mutates the canonical `CombatEncounter` definition used by
+preview, tactical combat, loot, and outcome resolution. Initial availability uses the
+shared Condition pipeline, while conditional encounter modifiers use the shared Effect
+pipeline at combat start. Quick playtest creates a normal injected `GameSession`; no
+editor-specific encounter DTO, combat state, or combat engine exists.

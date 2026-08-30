@@ -795,6 +795,8 @@ export class GameSession {
   // --- Combat Encounter & Resolution Lifecycle ---
 
   public startCombatEncounter(encounterId: string, previewFirst: boolean = true, originContext?: OriginContext): boolean {
+    const encounter = this.contentRegistry.getEncounter(encounterId);
+    if (!encounter || !this.evaluateConditions(encounter.initialConditions).allMet) return false;
     if (originContext) {
       this.state.world.activeOriginContext = originContext;
     }
@@ -827,6 +829,11 @@ export class GameSession {
   public startTacticalCombat(encounterId?: string): boolean {
     const id = encounterId ?? this.state.world.activeEncounterId;
     if (!id) return false;
+    const definition = this.contentRegistry.getEncounter(id);
+    if (!definition || !this.evaluateConditions(definition.initialConditions).allMet) return false;
+    for (const modifier of definition.modifiers) {
+      if (this.evaluateConditions(modifier.conditions).allMet) this.executeEffects(modifier.effects);
+    }
     const combat = this.turnBasedCombatEngine.createEncounter(id, this.state);
     const ok = combat !== undefined;
     if (combat) {

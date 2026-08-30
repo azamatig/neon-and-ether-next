@@ -8,22 +8,44 @@
       "Medical",
       "Consumable"
     ],
-    "category": "ChemSynthesis",
-    "requiredStationType": "FieldCrafting",
-    "ingredients": [
+    "category": "consumable",
+    "inputs": [
       {
         "itemId": "itm_cyberware_fiber",
         "quantity": 2
       }
     ],
-    "resultItemId": "con_ether_vial",
-    "resultQuantity": 1,
-    "craftingTimeTurns": 2,
-    "etherCost": 5,
-    "requiredSkill": {
-      "stat": "EtherTech",
-      "minLevel": 12
+    "requirements": [
+      {
+        "type": "attribute",
+        "minimum": 12,
+        "attribute": "etherTech"
+      }
+    ],
+    "toolItemIds": [],
+    "roomIds": [
+      "room_safehouse_workshop"
+    ],
+    "availableAt": [
+      "base",
+      "room"
+    ],
+    "output": {
+      "itemId": "con_ether_vial",
+      "quantity": 1
     },
+    "timeCost": {
+      "turns": 2
+    },
+    "conditions": [],
+    "effects": [
+      {
+        "type": "changeStat",
+        "stat": "currentEther",
+        "delta": -5,
+        "mode": "add"
+      }
+    ],
     "discoveredByDefault": true
   }
 ]

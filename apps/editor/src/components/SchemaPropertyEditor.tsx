@@ -125,7 +125,7 @@ export const SchemaPropertyEditor: React.FC<SchemaPropertyEditorProps> = ({ sche
   if (type === 'array') {
     const list = value as unknown[];
     if (['tags', 'traits', 'behaviorFlags'].includes(field)) return <TagsEditor value={list as string[]} onChange={onChange}/>;
-    if (/conditions$/i.test(field) || field === 'requirements') return <VariantListEditor kind="condition" value={list} content={content} path={path} onChange={onChange}/>;
+    if (/conditions$/i.test(field)) return <VariantListEditor kind="condition" value={list} content={content} path={path} onChange={onChange}/>;
     if (/effects$/i.test(field)) return <VariantListEditor kind="effect" value={list} content={content} path={path} onChange={onChange}/>;
     const element = schema._def.element as SchemaLike;
     const elementReference = referenceCollection([...path, field.endsWith('Ids') ? field.slice(0, -1) : ''], content);
@@ -144,6 +144,12 @@ export const SchemaPropertyEditor: React.FC<SchemaPropertyEditorProps> = ({ sche
   if (type === 'object') {
     const objectValue = value as Record<string, unknown>;
     return <div className="space-y-3 rounded border border-zinc-800 bg-black/20 p-3">{Object.entries(schema._def.shape).map(([key, child]) => <label key={key} className="block"><span className="mb-1 block text-[10px] uppercase tracking-wider text-zinc-500">{labelFor(key)}</span><SchemaPropertyEditor schema={child as SchemaLike} value={objectValue[key]} path={[...path, key]} content={content} onChange={(next) => { const copy = { ...objectValue }; if (next === undefined) delete copy[key]; else copy[key] = next; onChange(copy); }}/></label>)}</div>;
+  }
+  if (type === 'union') {
+    const variants = flattenVariants(schema);
+    const currentType = String((value as { type?: string })?.type ?? literalValue(variants[0]?._def.shape?.type) ?? '');
+    const selected = variants.find((variant) => literalValue(variant._def.shape.type) === currentType) ?? variants[0];
+    if (selected) return <div className="space-y-2"><select value={currentType} onChange={(event) => { const variant=variants.find((candidate)=>literalValue(candidate._def.shape.type)===event.target.value); if(variant) onChange(createValue(variant)); }} className={inputClass}>{variants.map((variant)=><option key={String(literalValue(variant._def.shape.type))}>{String(literalValue(variant._def.shape.type))}</option>)}</select><SchemaPropertyEditor schema={selected} value={value} path={path} content={content} onChange={onChange}/></div>;
   }
   return <textarea value={JSON.stringify(value, null, 2)} onChange={(event) => { try { onChange(JSON.parse(event.target.value)); } catch {} }} className={`${inputClass} min-h-24`}/>;
 };

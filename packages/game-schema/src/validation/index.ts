@@ -376,26 +376,28 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
 
   // 5. Validate Recipe references
   for (const recipe of content.recipes ?? []) {
-    if (!itemIds.has(recipe.resultItemId)) {
+    if (!itemIds.has(recipe.output.itemId)) {
       issues.push({
         severity: 'error',
         category: 'Recipe',
         targetId: recipe.id,
-        field: 'resultItemId',
-        message: `Recipe '${recipe.name}' result references missing itemId '${recipe.resultItemId}'`,
+        field: 'output.itemId',
+        message: `Recipe '${recipe.name}' output references missing itemId '${recipe.output.itemId}'`,
       });
     }
-    for (const ing of recipe.ingredients ?? []) {
+    for (const ing of recipe.inputs ?? []) {
       if (!itemIds.has(ing.itemId)) {
         issues.push({
           severity: 'error',
           category: 'Recipe',
           targetId: recipe.id,
-          field: 'ingredients',
-          message: `Recipe '${recipe.name}' ingredient references missing itemId '${ing.itemId}'`,
+          field: 'inputs',
+          message: `Recipe '${recipe.name}' input references missing itemId '${ing.itemId}'`,
         });
       }
     }
+    for (const toolId of recipe.toolItemIds) if (!itemIds.has(toolId)) issues.push({ severity:'error',category:'Recipe',targetId:recipe.id,field:'toolItemIds',message:`Recipe '${recipe.name}' references missing tool itemId '${toolId}'` });
+    for (const roomId of recipe.roomIds) if (!roomIds.has(roomId)) issues.push({ severity:'error',category:'Recipe',targetId:recipe.id,field:'roomIds',message:`Recipe '${recipe.name}' references missing roomId '${roomId}'` });
   }
 
   // 6. Validate GameEvent references

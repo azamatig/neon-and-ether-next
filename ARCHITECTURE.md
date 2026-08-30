@@ -124,3 +124,12 @@ framework-independent `ProgressionSystem` owns XP thresholds, level currency, an
 open-ended skill progression for players and companions. Combat, quest completion,
 events, and exploration use the same `grantRewards` effect; source systems do not
 implement their own XP mutations.
+
+## Crafting
+
+`CraftingSystem` is the single recipe executor for POI, base, and room/station access.
+Recipes declare inputs, level/attribute/skill requirements, non-consumed tool items,
+required room definitions, location availability, output, time, conditions, and effects.
+The runtime derives built room access from `BaseState`; presentation only sends a typed
+location context. Inventory, Condition, and Effect systems remain the owners of their
+respective rules.

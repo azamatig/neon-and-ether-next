@@ -14,6 +14,7 @@ const EDITABLE_FILES = {
   encounters: 'content/encounters/encounters.json',
   rooms: 'content/rooms/rooms.json',
   bases: 'content/bases/bases.json',
+  recipes: 'content/recipes/recipes.json',
 } as const;
 
 type EditableCategory = keyof typeof EDITABLE_FILES;
@@ -23,11 +24,11 @@ async function readJson(root: string, category: EditableCategory): Promise<unkno
 }
 
 async function readEditableContent(root: string, gameContent: Record<string, unknown>) {
-  const [items, npcs, enemies, pois, events, quests, maps, encounters, rooms, bases] = await Promise.all([
+  const [items, npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, recipes] = await Promise.all([
     readJson(root, 'items'), readJson(root, 'npcs'), readJson(root, 'enemies'), readJson(root, 'pois'), readJson(root, 'events'), readJson(root, 'quests'), readJson(root, 'maps'),
-    readJson(root, 'encounters'), readJson(root, 'rooms'), readJson(root, 'bases'),
+    readJson(root, 'encounters'), readJson(root, 'rooms'), readJson(root, 'bases'), readJson(root, 'recipes'),
   ]);
-  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps, encounters, rooms, bases };
+  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, recipes };
 }
 
 async function readKnownAssets(root: string): Promise<string[]> {

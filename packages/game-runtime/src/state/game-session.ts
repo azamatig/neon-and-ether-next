@@ -63,6 +63,7 @@ import { CombatEncounterEngine, ResolvedCombatPreview } from '../combat/combat-e
 import type { RuntimeTraceEvent, RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import { InventorySystem, InventoryCommandResult } from '../inventory/inventory-system.ts';
 import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
+import { CraftingSystem, type CraftingContext, type CraftingResult } from '../crafting/crafting-system.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   deserializeSaveGame,
@@ -128,6 +129,7 @@ export class GameSession {
   private questRuntime: QuestRuntime;
   private combatEncounterEngine: CombatEncounterEngine;
   private inventorySystem: InventorySystem;
+  private craftingSystem: CraftingSystem;
   public events: TypedEventEmitter<GameRuntimeEvents>;
 
   constructor(
@@ -148,6 +150,7 @@ export class GameSession {
     this.effectRegistry = effectRegistry ?? new EffectRegistry(true);
     this.effectExecutor = new EffectExecutor(this.effectRegistry, report);
     this.inventorySystem = new InventorySystem(contentRegistry, (effects, state) => { this.effectExecutor.executeBatch(effects, { state, contentRegistry }); });
+    this.craftingSystem = new CraftingSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.baseManagementSystem = new BaseManagementSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.actionExecutor = new ActionExecutor(this.conditionRegistry, this.effectExecutor);
     this.outcomeEngine = new GameplayOutcomeEngine();
@@ -189,6 +192,12 @@ export class GameSession {
   }
   public unequipSlot(slotId: string): InventoryCommandResult {
     const result = this.inventorySystem.unequip(this.state, slotId);
+    if (result.success) this.events.emit('STATE_CHANGED', this.state);
+    return result;
+  }
+  public getAvailableRecipes(context: CraftingContext) { return this.craftingSystem.getAvailable(this.state, context); }
+  public craftRecipe(recipeId: string, context: CraftingContext): CraftingResult {
+    const result = this.craftingSystem.craft(recipeId, this.state, context);
     if (result.success) this.events.emit('STATE_CHANGED', this.state);
     return result;
   }

@@ -33,6 +33,8 @@ import {
   StatusEffectDefinition,
   ShopDefinition,
   ValidationIssue,
+  WeatherDefinition,
+  WeatherProfile,
   validateGameContent,
 } from '@neon-ether/game-schema';
 
@@ -140,6 +142,8 @@ export class ContentRegistry {
   public readonly rooms = new RegistryCollection<BaseRoomDefinition>('Room');
   public readonly factions = new RegistryCollection<Faction>('Faction');
   public readonly dialogues = new RegistryCollection<DialogueTree>('Dialogue');
+  public readonly weatherDefinitions = new RegistryCollection<WeatherDefinition>('WeatherDefinition');
+  public readonly weatherProfiles = new RegistryCollection<WeatherProfile>('WeatherProfile');
 
   private lastValidationReport: ContentValidationReport | null = null;
   private version: string = '1.0.0';
@@ -241,6 +245,8 @@ export class ContentRegistry {
     for (const dialogue of content.dialogues ?? []) {
       this.dialogues.set(dialogue.id, dialogue);
     }
+    for (const weather of content.weatherDefinitions ?? []) this.weatherDefinitions.set(weather.id, weather);
+    for (const profile of content.weatherProfiles ?? []) this.weatherProfiles.set(profile.id, profile);
 
     return report;
   }
@@ -291,6 +297,8 @@ export class ContentRegistry {
       rooms: this.rooms.getAll(),
       factions: this.factions.getAll(),
       dialogues: this.dialogues.getAll(),
+      weatherDefinitions: this.weatherDefinitions.getAll(),
+      weatherProfiles: this.weatherProfiles.getAll(),
     };
   }
 
@@ -321,6 +329,8 @@ export class ContentRegistry {
     this.rooms.clear();
     this.factions.clear();
     this.dialogues.clear();
+    this.weatherDefinitions.clear();
+    this.weatherProfiles.clear();
     this.lastValidationReport = null;
   }
 

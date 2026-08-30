@@ -50,6 +50,7 @@ export function useGameRuntime() {
   const activeMap = useMemo(() => {
     return session.getContentRegistry().getMap(gameState.world.currentMapId);
   }, [session, gameState.world.currentMapId]);
+  const currentWeather = useMemo(() => activeMap ? session.getCurrentWeather(activeMap.id) : undefined, [session, activeMap, gameState.time, gameState.world.weatherByScope]);
 
   const activeDialogueTree = useMemo(() => {
     if (!gameState.world.activeDialogueTreeId) return null;
@@ -146,6 +147,7 @@ export function useGameRuntime() {
     gameState,
     resolvedPlayer,
     activeMap,
+    currentWeather,
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,

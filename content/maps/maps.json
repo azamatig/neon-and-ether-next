@@ -65,6 +65,7 @@
         "travelTimeMinutes": 30
       }
     ],
-    "defaultTravelTimeMinutes": 30
+    "defaultTravelTimeMinutes": 30,
+    "weatherProfileId": "weather_profile_urban"
   }
 ]

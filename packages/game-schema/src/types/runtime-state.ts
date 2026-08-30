@@ -243,6 +243,12 @@ export const TimeStateSchema = z.object({
 
 export type TimeState = z.infer<typeof TimeStateSchema>;
 
+export const WeatherStateSchema = z.object({
+  mapId: z.string().min(1), regionId: z.string().optional(), currentWeatherId: z.string().min(1), weatherProfileId: z.string().optional(),
+  startedAtWorldMinute: z.number().int().min(0), nextChangeAtWorldMinute: z.number().int().min(0).optional(), forced: z.boolean().default(false),
+});
+export type WeatherState = z.infer<typeof WeatherStateSchema>;
+
 // -----------------------------------------------------------------------------
 // 8. World Runtime State (Map, POIs, World Flags)
 // -----------------------------------------------------------------------------
@@ -325,6 +331,7 @@ export const WorldStateSchema = z.object({
   containers: z.record(z.string(), ContainerRuntimeStateSchema).default({}),
   doors: z.record(z.string(), DoorRuntimeStateSchema).default({}),
   ambientEtherModifier: z.number().min(0).max(2).default(1.0),
+  weatherByScope: z.record(z.string(), WeatherStateSchema).default({}),
 });
 
 export type WorldState = z.infer<typeof WorldStateSchema>;

@@ -5,6 +5,7 @@
 
 export * from './types/base.ts';
 export * from './types/world.ts';
+export * from './types/weather.ts';
 export * from './types/stats.ts';
 export * from './types/progression.ts';
 export * from './types/grid.ts';

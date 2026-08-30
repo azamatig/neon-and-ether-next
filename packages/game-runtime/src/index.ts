@@ -30,3 +30,4 @@ export * from './crafting/index.ts';
 export * from './economy/index.ts';
 export * from './time/index.ts';
 export * from './factions/faction-state.ts';
+export * from './weather/index.ts';

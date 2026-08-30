@@ -19,6 +19,7 @@ import { handleAndCondition, handleOrCondition, handleNotCondition } from './han
 import type { RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import { handleTimeCondition } from './handlers/time-condition.ts';
 import { handleFactionStateCondition } from './handlers/faction-state-condition.ts';
+import { handleWeatherCondition } from './handlers/weather-condition.ts';
 
 export class ConditionRegistry {
   private handlers = new Map<string, ConditionHandler<any>>();
@@ -47,6 +48,7 @@ export class ConditionRegistry {
     this.registerHandler('baseRoomExists', handleBaseRoomExistsCondition);
     this.registerHandler('randomChance', handleRandomChanceCondition);
     this.registerHandler('time', handleTimeCondition);
+    for(const type of ['currentWeather','weatherTag','environmentTag']) this.registerHandler(type,handleWeatherCondition);
 
     // Combinators
     this.registerHandler('and', handleAndCondition);

@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import { WeatherVisualsSchema } from './weather.ts';
 import { BaseEntitySchema } from './base.ts';
 import { ConditionSchema } from './conditions.ts';
 import { EffectSchema } from './effects.ts';
@@ -97,6 +98,8 @@ export const EventPresentationSchema = z.object({
   ambientGlow: z.enum(['cyan', 'purple', 'rose', 'amber', 'emerald', 'none']).default('cyan'),
   icon: z.string().optional(),
   themeMood: z.string().optional(),
+  weatherPresentation: z.enum(['inherit','disabled','override']).default('inherit'),
+  weatherVisualOverride: WeatherVisualsSchema.optional(),
 });
 
 export type EventPresentation = z.infer<typeof EventPresentationSchema>;
@@ -107,7 +110,7 @@ export const GameEventSchema = BaseEntitySchema.extend({
   conditions: z.array(ConditionSchema).default([]),
   triggerConditions: z.array(ConditionSchema).default([]),
   availabilityConditions: z.array(ConditionSchema).default([]),
-  presentation: EventPresentationSchema.default({ layoutStyle: 'standard', ambientGlow: 'cyan' }),
+  presentation: EventPresentationSchema.default({ layoutStyle: 'standard', ambientGlow: 'cyan', weatherPresentation:'inherit' }),
   steps: z.array(EventStepSchema).min(1, 'Event must contain at least one step'),
   entryEffects: z.array(EffectSchema).default([]),
   completionEffects: z.array(EffectSchema).default([]),

@@ -137,6 +137,7 @@ export function createInitialWorldState(overrides: Partial<WorldState> = {}): Wo
     containers: overrides.containers ?? {},
     doors: overrides.doors ?? {},
     ambientEtherModifier: overrides.ambientEtherModifier ?? 1.0,
+    weatherByScope: overrides.weatherByScope ?? {},
   };
 }
 

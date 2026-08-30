@@ -246,6 +246,10 @@ export type AdvanceTimeEffect = z.infer<typeof AdvanceTimeEffectSchema>;
 
 export const GrantRewardsEffectSchema = RewardDefinitionSchema.extend({ type: z.literal('grantRewards') });
 export type GrantRewardsEffect = z.infer<typeof GrantRewardsEffectSchema>;
+export const SetWeatherEffectSchema = z.object({ type:z.literal('setWeather'), weatherId:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional(), durationMinutes:z.number().int().positive().optional() });
+export const ChangeWeatherEffectSchema = z.object({ type:z.literal('changeWeather'), weatherProfileId:z.string().optional(), mapId:z.string().optional(), regionId:z.string().optional() });
+export type SetWeatherEffect=z.infer<typeof SetWeatherEffectSchema>;
+export type ChangeWeatherEffect=z.infer<typeof ChangeWeatherEffectSchema>;
 
 /**
  * Universal Effect Discriminated Union.
@@ -275,6 +279,8 @@ export const EffectSchema = z.discriminatedUnion('type', [
   RecruitNpcEffectSchema,
   AdvanceTimeEffectSchema,
   GrantRewardsEffectSchema,
+  SetWeatherEffectSchema,
+  ChangeWeatherEffectSchema,
 ]);
 
 export type Effect = z.infer<typeof EffectSchema>;

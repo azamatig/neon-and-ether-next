@@ -153,6 +153,8 @@ export const POISchema = BaseEntitySchema.extend({
   ambientEtherLevel: z.number().int().min(0).max(100).default(20),
   controllingFactionId: z.string().optional(),
   ownerFactionId: z.string().optional(),
+  environmentalExposure: z.enum(['outdoor', 'sheltered', 'indoor']).default('outdoor'),
+  weatherVisualScale: z.number().min(0).max(1).optional(),
 });
 
 export type POI = z.infer<typeof POISchema>;

@@ -6,7 +6,8 @@
 
 import React, { useState } from 'react';
 import { CharacterDefinition, GameMap } from '@neon-ether/game-schema';
-import { ResolvedPOI } from '@neon-ether/game-runtime';
+import { ResolvedEnvironment, ResolvedPOI } from '@neon-ether/game-runtime';
+import { EnvironmentalLayer } from './EnvironmentalLayer.tsx';
 import { Badge } from './Badge.tsx';
 import { Button } from './Button.tsx';
 import { Panel } from './Panel.tsx';
@@ -54,6 +55,7 @@ export interface PoiScreenProps {
     maxHp: number;
     credits: number;
   };
+  environment?: ResolvedEnvironment;
 }
 
 export const PoiScreen: React.FC<PoiScreenProps> = ({
@@ -64,6 +66,7 @@ export const PoiScreen: React.FC<PoiScreenProps> = ({
   onExecuteAction,
   onTalkNpc,
   playerVitals,
+  environment,
 }) => {
   const [executingActionId, setExecutingActionId] = useState<string | null>(null);
 
@@ -105,7 +108,7 @@ export const PoiScreen: React.FC<PoiScreenProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-4 font-mono select-none">
+    <div className="relative w-full h-full flex flex-col gap-4 font-mono select-none overflow-hidden"><EnvironmentalLayer visuals={environment?.definition.visuals} intensity={poi.environmentalExposure==='indoor'?0:poi.environmentalExposure==='sheltered'?.35:poi.weatherVisualScale??1} label={environment?.definition.name}/>
       {/* Navigation Breadcrumbs & Return Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-950/90 border border-zinc-800 p-3 rounded-xl backdrop-blur-md shadow-xl">
         <div className="flex items-center gap-2 text-xs">

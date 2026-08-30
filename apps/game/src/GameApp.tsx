@@ -22,6 +22,7 @@ export const GameApp: React.FC = () => {
     gameState,
     resolvedPlayer,
     activeMap,
+    currentWeather,
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,
@@ -142,6 +143,7 @@ export const GameApp: React.FC = () => {
               <div className="flex-1 min-h-[460px] relative flex flex-col">
                 {isBaseMode ? <BaseScreen base={gameState.base} onReturn={returnToMap}/> : isPoiMode ? (
                   <PoiScreen
+                    environment={currentWeather}
                     poi={selectedPoi}
                     map={activeMap}
                     stationedNpcs={stationedNpcsAtSelectedPoi}
@@ -164,6 +166,7 @@ export const GameApp: React.FC = () => {
                   />
                 ) : (
                   <WorldMapView
+                    environment={currentWeather}
                     map={activeMap}
                     pois={poisForActiveMap}
                     currentPoiId={gameState.world.currentPoiId}

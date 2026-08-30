@@ -66,6 +66,7 @@ import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
 import { CraftingSystem, type CraftingContext, type CraftingResult } from '../crafting/crafting-system.ts';
 import { EconomySystem, type ShopView, type TradeResult } from '../economy/economy-system.ts';
 import { WorldTimeSystem, type TimeAdvance, type TimeAdvanceResult } from '../time/world-time-system.ts';
+import { WeatherSystem, type ResolvedEnvironment } from '../weather/weather-system.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   deserializeSaveGame,
@@ -134,6 +135,7 @@ export class GameSession {
   private craftingSystem: CraftingSystem;
   private economySystem: EconomySystem;
   private worldTimeSystem: WorldTimeSystem;
+  private weatherSystem: WeatherSystem;
   public events: TypedEventEmitter<GameRuntimeEvents>;
 
   constructor(
@@ -157,6 +159,7 @@ export class GameSession {
     this.craftingSystem = new CraftingSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.economySystem = new EconomySystem(contentRegistry, this.conditionRegistry);
     this.worldTimeSystem = new WorldTimeSystem();
+    this.weatherSystem = new WeatherSystem(contentRegistry,(conditions,state)=>evaluateConditions(conditions,{state,contentRegistry},this.conditionRegistry).allMet);
     this.baseManagementSystem = new BaseManagementSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.actionExecutor = new ActionExecutor(this.conditionRegistry, this.effectExecutor);
     this.outcomeEngine = new GameplayOutcomeEngine();
@@ -167,6 +170,7 @@ export class GameSession {
 
     // Initial modular state
     this.state = createInitialGameStateFromContent(this.contentRegistry.exportSnapshot());
+    this.weatherSystem.update(this.state);
     const initialBase = this.contentRegistry.getBase(this.state.base.baseId);
     if (initialBase && this.evaluateConditions(initialBase.unlockConditions).allMet) {
       this.effectExecutor.executeBatch(initialBase.globalEffects, { state: this.state, contentRegistry: this.contentRegistry });
@@ -214,8 +218,9 @@ export class GameSession {
   public getShop(shopId: string): ShopView | undefined { return this.economySystem.getShop(shopId, this.state); }
   public buyFromShop(shopId: string, itemId: string, quantity = 1): TradeResult { const result=this.economySystem.buy(shopId,itemId,quantity,this.state);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result; }
   public sellToShop(shopId: string, itemId: string, quantity = 1): TradeResult { const result=this.economySystem.sell(shopId,itemId,quantity,this.state);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result; }
-  public advanceWorldTime(change: TimeAdvance): TimeAdvanceResult { const result=this.worldTimeSystem.advance(this.state.time,change);this.events.emit('STATE_CHANGED',this.state);return result; }
-  public rest(hours = 8): TimeAdvanceResult { const result=this.worldTimeSystem.rest(this.state.time,hours);this.events.emit('STATE_CHANGED',this.state);return result; }
+  public getCurrentWeather(mapId=this.state.world.currentMapId,regionId?:string):ResolvedEnvironment|undefined { return mapId ? structuredClone(this.weatherSystem.resolve(this.state,mapId,regionId)) : undefined; }
+  public advanceWorldTime(change: TimeAdvance): TimeAdvanceResult { const result=this.worldTimeSystem.advance(this.state.time,change);this.weatherSystem.update(this.state);this.events.emit('STATE_CHANGED',this.state);return result; }
+  public rest(hours = 8): TimeAdvanceResult { const result=this.worldTimeSystem.rest(this.state.time,hours);this.weatherSystem.update(this.state);this.events.emit('STATE_CHANGED',this.state);return result; }
 
   /** Applies HUD resource commands inside the runtime rather than mutating React snapshots. */
   public spendPlayerResource(resource: 'actionPoints' | 'ether', amount: number): PlayerResourceCommandResult {

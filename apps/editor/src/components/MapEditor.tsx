@@ -53,7 +53,7 @@ export const MapEditor: React.FC<MapEditorProps> = ({ map, pois, onChangeMap, on
   const addPoi = () => {
     let index = pois.length + 1; while (pois.some((poi) => poi.id === `poi_map_${index}`)) index += 1;
     const id = `poi_map_${index}`;
-    const poi: POI = { id, name: 'New Location', description: '', tags: [], mapId: map.id, regionId: selectedRegionId || undefined, mapPosition: { x: 50, y: 50 }, icon: 'MapPin', category: 'Landmark', visibilityConditions: [], availabilityConditions: [], actions: [], npcIds: [], questIds: [], eventIds: [], encounterIds: [], dangerLevel: 1, ambientEtherLevel: map.ambientEtherLevel };
+    const poi: POI = { id, name: 'New Location', description: '', tags: [], mapId: map.id, regionId: selectedRegionId || undefined, mapPosition: { x: 50, y: 50 }, icon: 'MapPin', category: 'Landmark', visibilityConditions: [], availabilityConditions: [], actions: [], npcIds: [], questIds: [], eventIds: [], encounterIds: [], dangerLevel: 1, ambientEtherLevel: map.ambientEtherLevel, environmentalExposure: 'outdoor' };
     onChangePois([...pois, poi]); onChangeMap({ ...map, poiIds: [...map.poiIds, id] }); setSelectedPoiId(id);
   };
   const deletePoi = () => {

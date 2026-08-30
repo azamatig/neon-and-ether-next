@@ -16,6 +16,7 @@ import { AbilitySchema, CombatAIProfileSchema, StatusEffectDefinitionSchema } fr
 import { BaseJobDefinitionSchema, CharacterManagementRuleSchema, PartySlotDefinitionSchema } from './character-management.ts';
 import { ProgressionDefinitionSchema } from './progression.ts';
 import { BaseUpgradeDefinitionSchema, PlayerBaseDefinitionSchema } from './base-management.ts';
+import { WeatherDefinitionSchema, WeatherProfileSchema } from './weather.ts';
 
 export const GameContentSchema = z.object({
   version: z.string().default('1.0.0'),
@@ -40,6 +41,8 @@ export const GameContentSchema = z.object({
   recipes: z.array(RecipeSchema).default([]),
   rooms: z.array(BaseRoomDefinitionSchema).default([]),
   factions: z.array(FactionSchema).default([]),
+  weatherDefinitions: z.array(WeatherDefinitionSchema).default([]),
+  weatherProfiles: z.array(WeatherProfileSchema).default([]),
   dialogues: z.array(DialogueTreeSchema).default([]),
   // Backward compatibility alias for characters
   characters: z.array(NPCSchema).optional(),

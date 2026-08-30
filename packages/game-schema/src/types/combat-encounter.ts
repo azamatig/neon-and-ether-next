@@ -66,8 +66,12 @@ export const CombatEncounterSchema = BaseEntitySchema.extend({
       ambientEtherLevel: z.number().int().min(0).max(100).default(20),
       lighting: z.enum(['Normal', 'Dim', 'Dark', 'Strobe']).default('Normal'),
       hazardDescription: z.string().optional(),
+      inheritWorldEnvironment: z.boolean().default(true),
+      weatherOverrideId: z.string().optional(),
+      environmentTags: z.array(z.string()).default([]),
+      gameplayModifiers: z.record(z.string(), z.number()).default({}),
     })
-    .default({ ambientEtherLevel: 20, lighting: 'Normal' }),
+    .default({ ambientEtherLevel: 20, lighting: 'Normal', inheritWorldEnvironment:true, environmentTags:[], gameplayModifiers:{} }),
   threatLevel: z.number().int().min(1).max(5).default(1),
   initialConditions: z.array(ConditionSchema).default([]),
   modifiers: z.array(EncounterModifierSchema).default([]),

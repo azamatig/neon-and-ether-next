@@ -1,0 +1,3 @@
+[
+  {"id":"weather_profile_urban","name":"Urban Climate","description":"Weighted atmospheric conditions for city districts.","tags":["urban"],"fallbackWeatherId":"weather_clear","possibleWeather":[{"weatherId":"weather_clear","weight":5,"minimumDurationMinutes":120,"maximumDurationMinutes":360,"timeConditions":[]},{"weatherId":"weather_rain","weight":3,"minimumDurationMinutes":90,"maximumDurationMinutes":240,"timeConditions":[]},{"weatherId":"weather_fog","weight":2,"minimumDurationMinutes":60,"maximumDurationMinutes":180,"timeConditions":[{"type":"time","field":"timeOfDay","operator":"==","value":"Night"}]},{"weatherId":"weather_ether_storm","weight":1,"minimumDurationMinutes":45,"maximumDurationMinutes":120,"timeConditions":[]}]}
+]

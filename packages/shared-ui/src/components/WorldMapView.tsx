@@ -6,7 +6,8 @@
 
 import React, { useState } from 'react';
 import { GameMap, POICategory } from '@neon-ether/game-schema';
-import { ResolvedPOI } from '@neon-ether/game-runtime';
+import { ResolvedEnvironment, ResolvedPOI } from '@neon-ether/game-runtime';
+import { EnvironmentalLayer } from './EnvironmentalLayer.tsx';
 import { Badge } from './Badge.tsx';
 import { Button } from './Button.tsx';
 import { Panel } from './Panel.tsx';
@@ -47,6 +48,7 @@ export interface WorldMapViewProps {
     currentEther: number;
     maxEther: number;
   };
+  environment?: ResolvedEnvironment;
 }
 
 export const WorldMapView: React.FC<WorldMapViewProps> = ({
@@ -56,6 +58,7 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
   onSelectPoi,
   onTravelToPoi,
   playerVitals,
+  environment,
 }) => {
   const [hoveredPoiId, setHoveredPoiId] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>('ALL');
@@ -150,7 +153,8 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
   const categories = ['ALL', ...Array.from(new Set(pois.map((p) => p.category)))];
 
   return (
-    <div className="w-full h-full flex flex-col gap-3 font-mono select-none">
+    <div className="relative w-full h-full flex flex-col gap-3 font-mono select-none overflow-hidden"><EnvironmentalLayer visuals={environment?.definition.visuals} label={environment?.definition.name}/>
+      {environment&&<div className="pointer-events-none absolute right-4 top-4 z-30 rounded border border-cyan-400/30 bg-black/70 px-2 py-1 text-[10px] text-cyan-200">{environment.definition.visuals.icon??'◌'} {environment.definition.name}</div>}
       {/* Map District Header Bar */}
       <div className="bg-zinc-950/90 border border-zinc-800/80 p-3 rounded-xl backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shadow-xl">
         <div className="flex items-center gap-3">

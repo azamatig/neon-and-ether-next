@@ -27,6 +27,8 @@ import baseJobsData from './character-management/jobs.json';
 import partySlotsData from './character-management/party-slots.json';
 import basesData from './bases/bases.json';
 import baseUpgradesData from './bases/upgrades.json';
+import weatherDefinitionsData from './weather/weather.json';
+import weatherProfilesData from './weather/profiles.json';
 
 export const gameContent: GameContent = GameContentSchema.parse({
   version: '1.0.0',
@@ -53,6 +55,8 @@ export const gameContent: GameContent = GameContentSchema.parse({
   rooms: roomsData,
   factions: factionsData,
   dialogues: dialoguesData,
+  weatherDefinitions: weatherDefinitionsData,
+  weatherProfiles: weatherProfilesData,
 });
 
 export const GAME_CONTENT_MANIFEST = gameContent;

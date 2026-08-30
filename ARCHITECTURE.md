@@ -195,3 +195,7 @@ shops, events, POIs, NPCs, quests, and combat contain no faction-specific branch
 The Editor relation matrix writes the same directional relation list loaded by
 `ContentRegistry`; no diplomacy simulation, territory state machine, or faction AI is
 introduced.
+
+## Data-driven weather and environments
+
+Weather definitions and weighted profiles are immutable content. `WeatherSystem` resolves map/region-scoped weather only when world time advances and persists the result in `WorldState.weatherByScope`; it uses no real-time background timer. Conditions and Effects access weather through their shared registries, while consumers receive generic tags and numeric modifiers rather than branching on weather IDs. `EnvironmentalLayer` is the single pointer-transparent, capped-particle renderer shared by map, POI, and Editor previews. POIs declare exposure, events may alter only presentation, and encounters can inherit or override resolved environmental metadata without coupling combat logic to weather rendering.

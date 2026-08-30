@@ -149,3 +149,11 @@ rest, and authored route/POI travel duration. The common `time` condition makes 
 Event, Shop, and NPC availability use the existing Condition pipeline. The common
 `advanceTime` effect supports turns, minutes, hours, and days. No per-NPC daily
 simulation or presentation-side clock logic is introduced.
+
+## Event authoring
+
+The Editor provides both a generic schema inspector and an ordered scene editor for
+`GameEvent`. The scene editor changes the same event, step, choice, check, effect, and
+`GameplayOutcome` objects consumed by `EventRuntime`; it has no graph DTO, conversion
+layer, or editor-only event format. Local step links and cross-event outcome links stay
+as stable string IDs and remain subject to the shared content-graph validator.

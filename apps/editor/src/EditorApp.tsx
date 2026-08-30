@@ -1,13 +1,14 @@
 /** Development-only schema-driven content editor. */
 import React, { useEffect, useMemo, useState } from 'react';
 import { ContentRegistry } from '@neon-ether/game-runtime';
-import { BaseRoomDefinitionSchema, CombatEncounterSchema, EnemySchema, GameContent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, PlayerBaseDefinitionSchema, POISchema, RecipeSchema, ShopDefinitionSchema, Quest, QuestSchema, ValidationIssue } from '@neon-ether/game-schema';
+import { BaseRoomDefinitionSchema, CombatEncounterSchema, EnemySchema, GameContent, GameEvent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, PlayerBaseDefinitionSchema, POISchema, RecipeSchema, ShopDefinitionSchema, Quest, QuestSchema, ValidationIssue } from '@neon-ether/game-schema';
 import { AlertTriangle, Bug, CheckCircle2, Copy, ListTree, Network, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { SchemaPropertyEditor } from './components/SchemaPropertyEditor.tsx';
 import { QuestGraphEditor } from './components/QuestGraphEditor.tsx';
 import { MapEditor } from './components/MapEditor.tsx';
 import { ValidationPanel } from './components/ValidationPanel.tsx';
 import { PlaytestPanel } from './components/PlaytestPanel.tsx';
+import { GameEventEditor } from './components/GameEventEditor.tsx';
 
 type Category = 'items' | 'npcs' | 'enemies' | 'pois' | 'events' | 'quests' | 'maps' | 'encounters' | 'rooms' | 'bases' | 'recipes' | 'shops';
 type EditableEntity = GameContent[Category][number];
@@ -48,6 +49,7 @@ export const EditorApp: React.FC = () => {
   const [status, setStatus] = useState('Loading content files…');
   const [questView, setQuestView] = useState<'inspector' | 'graph'>('inspector');
   const [mapView, setMapView] = useState<'inspector' | 'visual'>('visual');
+  const [eventView, setEventView] = useState<'inspector' | 'scene'>('scene');
   const [validationOpen, setValidationOpen] = useState(false);
   const [knownAssets, setKnownAssets] = useState<string[]>([]);
   const [validationPreview, setValidationPreview] = useState<{ issue: ValidationIssue; entity: unknown } | null>(null);
@@ -139,14 +141,15 @@ export const EditorApp: React.FC = () => {
         <main className="flex min-h-0 flex-col rounded-xl border border-zinc-800 bg-black/40 p-4">
           {selected ? <>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <div><p className="text-[10px] text-cyan-400">{category === 'quests' && questView === 'graph' ? 'VISUAL QUEST GRAPH' : category === 'maps' && mapView === 'visual' ? 'VISUAL MAP EDITOR' : 'SCHEMA-DRIVEN INSPECTOR'} // {category.toUpperCase()}</p><h2 className="font-bold text-white">{selected.name}</h2></div>
+              <div><p className="text-[10px] text-cyan-400">{category === 'quests' && questView === 'graph' ? 'VISUAL QUEST GRAPH' : category === 'maps' && mapView === 'visual' ? 'VISUAL MAP EDITOR' : category === 'events' && eventView === 'scene' ? 'ORDERED GAME EVENT EDITOR' : 'SCHEMA-DRIVEN INSPECTOR'} // {category.toUpperCase()}</p><h2 className="font-bold text-white">{selected.name}</h2></div>
               <div className="flex gap-2">
                 {category === 'quests' && <div className="flex rounded border border-zinc-700 p-0.5"><button type="button" onClick={() => setQuestView('inspector')} className={`flex items-center gap-1 rounded px-2 py-1.5 text-[10px] ${questView === 'inspector' ? 'bg-cyan-500/15 text-cyan-300' : 'text-zinc-500'}`}><ListTree className="h-3 w-3"/> Inspector</button><button type="button" onClick={() => setQuestView('graph')} className={`flex items-center gap-1 rounded px-2 py-1.5 text-[10px] ${questView === 'graph' ? 'bg-purple-500/15 text-purple-300' : 'text-zinc-500'}`}><Network className="h-3 w-3"/> Graph</button></div>}
                 {category === 'maps' && <div className="flex rounded border border-zinc-700 p-0.5"><button type="button" onClick={() => setMapView('inspector')} className={`flex items-center gap-1 rounded px-2 py-1.5 text-[10px] ${mapView === 'inspector' ? 'bg-cyan-500/15 text-cyan-300' : 'text-zinc-500'}`}><ListTree className="h-3 w-3"/> Inspector</button><button type="button" onClick={() => setMapView('visual')} className={`flex items-center gap-1 rounded px-2 py-1.5 text-[10px] ${mapView === 'visual' ? 'bg-purple-500/15 text-purple-300' : 'text-zinc-500'}`}><Network className="h-3 w-3"/> Map</button></div>}
+                {category === 'events' && <div className="flex rounded border border-zinc-700 p-0.5"><button type="button" onClick={() => setEventView('scene')} className={`flex items-center gap-1 rounded px-2 py-1.5 text-[10px] ${eventView === 'scene' ? 'bg-purple-500/15 text-purple-300' : 'text-zinc-500'}`}><ListTree className="h-3 w-3"/> Scene</button><button type="button" onClick={() => setEventView('inspector')} className={`flex items-center gap-1 rounded px-2 py-1.5 text-[10px] ${eventView === 'inspector' ? 'bg-cyan-500/15 text-cyan-300' : 'text-zinc-500'}`}><Network className="h-3 w-3"/> Inspector</button></div>}
                 <button onClick={renameEntity} className="rounded border border-zinc-700 px-3 py-2 text-xs">Rename</button><button onClick={deleteEntity} className="flex items-center gap-1 rounded border border-rose-500/40 px-3 py-2 text-xs text-rose-300"><Trash2 className="h-3 w-3"/> Delete</button>
               </div>
             </div>
-            <div className="max-h-[570px] flex-1 overflow-auto pr-2">{category === 'quests' && questView === 'graph' ? <QuestGraphEditor quest={selected as Quest} onChange={editEntity}/> : category === 'maps' && mapView === 'visual' ? <MapEditor map={selected as GameMap} pois={content!.pois} onChangeMap={editEntity} onChangePois={(pois) => updateCollection('pois', pois)}/> : <SchemaPropertyEditor schema={CATEGORY_SCHEMAS[category]} value={selected} content={content!} onChange={editEntity}/>}</div>
+            <div className="max-h-[570px] flex-1 overflow-auto pr-2">{category === 'quests' && questView === 'graph' ? <QuestGraphEditor quest={selected as Quest} onChange={editEntity}/> : category === 'maps' && mapView === 'visual' ? <MapEditor map={selected as GameMap} pois={content!.pois} onChangeMap={editEntity} onChangePois={(pois) => updateCollection('pois', pois)}/> : category === 'events' && eventView === 'scene' ? <GameEventEditor event={selected as GameEvent} content={content!} onChange={editEntity}/> : <SchemaPropertyEditor schema={CATEGORY_SCHEMAS[category]} value={selected} content={content!} onChange={editEntity}/>}</div>
             {selectedValidation && !selectedValidation.success && <div className="mt-2 rounded border border-rose-500/30 bg-rose-950/20 p-2 text-[10px] text-rose-300">{selectedValidation.error.issues.slice(0, 5).map((issue) => <div key={`${issue.path.join('.')}-${issue.message}`}>{issue.path.join('.')}: {issue.message}</div>)}</div>}
           </> : <div className="m-auto text-zinc-600">Select or create an entity.</div>}
           <footer className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800 pt-3 text-xs"><span className="text-zinc-500">{status}</span><button type="button" onClick={() => setValidationOpen(true)} className={`flex items-center gap-2 ${report?.errorsCount ? 'text-rose-400' : 'text-emerald-400'}`}>{report?.errorsCount ? <AlertTriangle className="h-4 w-4"/> : <CheckCircle2 className="h-4 w-4"/>} Validation: {report?.errorsCount ?? 0} errors · {report?.warningsCount ?? 0} warnings · {report?.infoCount ?? 0} info</button></footer>

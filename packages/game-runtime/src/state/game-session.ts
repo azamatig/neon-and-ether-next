@@ -59,6 +59,7 @@ import { PoiActionPipeline, PoiActionPipelineResult } from '../actions/poi-actio
 import { EventRuntime, ResolvedEventState } from '../events/event-runtime.ts';
 import { QuestRuntime, QuestCommandResult, ResolvedQuestState } from '../quests/quest-runtime.ts';
 import { CombatEncounterEngine, ResolvedCombatPreview } from '../combat/combat-encounter-engine.ts';
+import type { RuntimeTraceEvent, RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   deserializeSaveGame,
@@ -96,6 +97,7 @@ export interface GameRuntimeEvents {
   GAME_EVENT_TRIGGERED: { eventId: string; payload?: any };
   ACTION_EXECUTED: { actionId: string; actionName: string; effectResults: BatchEffectExecutionResult };
   POI_ACTION_EXECUTED: { poiId: string; actionId: string; actionLabel: string; resolution: ActionResolution };
+  RUNTIME_TRACED: RuntimeTraceEvent;
 }
 
 export interface PlayerResourceCommandResult {
@@ -128,7 +130,8 @@ export class GameSession {
     contentRegistry: ContentRegistry,
     seed: number = 1337,
     conditionRegistry?: ConditionRegistry,
-    effectRegistry?: EffectRegistry
+    effectRegistry?: EffectRegistry,
+    private readonly trace?: RuntimeTraceSink,
   ) {
     this.contentRegistry = contentRegistry;
     this.diceRoller = new DiceRoller(seed);
@@ -136,9 +139,10 @@ export class GameSession {
     this.turnBasedCombatEngine = new TurnBasedCombatEngine(contentRegistry, this.diceRoller);
     this.characterManagementSystem = new CharacterManagementSystem(contentRegistry);
     // Initialize registries and executors
-    this.conditionRegistry = conditionRegistry ?? new ConditionRegistry(true);
+    const report = (event: RuntimeTraceEvent) => { this.trace?.(event); this.events.emit('RUNTIME_TRACED', event); };
+    this.conditionRegistry = conditionRegistry ?? new ConditionRegistry(true, report);
     this.effectRegistry = effectRegistry ?? new EffectRegistry(true);
-    this.effectExecutor = new EffectExecutor(this.effectRegistry);
+    this.effectExecutor = new EffectExecutor(this.effectRegistry, report);
     this.baseManagementSystem = new BaseManagementSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.actionExecutor = new ActionExecutor(this.conditionRegistry, this.effectExecutor);
     this.outcomeEngine = new GameplayOutcomeEngine();
@@ -216,7 +220,10 @@ export class GameSession {
   }
 
   private emitQuestResult(result: QuestCommandResult): QuestCommandResult {
-    if (result.success) this.events.emit('STATE_CHANGED', this.state);
+    if (result.success) {
+      this.reportTrace({ kind: 'QuestTransition', message: result.message, details: { questId: result.resolved?.definition.id, stageId: result.resolved?.stage.id } });
+      this.events.emit('STATE_CHANGED', this.state);
+    }
     return result;
   }
 
@@ -657,6 +664,7 @@ export class GameSession {
 
   public resolveOutcome(outcome: GameplayOutcome): void {
     this.outcomeEngine.resolveOutcome(outcome, this.state, this.contentRegistry);
+    this.reportTrace({ kind: 'OutcomeResolved', message: `Outcome resolved: ${outcome.type}`, details: { type: outcome.type } });
     this.events.emit('STATE_CHANGED', this.state);
   }
 
@@ -683,6 +691,7 @@ export class GameSession {
       (cat, txt) => this.logJournal(cat, txt)
     );
     if (ok) {
+      this.reportTrace({ kind: 'EventTransition', message: `Event started: ${eventId}`, details: { eventId, stepId: this.state.world.activeEventStepId } });
       this.events.emit('GAME_EVENT_TRIGGERED', { eventId });
       this.events.emit('STATE_CHANGED', this.state);
     }
@@ -765,6 +774,7 @@ export class GameSession {
       this.resolvePendingAiTurns();
     }
     if (ok) {
+      this.reportTrace({ kind: 'CombatStarted', message: `Combat started: ${id}`, details: { encounterId: id } });
       this.events.emit('COMBAT_STATE_CHANGED', undefined);
       this.events.emit('STATE_CHANGED', this.state);
     }
@@ -807,6 +817,7 @@ export class GameSession {
     const id = encounterId ?? this.state.world.activeEncounterId;
     if (!id) return undefined;
     const res = this.combatEncounterEngine.resolveVictory(id, this.state, this.contentRegistry, rounds, (cat, txt) => this.logJournal(cat, txt));
+    this.reportTrace({ kind: 'CombatCompleted', message: `Combat completed: victory in ${rounds} rounds`, details: { encounterId: id, outcome: 'Victory', rounds } });
     this.events.emit('STATE_CHANGED', this.state);
     return res;
   }
@@ -815,6 +826,7 @@ export class GameSession {
     const id = encounterId ?? this.state.world.activeEncounterId;
     if (!id) return undefined;
     const res = this.combatEncounterEngine.resolveDefeat(id, this.state, this.contentRegistry, (cat, txt) => this.logJournal(cat, txt));
+    this.reportTrace({ kind: 'CombatCompleted', message: 'Combat completed: defeat', details: { encounterId: id, outcome: 'Defeat' } });
     this.events.emit('STATE_CHANGED', this.state);
     return res;
   }
@@ -1050,6 +1062,11 @@ export class GameSession {
     }
     this.events.emit('STATE_CHANGED', this.state);
     return result;
+  }
+
+  private reportTrace(event: RuntimeTraceEvent): void {
+    this.trace?.(event);
+    this.events.emit('RUNTIME_TRACED', event);
   }
 
   public executeEffects(effects: Effect[]): BatchEffectExecutionResult {

@@ -89,3 +89,12 @@ Editor builds follow a separate entry point and never participate in this runtim
 - The graph pass validates global and nested IDs, entity references, conditions, effects, outcomes, quest/event transitions, map membership/routes, combat encounters, base rooms, and host-provided asset paths.
 - `ContentRegistry` runs the same validator before indexing. Strict loads throw when the report contains errors.
 - The production Vite build invokes `scripts/validate-content.ts` before bundling and must fail on any validation error. The Editor remains buildable so authors can repair invalid drafts.
+
+## Development playtest boundary
+
+The Editor owns its playtest command facade and GameState inspector under
+`apps/editor/src/playtest`. It drives a normal injected `GameSession` and transfers a
+save snapshot to the Game only through a Vite-pruned `import.meta.env.DEV` bootstrap.
+The runtime exposes an optional presentation-neutral trace sink; it has no dependency
+on Editor or React. Editor panels, mutation helpers, and debug markers are excluded
+from the production Game bundle.

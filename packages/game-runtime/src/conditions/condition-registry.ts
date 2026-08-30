@@ -16,14 +16,19 @@ import { handleCompanionPresentCondition } from './handlers/companion-present-co
 import { handleBaseRoomExistsCondition } from './handlers/base-room-exists-condition.ts';
 import { handleRandomChanceCondition } from './handlers/random-chance-condition.ts';
 import { handleAndCondition, handleOrCondition, handleNotCondition } from './handlers/combinator-conditions.ts';
+import type { RuntimeTraceSink } from '../observability/runtime-trace.ts';
 
 export class ConditionRegistry {
   private handlers = new Map<string, ConditionHandler<any>>();
 
-  constructor(registerDefaults: boolean = true) {
+  constructor(registerDefaults: boolean = true, private trace?: RuntimeTraceSink) {
     if (registerDefaults) {
       this.registerDefaultHandlers();
     }
+  }
+
+  public report(type: string, isMet: boolean, reason?: string): void {
+    this.trace?.({ kind: 'ConditionChecked', message: `${type}: ${isMet ? 'passed' : 'failed'}`, details: { type, isMet, reason } });
   }
 
   private registerDefaultHandlers(): void {

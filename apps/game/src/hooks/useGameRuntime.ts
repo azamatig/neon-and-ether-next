@@ -20,7 +20,12 @@ export function useGameRuntime() {
   const session = useMemo(() => {
     const registry = new ContentRegistry();
     registry.loadManifest(GAME_CONTENT_MANIFEST);
-    return new GameSession(registry);
+    const nextSession = new GameSession(registry);
+    if ((import.meta as ImportMeta & { env: { DEV: boolean } }).env.DEV && new URLSearchParams(window.location.search).has('editorPlaytest')) {
+      const playtestSave = localStorage.getItem('__neon_editor_playtest');
+      if (playtestSave) nextSession.loadSave(playtestSave);
+    }
+    return nextSession;
   }, []);
 
   const [gameState, setGameState] = useState<GameState>(() => session.getState());

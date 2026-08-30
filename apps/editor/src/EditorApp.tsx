@@ -2,11 +2,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ContentRegistry } from '@neon-ether/game-runtime';
 import { BaseRoomDefinitionSchema, CombatEncounterSchema, EnemySchema, GameContent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, PlayerBaseDefinitionSchema, POISchema, Quest, QuestSchema, ValidationIssue } from '@neon-ether/game-schema';
-import { AlertTriangle, CheckCircle2, Copy, ListTree, Network, Plus, Save, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, Bug, CheckCircle2, Copy, ListTree, Network, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { SchemaPropertyEditor } from './components/SchemaPropertyEditor.tsx';
 import { QuestGraphEditor } from './components/QuestGraphEditor.tsx';
 import { MapEditor } from './components/MapEditor.tsx';
 import { ValidationPanel } from './components/ValidationPanel.tsx';
+import { PlaytestPanel } from './components/PlaytestPanel.tsx';
 
 type Category = 'items' | 'npcs' | 'enemies' | 'pois' | 'events' | 'quests' | 'maps' | 'encounters' | 'rooms' | 'bases';
 type EditableEntity = GameContent[Category][number];
@@ -48,6 +49,7 @@ export const EditorApp: React.FC = () => {
   const [validationOpen, setValidationOpen] = useState(false);
   const [knownAssets, setKnownAssets] = useState<string[]>([]);
   const [validationPreview, setValidationPreview] = useState<{ issue: ValidationIssue; entity: unknown } | null>(null);
+  const [playtestOpen, setPlaytestOpen] = useState(false);
 
   useEffect(() => {
     fetch('/__editor/content').then(async (response) => {
@@ -123,7 +125,7 @@ export const EditorApp: React.FC = () => {
     <div className="min-h-screen bg-[#050713] p-4 text-zinc-200 font-mono">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border border-purple-500/30 bg-black/50 p-4 rounded-xl">
         <div><p className="text-[10px] tracking-[0.3em] text-purple-400">DEVELOPMENT APPLICATION</p><h1 className="text-lg font-bold text-white">NEON & ETHER // CONTENT EDITOR MVP</h1></div>
-        <button onClick={save} disabled={!dirty.size || Boolean(report?.errorsCount)} className="flex items-center gap-2 rounded border border-cyan-500/50 bg-cyan-500/10 px-4 py-2 text-xs text-cyan-300 disabled:opacity-40"><Save className="h-4 w-4"/> Save {dirty.size ? `(${dirty.size})` : ''}</button>
+        <div className="flex gap-2"><button type="button" onClick={() => setPlaytestOpen(true)} disabled={!content || Boolean(report?.errorsCount)} className="flex items-center gap-2 rounded border border-purple-500/50 bg-purple-500/10 px-4 py-2 text-xs text-purple-300 disabled:opacity-40"><Bug className="h-4 w-4"/> Playtest</button><button onClick={save} disabled={!dirty.size || Boolean(report?.errorsCount)} className="flex items-center gap-2 rounded border border-cyan-500/50 bg-cyan-500/10 px-4 py-2 text-xs text-cyan-300 disabled:opacity-40"><Save className="h-4 w-4"/> Save {dirty.size ? `(${dirty.size})` : ''}</button></div>
       </header>
       <div className="grid min-h-[680px] grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
         <aside className="rounded-xl border border-zinc-800 bg-black/40 p-3">
@@ -149,6 +151,7 @@ export const EditorApp: React.FC = () => {
         </main>
       </div>
       {validationOpen && report && <ValidationPanel report={report} onNavigate={navigateToIssue} onClose={() => setValidationOpen(false)}/>}
+      {playtestOpen && content && <PlaytestPanel content={content} onClose={() => setPlaytestOpen(false)}/>}
       {validationPreview && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"><section className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl border border-cyan-500/30 bg-[#050713] p-4"><header className="mb-3 flex justify-between"><div><p className="text-[9px] uppercase text-cyan-400">{validationPreview.issue.category} · {validationPreview.issue.field}</p><h2 className="font-bold text-white">{validationPreview.issue.targetId}</h2></div><button type="button" onClick={() => setValidationPreview(null)}>×</button></header><p className="mb-3 text-xs text-rose-300">{validationPreview.issue.message}</p><pre className="rounded border border-zinc-800 bg-black/40 p-3 text-[10px] text-emerald-300">{JSON.stringify(validationPreview.entity, null, 2)}</pre></section></div>}
     </div>
   );

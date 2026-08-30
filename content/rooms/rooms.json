@@ -23,7 +23,7 @@
     ],
     "recommendedEnemies": [],
     "recommendedPois": [
-      "poi_sec09_hideout"
+      "poi_glassline_safehouse"
     ],
     "minSecurityLevel": 1,
     "isHazardous": false,
@@ -76,7 +76,7 @@
     ],
     "recommendedEnemies": [],
     "recommendedPois": [
-      "poi_sec09_hideout"
+      "poi_glassline_safehouse"
     ],
     "minSecurityLevel": 1,
     "isHazardous": false,

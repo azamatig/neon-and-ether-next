@@ -26,6 +26,11 @@ export function PlaytestPanel({ content, onClose }: { content: GameContent; onCl
   const [factionId, setFactionId] = useState(content.factions[0]?.id ?? '');
   const [targetFactionId,setTargetFactionId]=useState(content.factions[1]?.id??content.factions[0]?.id??'');
   const [flag, setFlag] = useState('debug_flag');
+  const checkpoints = [
+    ...content.pois.flatMap((entity)=>entity.tags.filter((tag)=>tag.startsWith('Checkpoint:')).map((tag)=>({name:tag.slice(11),kind:'poi' as const,id:entity.id}))),
+    ...content.events.flatMap((entity)=>entity.tags.filter((tag)=>tag.startsWith('Checkpoint:')).map((tag)=>({name:tag.slice(11),kind:'event' as const,id:entity.id}))),
+    ...content.encounters.flatMap((entity)=>entity.tags.filter((tag)=>tag.startsWith('Checkpoint:')).map((tag)=>({name:tag.slice(11),kind:'encounter' as const,id:entity.id}))),
+  ];
   useEffect(() => controller.subscribe(() => refresh((value) => value + 1)), [controller]);
   const select = 'w-full rounded border border-zinc-700 bg-zinc-950 p-2 text-xs';
   const button = 'rounded border border-cyan-500/40 bg-cyan-500/10 px-3 py-2 text-xs text-cyan-300';
@@ -34,6 +39,7 @@ export function PlaytestPanel({ content, onClose }: { content: GameContent; onCl
     <nav className="my-3 flex gap-2">{(['tools','state','factions','log'] as const).map((value) => <button key={value} onClick={() => setTab(value)} className={`rounded px-4 py-2 text-xs uppercase ${tab===value?'bg-purple-500/20 text-purple-300':'text-zinc-500'}`}>{value}{value==='log'?` (${controller.log.length})`:''}</button>)}</nav>
     <div className="flex-1 overflow-auto">
       {tab === 'tools' && <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <Tool title="Content Checkpoints">{checkpoints.map(checkpoint=><button key={`${checkpoint.kind}:${checkpoint.id}`} className={button} onClick={()=>{if(checkpoint.kind==='poi')controller.teleport(checkpoint.id);if(checkpoint.kind==='event')controller.launchEvent(checkpoint.id);if(checkpoint.kind==='encounter')controller.launchEncounter(checkpoint.id);}}>{checkpoint.name}</button>)}</Tool>
         <Tool title="Launch Map / POI"><select className={select} value={mapId} onChange={e=>{setMapId(e.target.value);setPoiId('')}}>{content.maps.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select><select className={select} value={poiId} onChange={e=>setPoiId(e.target.value)}><option value="">Map root</option>{pois.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select><button className={button} onClick={()=>controller.launchLocation(mapId,poiId||undefined)}>Prepare</button></Tool>
         <Tool title="Launch Event"><select className={select} value={eventId} onChange={e=>setEventId(e.target.value)}>{content.events.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select><button className={button} onClick={()=>controller.launchEvent(eventId)}>Start</button></Tool>
         <Tool title="Quest Stage"><select className={select} value={questId} onChange={e=>{setQuestId(e.target.value);setStageId(content.quests.find(q=>q.id===e.target.value)?.initialStageId??'')}}>{content.quests.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select><select className={select} value={stageId} onChange={e=>setStageId(e.target.value)}>{Object.values(quest?.stages??{}).map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select><button className={button} onClick={()=>controller.launchQuestStage(questId,stageId)}>Start stage</button></Tool>

@@ -1,8 +1,8 @@
 [
   {
-    "id": "shop_rourke_exchange",
-    "name": "Rourke Exchange",
-    "description": "A compact illicit gear counter.",
+    "id": "shop_glassline_nightmarket",
+    "name": "Nix's Night-Market Ledger",
+    "description": "A practical inventory whose prices respond to Syndicate standing.",
     "tags": [
       "BlackMarket"
     ],
@@ -10,13 +10,23 @@
     "inventory": [
       {
         "itemId": "con_ether_vial",
-        "quantity": 4,
-        "maxQuantity": 4
-      },
-      {
-        "itemId": "itm_cyberware_fiber",
         "quantity": 8,
         "maxQuantity": 8
+      },
+      {
+        "itemId": "con_trauma_patch",
+        "quantity": 5,
+        "maxQuantity": 5
+      },
+      {
+        "itemId": "arm_rainweave_coat",
+        "quantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemId": "itm_glassline_access_shard",
+        "quantity": 1,
+        "maxQuantity": 1
       }
     ],
     "buyRules": {
@@ -24,30 +34,34 @@
       "conditions": [],
       "categories": [],
       "requiredTags": [],
-      "priceMultiplier": 1.05
+      "priceMultiplier": 1
     },
     "sellRules": {
       "enabled": true,
       "conditions": [],
       "categories": [],
       "requiredTags": [],
-      "priceMultiplier": 0.5
+      "priceMultiplier": 0.55
     },
     "priceModifiers": [
       {
-        "id": "trusted_customer",
+        "id": "syndicate_friend_discount",
         "conditions": [
           {
-            "type": "relationship",
-            "npcId": "npc_kaelen_rourke",
+            "type": "factionReputation",
+            "factionId": "fac_ether_syndicate",
             "operator": ">=",
-            "value": 40
+            "value": 20
           }
         ],
         "requiredPlayerTraits": [],
-        "mapIds": [],
-        "poiIds": [],
-        "buyMultiplier": 0.9,
+        "mapIds": [
+          "map_slums_sec09"
+        ],
+        "poiIds": [
+          "poi_glassline_market"
+        ],
+        "buyMultiplier": 0.8,
         "sellMultiplier": 1.1,
         "flatAdjustment": 0
       }
@@ -59,16 +73,9 @@
     },
     "availabilityConditions": [
       {
-        "type": "time",
-        "field": "hour",
-        "operator": ">=",
-        "value": 8
-      },
-      {
-        "type": "time",
-        "field": "hour",
-        "operator": "<",
-        "value": 22
+        "type": "factionHostile",
+        "factionId": "fac_ether_syndicate",
+        "hostile": false
       }
     ]
   }

@@ -3,11 +3,28 @@
     "id": "status_burning",
     "name": "Burning",
     "description": "Thermal residue continues to damage the target.",
-    "tags": ["DamageOverTime", "Thermal"],
+    "tags": [
+      "DamageOverTime",
+      "Thermal"
+    ],
     "tickTiming": "TurnEnd",
     "damagePerTick": 3,
     "healingPerTick": 0,
     "armorModifier": 0,
     "icon": "Flame"
+  },
+  {
+    "id": "status_shrapnel_wound",
+    "name": "Shrapnel Wound",
+    "description": "A persistent combat injury that bleeds at the end of each turn.",
+    "tags": [
+      "Injury",
+      "Physical"
+    ],
+    "tickTiming": "TurnEnd",
+    "damagePerTick": 1,
+    "healingPerTick": 0,
+    "armorModifier": -1,
+    "icon": "Activity"
   }
 ]

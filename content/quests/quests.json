@@ -1,138 +1,25 @@
 [
   {
-    "id": "qst_subgrid_vault_heist",
-    "name": "Sub-Grid Infiltration: Vault 09",
-    "title": "Sub-Grid Infiltration: Vault 09",
-    "description": "Infiltrate the OmniCorp terminal room in Sector 09, bypass cyber security, and retrieve the encrypted Ether Conduit.",
+    "id": "qst_glassline_signal",
+    "name": "The Signal Beneath Glass",
+    "title": "The Signal Beneath Glass",
+    "description": "Trace a stolen-memory broadcast into the sealed Glassline annex and decide who controls the recovered archive.",
+    "summary": "A compact branching investigation through Glassline Ward.",
     "tags": [
-      "Heist",
-      "Infiltration",
-      "Syndicate",
-      "MainQuest"
+      "MainQuest",
+      "Glassline",
+      "VerticalSlice"
     ],
-    "factionId": "fac_ether_syndicate",
-    "faction": "fac_ether_syndicate",
-    "summary": "Infiltrate the OmniCorp terminal room in Sector 09, bypass cyber security, and retrieve the encrypted Ether Conduit.",
+    "factionId": "fac_undercity_drifters",
+    "faction": "fac_undercity_drifters",
     "recommendedLevel": 1,
-    "initialStageId": "stage_contract",
-    "rewardCredits": 1500,
-    "rewardXp": 350,
-    "rewardItemIds": [
-      "wpn_ether_baton"
-    ],
-    "isMainQuest": true,
-    "isRepeatable": false,
     "stages": {
-      "stage_contract": {
-        "id": "stage_contract",
+      "stage_intel": {
+        "id": "stage_intel",
         "stageNumber": 1,
-        "title": "Choose the Breach Vector",
-        "journalEntry": "Rourke needs the Vault 09 cipher. The optical terminal supports covert and direct approaches.",
-        "objectives": [
-          {
-            "id": "obj_choose_approach",
-            "description": "Choose infiltration or combat at the optical terminal",
-            "objectiveType": "InteractPOI",
-            "targetId": "poi_sec09_terminal",
-            "requiredCount": 1,
-            "approachType": "Infiltration"
-          }
-        ],
-        "entryConditions": [],
-        "completionConditions": [],
-        "actions": [
-          {
-            "id": "act_choose_covert",
-            "label": "Commit to covert breach",
-            "conditions": [
-              {
-                "type": "playerStat",
-                "stat": "etherTech",
-                "operator": ">=",
-                "value": 10
-              }
-            ],
-            "effects": [
-              {
-                "type": "advanceQuest",
-                "questId": "qst_subgrid_vault_heist",
-                "completeObjectiveId": "obj_choose_approach"
-              },
-              {
-                "type": "setFlag",
-                "flag": "vault_route",
-                "value": "covert"
-              }
-            ],
-            "hideIfUnavailable": false
-          },
-          {
-            "id": "act_choose_assault",
-            "label": "Commit to direct assault",
-            "conditions": [],
-            "effects": [
-              {
-                "type": "advanceQuest",
-                "questId": "qst_subgrid_vault_heist",
-                "completeObjectiveId": "obj_choose_approach"
-              },
-              {
-                "type": "setFlag",
-                "flag": "vault_route",
-                "value": "assault"
-              }
-            ],
-            "hideIfUnavailable": false
-          }
-        ],
-        "entryEffects": [],
-        "completionEffects": [],
-        "branches": [
-          {
-            "id": "branch_covert",
-            "label": "Silent extraction",
-            "conditions": [
-              {
-                "type": "flag",
-                "flag": "vault_route",
-                "operator": "==",
-                "value": "covert"
-              }
-            ],
-            "effects": [],
-            "targetStageId": "stage_covert"
-          },
-          {
-            "id": "branch_assault",
-            "label": "Hot extraction",
-            "conditions": [
-              {
-                "type": "flag",
-                "flag": "vault_route",
-                "operator": "==",
-                "value": "assault"
-              }
-            ],
-            "effects": [],
-            "targetStageId": "stage_assault"
-          }
-        ]
-      },
-      "stage_covert": {
-        "id": "stage_covert",
-        "stageNumber": 2,
-        "title": "Silent Extraction",
-        "journalEntry": "The patrol telemetry is spoofed. Extract and transmit the cipher before the false route expires.",
-        "objectives": [
-          {
-            "id": "obj_extract_covert",
-            "description": "Transmit the cipher without triggering security",
-            "objectiveType": "HackNode",
-            "targetId": "poi_sec09_terminal",
-            "requiredCount": 1,
-            "approachType": "EtherTech"
-          }
-        ],
+        "title": "Find the Closed-Zone Frequency",
+        "journalEntry": "Talk to Dr. Sable at the Glassline clinic.",
+        "objectives": [],
         "entryConditions": [],
         "completionConditions": [],
         "actions": [],
@@ -140,21 +27,64 @@
         "completionEffects": [],
         "branches": []
       },
-      "stage_assault": {
-        "id": "stage_assault",
+      "stage_access": {
+        "id": "stage_access",
         "stageNumber": 2,
-        "title": "Hot Extraction",
-        "journalEntry": "The alarm is live. Defeat the response team, then transmit the cipher.",
-        "objectives": [
-          {
-            "id": "obj_defeat_response",
-            "description": "Defeat the OmniCorp response team",
-            "objectiveType": "KillTarget",
-            "targetId": "enc_omnicorp_patrol_sector09",
-            "requiredCount": 1,
-            "approachType": "Combat"
-          }
-        ],
+        "title": "Find a Way Inside",
+        "journalEntry": "Obtain a shard, craft a bypass spike, or trust your intrusion skills.",
+        "objectives": [],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": []
+      },
+      "stage_infiltrate": {
+        "id": "stage_infiltrate",
+        "stageNumber": 3,
+        "title": "Cross Platform Zero",
+        "journalEntry": "Reach the sealed annex entrance beneath the transit station.",
+        "objectives": [],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": []
+      },
+      "stage_confrontation": {
+        "id": "stage_confrontation",
+        "stageNumber": 4,
+        "title": "Break the Lockdown",
+        "journalEntry": "Enter the annex core and survive its security response.",
+        "objectives": [],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": []
+      },
+      "stage_choice": {
+        "id": "stage_choice",
+        "stageNumber": 5,
+        "title": "Decide the Archive’s Fate",
+        "journalEntry": "Choose who receives the recovered memory archive.",
+        "objectives": [],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": []
+      },
+      "stage_return": {
+        "id": "stage_return",
+        "stageNumber": 6,
+        "title": "Return to Glassline",
+        "journalEntry": "Return to the safehouse and witness the consequences.",
+        "objectives": [],
         "entryConditions": [],
         "completionConditions": [],
         "actions": [],
@@ -162,6 +92,85 @@
         "completionEffects": [],
         "branches": []
       }
-    }
+    },
+    "initialStageId": "stage_intel",
+    "rewardCredits": 300,
+    "rewardXp": 400,
+    "rewardItemIds": [
+      "arm_rainweave_coat"
+    ],
+    "reputationChanges": {
+      "fac_undercity_drifters": 5
+    },
+    "isMainQuest": true,
+    "isRepeatable": false
+  },
+  {
+    "id": "qst_clinic_coolant",
+    "name": "Cold Cradle",
+    "description": "Recover sterile coolant for Sable’s failing clinic cradle.",
+    "tags": [
+      "SideQuest",
+      "Clinic"
+    ],
+    "factionId": "fac_undercity_drifters",
+    "recommendedLevel": 1,
+    "initialStageId": "stage_find",
+    "stages": {
+      "stage_find": {
+        "id": "stage_find",
+        "stageNumber": 1,
+        "title": "Recover Cradle Coolant",
+        "journalEntry": "Search the abandoned transit station for sterile coolant.",
+        "objectives": [],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": []
+      }
+    },
+    "rewardCredits": 120,
+    "rewardXp": 100,
+    "rewardItemIds": [
+      "con_trauma_patch"
+    ],
+    "isMainQuest": false,
+    "isRepeatable": false
+  },
+  {
+    "id": "qst_market_signal",
+    "name": "Dead-Air Ledger",
+    "description": "Intercept a corporate burst transmission for Nix.",
+    "tags": [
+      "SideQuest",
+      "Market"
+    ],
+    "factionId": "fac_ether_syndicate",
+    "recommendedLevel": 1,
+    "initialStageId": "stage_scan",
+    "stages": {
+      "stage_scan": {
+        "id": "stage_scan",
+        "stageNumber": 1,
+        "title": "Scan the Dead Band",
+        "journalEntry": "Use the market antenna during rain, fog, or an ether storm.",
+        "objectives": [],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": []
+      }
+    },
+    "rewardCredits": 160,
+    "rewardXp": 90,
+    "rewardItemIds": [
+      "itm_glassline_access_shard"
+    ],
+    "isMainQuest": false,
+    "isRepeatable": false
   }
 ]

@@ -75,7 +75,7 @@ export class BaseManagementSystem {
   }
 
   public execute(command: BaseManagementCommand, state: GameState): BaseManagementResult {
-    if (command.type === 'BuildRoom') return this.buildRoom(command.slotId, command.roomDefinitionId, command.roomInstanceId, state);
+    if (command.type === 'BuildRoom') return this.buildRoom(command.slotId, command.roomDefinitionId, command.roomInstanceId ?? this.nextRoomInstanceId(command.slotId, state), state);
     if (command.type === 'InstallUpgrade') return this.installUpgrade(command.roomInstanceId, command.upgradeId, state);
     if (command.type === 'InstallBaseUpgrade') return this.installBaseUpgrade(command.upgradeId,state);
     if (command.type === 'StoreItem') return this.transferItem(command.itemId, command.quantity, state, true);
@@ -141,4 +141,5 @@ export class BaseManagementSystem {
   private spendResources(cost: Record<string, number>, state: GameState): void {
     for (const [id, amount] of Object.entries(cost)) state.base.resources[id] = (state.base.resources[id] ?? 0) - amount;
   }
+  private nextRoomInstanceId(slotId:string,state:GameState):string { let index=1; while(state.base.rooms[`room:${slotId}:${index}`]) index+=1; return `room:${slotId}:${index}`; }
 }

@@ -250,6 +250,9 @@ export const SetWeatherEffectSchema = z.object({ type:z.literal('setWeather'), w
 export const ChangeWeatherEffectSchema = z.object({ type:z.literal('changeWeather'), weatherProfileId:z.string().optional(), mapId:z.string().optional(), regionId:z.string().optional() });
 export type SetWeatherEffect=z.infer<typeof SetWeatherEffectSchema>;
 export type ChangeWeatherEffect=z.infer<typeof ChangeWeatherEffectSchema>;
+/** Generic persistent character status application shared by combat, events, items, and environments. */
+export const ApplyStatusEffectSchema=z.object({type:z.literal('applyStatusEffect'),statusEffectId:z.string().min(1),durationTurns:z.number().int().positive(),targetCharacterId:z.string().optional()});
+export type ApplyStatusEffect=z.infer<typeof ApplyStatusEffectSchema>;
 
 /**
  * Universal Effect Discriminated Union.
@@ -281,6 +284,7 @@ export const EffectSchema = z.discriminatedUnion('type', [
   GrantRewardsEffectSchema,
   SetWeatherEffectSchema,
   ChangeWeatherEffectSchema,
+  ApplyStatusEffectSchema,
 ]);
 
 export type Effect = z.infer<typeof EffectSchema>;

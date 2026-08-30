@@ -142,12 +142,17 @@ export function useGameRuntime() {
     return result;
   };
 
+  const baseResidents = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[]).filter((npc) => ['companion','employee'].includes(npc.relationship.status)).map((runtime) => ({ runtime, name: session.getContentRegistry().getNPC(runtime.npcId)?.name ?? runtime.npcId }));
+  const baseJobs = session.getContentRegistry().baseJobs.getAll();
+
   return {
     session,
     gameState,
     resolvedPlayer,
     activeMap,
     currentWeather,
+    baseResidents,
+    baseJobs,
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,

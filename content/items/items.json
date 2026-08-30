@@ -175,5 +175,156 @@
     "modifiers": [],
     "equipEffects": [],
     "unequipEffects": []
+  },
+  {
+    "id": "itm_glassline_access_shard",
+    "name": "Glassline Access Shard",
+    "description": "A signed corporate credential accepted by the annex turnstiles.",
+    "tags": [
+      "QuestItem",
+      "Credential"
+    ],
+    "category": "quest",
+    "rarity": "Common",
+    "weightKg": 0.2,
+    "valueCredits": 260,
+    "icon": "Box",
+    "grantedAbilityIds": [],
+    "stackable": true,
+    "maxStack": 99,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "apUseCost": 1
+  },
+  {
+    "id": "itm_clinic_coolant",
+    "name": "Sterile Cradle Coolant",
+    "description": "Rare coolant needed to restart the clinic recovery cradle.",
+    "tags": [
+      "QuestItem",
+      "Medical"
+    ],
+    "category": "quest",
+    "rarity": "Common",
+    "weightKg": 0.2,
+    "valueCredits": 90,
+    "icon": "Box",
+    "grantedAbilityIds": [],
+    "stackable": true,
+    "maxStack": 99,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "apUseCost": 1
+  },
+  {
+    "id": "itm_signal_scrap",
+    "name": "Resonant Signal Scrap",
+    "description": "Conductive transit scrap used in bypass tools.",
+    "tags": [
+      "CraftingMaterial",
+      "Technical"
+    ],
+    "category": "material",
+    "rarity": "Common",
+    "weightKg": 0.2,
+    "valueCredits": 55,
+    "icon": "Box",
+    "grantedAbilityIds": [],
+    "stackable": true,
+    "maxStack": 99,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "apUseCost": 1
+  },
+  {
+    "id": "itm_bypass_spike",
+    "name": "Disposable Bypass Spike",
+    "description": "A crafted intrusion spike; possession unlocks a silent annex approach.",
+    "tags": [
+      "Tool",
+      "Hacking"
+    ],
+    "category": "consumable",
+    "rarity": "Common",
+    "weightKg": 0.2,
+    "valueCredits": 180,
+    "icon": "Box",
+    "grantedAbilityIds": [],
+    "stackable": true,
+    "maxStack": 99,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "apUseCost": 1
+  },
+  {
+    "id": "arm_rainweave_coat",
+    "name": "Rainweave Field Coat",
+    "description": "Insulated street armor that improves protection in exposed districts.",
+    "tags": [
+      "Armor",
+      "Weatherproof"
+    ],
+    "category": "armor",
+    "rarity": "Common",
+    "weightKg": 0.2,
+    "valueCredits": 420,
+    "icon": "Shield",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "body"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "armorRating",
+        "operation": "add",
+        "value": 2
+      },
+      {
+        "target": "etherResistance",
+        "operation": "add",
+        "value": 3
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "apUseCost": 1
+  },
+  {
+    "id": "con_trauma_patch",
+    "name": "Trauma Patch",
+    "description": "Single-use field dressing recovered from security teams.",
+    "tags": [
+      "Consumable",
+      "Medical"
+    ],
+    "category": "consumable",
+    "rarity": "Common",
+    "weightKg": 0.2,
+    "valueCredits": 95,
+    "icon": "Activity",
+    "grantedAbilityIds": [],
+    "stackable": true,
+    "maxStack": 99,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "apUseCost": 1
   }
 ]

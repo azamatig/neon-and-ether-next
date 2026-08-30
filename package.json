@@ -11,7 +11,8 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "check:architecture": "bun scripts/check-architecture.ts",
-    "validate:content": "bun scripts/validate-content.ts"
+    "validate:content": "bun scripts/validate-content.ts",
+    "playtest:slice": "bun scripts/playtest-vertical-slice.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

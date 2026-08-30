@@ -56,7 +56,7 @@ export const RoomUpgradeDefinitionSchema = BaseUpgradeDefinitionSchema;
 export type RoomUpgradeDefinition = BaseUpgradeDefinition;
 
 export const BaseManagementCommandSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('BuildRoom'), slotId: z.string(), roomDefinitionId: z.string(), roomInstanceId: z.string() }),
+  z.object({ type: z.literal('BuildRoom'), slotId: z.string(), roomDefinitionId: z.string(), roomInstanceId: z.string().optional() }),
   z.object({ type: z.literal('InstallUpgrade'), roomInstanceId: z.string(), upgradeId: z.string() }),
   z.object({ type: z.literal('InstallBaseUpgrade'), upgradeId: z.string() }),
   z.object({ type: z.literal('StoreItem'), itemId: z.string(), quantity: z.number().int().min(1) }),

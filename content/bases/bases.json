@@ -1,21 +1,54 @@
 [
   {
     "id": "base_safehouse_sec09",
-    "name": "Sector-09 Safehouse",
+    "name": "Glassline Courier Safehouse",
     "description": "A modular underground base linked to the Sector-09 hideout.",
-    "tags": ["PlayerBase", "Safehouse"],
-    "poiId": "poi_sec09_hideout",
+    "tags": [
+      "PlayerBase",
+      "Safehouse"
+    ],
+    "poiId": "poi_glassline_safehouse",
     "maximumRoomSlots": 3,
     "roomSlots": [
-      { "id": "base_slot_utility", "slotType": "Utility", "allowedRoomTypes": ["Armory", "ServerRoom", "GeneratorHub"], "unlockedByDefault": true },
-      { "id": "base_slot_support", "slotType": "Support", "allowedRoomTypes": ["MedBay", "Barracks", "EtherLaboratory"], "unlockedByDefault": true },
-      { "id": "base_slot_expansion", "slotType": "Standard", "allowedRoomTypes": [], "unlockedByDefault": false }
+      {
+        "id": "base_slot_utility",
+        "slotType": "Utility",
+        "allowedRoomTypes": [
+          "Armory",
+          "ServerRoom",
+          "GeneratorHub"
+        ],
+        "unlockedByDefault": true
+      },
+      {
+        "id": "base_slot_support",
+        "slotType": "Support",
+        "allowedRoomTypes": [
+          "MedBay",
+          "Barracks",
+          "EtherLaboratory"
+        ],
+        "unlockedByDefault": true
+      },
+      {
+        "id": "base_slot_expansion",
+        "slotType": "Standard",
+        "allowedRoomTypes": [],
+        "unlockedByDefault": false
+      }
     ],
     "startingRooms": [
-      { "slotId": "base_slot_utility", "roomDefinitionId": "room_safehouse_workshop", "roomInstanceId": "base_room_workshop" },
-      { "slotId": "base_slot_support", "roomDefinitionId": "room_safehouse_medbay", "roomInstanceId": "base_room_medbay" }
+      {
+        "slotId": "base_slot_utility",
+        "roomDefinitionId": "room_safehouse_workshop",
+        "roomInstanceId": "base_room_workshop"
+      }
     ],
-    "startingResources": { "etherCells": 15, "techScrap": 40, "biogel": 5 },
+    "startingResources": {
+      "etherCells": 15,
+      "techScrap": 40,
+      "biogel": 5
+    },
     "storageCapacity": 20
   }
 ]

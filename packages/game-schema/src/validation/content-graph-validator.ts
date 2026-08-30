@@ -18,6 +18,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     progression: new Set(content.progressionDefinitions.map((value) => value.id)),
     shop: new Set(content.shops.map((value) => value.id)),
     weather: new Set(content.weatherDefinitions.map((value) => value.id)), weatherProfile: new Set(content.weatherProfiles.map((value) => value.id)),
+    statusEffect: new Set(content.statusEffects.map((value) => value.id)),
   };
   const missing = (set: ReadonlySet<string>, id: string | undefined, kind: string, owner: Owner) => {
     if (id && !set.has(id)) issues.push({ severity: 'error', category: owner.category, targetId: owner.targetId, field: owner.field, message: `Missing ${kind} reference '${id}'` });
@@ -63,6 +64,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if (current.type === 'grantRewards') current.items.forEach((item) => missing(ids.item, item.itemId, 'item', owner));
     if (current.type === 'setWeather') missing(ids.weather, current.weatherId, 'weather', owner);
     if (current.type === 'changeWeather') missing(ids.weatherProfile, current.weatherProfileId, 'weather profile', owner);
+    if (current.type === 'applyStatusEffect') missing(ids.statusEffect, current.statusEffectId, 'status effect', owner);
   };
   const outcome = (value: GameplayOutcome | undefined, owner: Owner): void => {
     if (!value) return;

@@ -1,124 +1,880 @@
 [
   {
-    "id": "evt_omnicorp_ambush",
-    "name": "OmniCorp Sentry Sweep",
-    "description": "Triggered when noise or cyberware signatures exceed security threshold in Sector 09.",
+    "id": "evt_glassline_briefing",
+    "name": "Static Beneath Glass",
+    "description": "Mira recruits Vane to investigate the sealed annex.",
     "tags": [
-      "Ambush",
-      "OmniCorp",
-      "Combat",
-      "Encounter"
+      "Glassline",
+      "VerticalSlice"
     ],
-    "type": "encounter",
+    "type": "dialogue",
     "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
     "presentation": {
-      "layoutStyle": "cinematic",
-      "ambientGlow": "rose"
+      "layoutStyle": "dialogue",
+      "ambientGlow": "cyan",
+      "weatherPresentation": "inherit"
     },
     "steps": [
       {
-        "id": "step_ambush_intro",
-        "type": "narration",
-        "title": "Threat Vector Detected",
-        "text": "Warning klaxons echo through the damp concrete alley as scarlet searchlights snap directly onto your visor. Heavy boots rhythmically crunch broken glass\u2014an OmniCorp tactical strike team has locked onto your neural signature!",
-        "speaker": {
-          "type": "system",
-          "name": "Tactical HUD",
-          "title": "Threat Advisory"
-        },
+        "id": "briefing",
+        "type": "choice",
+        "text": "“The annex is eating people’s memories,” Mira says. “Sable heard the security band. We need her frequency map.”",
         "conditions": [],
         "effects": [],
         "choices": [
           {
-            "id": "opt_engage_combat",
-            "text": "Take tactical cover behind ferroconcrete pillars and engage",
+            "id": "accept",
+            "text": "Take the job and go to the clinic",
             "conditions": [],
+            "effects": [
+              {
+                "type": "startQuest",
+                "questId": "qst_glassline_signal"
+              },
+              {
+                "type": "setFlag",
+                "flag": "glassline_contract",
+                "value": true
+              },
+              {
+                "type": "changeRelationship",
+                "npcId": "npc_mira_vesk",
+                "delta": 8
+              }
+            ],
+            "hideIfUnavailable": false,
+            "outcome": {
+              "type": "poi",
+              "poiId": "poi_glassline_clinic",
+              "mapId": "map_slums_sec09"
+            }
+          },
+          {
+            "id": "ask_payment",
+            "text": "Demand an advance",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "changeMoney",
+                "amount": 75,
+                "mode": "add"
+              },
+              {
+                "type": "startQuest",
+                "questId": "qst_glassline_signal"
+              }
+            ],
+            "hideIfUnavailable": false,
+            "outcome": {
+              "type": "poi",
+              "poiId": "poi_glassline_clinic",
+              "mapId": "map_slums_sec09"
+            }
+          }
+        ],
+        "speaker": {
+          "type": "npc",
+          "npcId": "npc_mira_vesk",
+          "name": "Mira Vesk",
+          "title": "Glassline Runner"
+        }
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_clinic_frequency",
+    "name": "The Clinic Frequency",
+    "description": "Information scene revealing the hidden station.",
+    "tags": [
+      "Glassline",
+      "VerticalSlice"
+    ],
+    "type": "dialogue",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "dialogue",
+      "ambientGlow": "cyan",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "clinic_intro",
+        "type": "choice",
+        "text": "Sable plays a recording: a human voice trapped beneath a corporate carrier signal.",
+        "conditions": [],
+        "effects": [],
+        "choices": [
+          {
+            "id": "help_clinic",
+            "text": "Promise coolant for her cradle",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "startQuest",
+                "questId": "qst_clinic_coolant"
+              },
+              {
+                "type": "setFlag",
+                "flag": "clinic_needs_resident",
+                "value": true
+              }
+            ],
+            "hideIfUnavailable": false,
+            "nextStepId": "clinic_reveal"
+          },
+          {
+            "id": "pay_for_intel",
+            "text": "Pay for the frequency map",
+            "conditions": [
+              {
+                "type": "playerStat",
+                "stat": "credits",
+                "operator": ">=",
+                "value": 100
+              }
+            ],
+            "effects": [
+              {
+                "type": "changeMoney",
+                "amount": 100,
+                "mode": "subtract"
+              }
+            ],
+            "hideIfUnavailable": false,
+            "nextStepId": "clinic_reveal"
+          }
+        ],
+        "speaker": {
+          "type": "npc",
+          "npcId": "npc_doctor_sable",
+          "name": "Dr. Iona Sable",
+          "title": "Street Clinician"
+        }
+      },
+      {
+        "id": "clinic_reveal",
+        "type": "narration",
+        "text": "The map exposes a forgotten station under Glassline and the service route into the annex.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "transit_discovered",
+            "value": true
+          },
+          {
+            "type": "advanceQuest",
+            "questId": "qst_glassline_signal",
+            "targetStageId": "stage_access"
+          }
+        ],
+        "choices": [],
+        "speaker": {
+          "type": "npc",
+          "npcId": "npc_doctor_sable",
+          "name": "Dr. Iona Sable",
+          "title": "Street Clinician"
+        },
+        "outcome": {
+          "type": "showResult",
+          "title": "A Route Beneath the Rain",
+          "resultText": "The abandoned transit station is now visible on the district map.",
+          "nextOutcome": {
+            "type": "poi",
+            "poiId": "poi_glassline_clinic",
+            "mapId": "map_slums_sec09"
+          }
+        }
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_transit_echo",
+    "name": "Voices on Platform Zero",
+    "description": "",
+    "tags": [
+      "Glassline",
+      "VerticalSlice"
+    ],
+    "type": "choice",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "standard",
+      "ambientGlow": "cyan",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "echo",
+        "type": "choice",
+        "text": "Ash Crow and two scavengers block the flooded platform. “Pay, turn back, or prove you are not corporate.”",
+        "conditions": [],
+        "effects": [],
+        "choices": [
+          {
+            "id": "talk_down",
+            "text": "Talk them down [Presence]",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "transit_peaceful",
+                "value": true
+              },
+              {
+                "type": "addItem",
+                "itemId": "itm_signal_scrap",
+                "quantity": 2
+              },
+              {
+                "type": "advanceQuest",
+                "questId": "qst_glassline_signal",
+                "targetStageId": "stage_infiltrate"
+              },
+              {
+                "type": "setFlag",
+                "flag": "annex_access_ready",
+                "value": true
+              }
+            ],
+            "hideIfUnavailable": false,
+            "outcome": {
+              "type": "showResult",
+              "title": "A Narrow Accord",
+              "resultText": "Ash parts with enough conductor to build a bypass spike."
+            },
+            "check": {
+              "attribute": "presence",
+              "skill": "negotiation",
+              "difficulty": "Moderate",
+              "targetDc": 12,
+              "modifiers": [],
+              "passEffects": [
+                {
+                  "type": "changeFactionReputation",
+                  "factionId": "fac_undercity_drifters",
+                  "delta": 5
+                }
+              ],
+              "partialEffects": [],
+              "failEffects": []
+            }
+          },
+          {
+            "id": "fight",
+            "text": "Force a path",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "annex_access_ready",
+                "value": true
+              },
+              {
+                "type": "advanceQuest",
+                "questId": "qst_glassline_signal",
+                "targetStageId": "stage_infiltrate"
+              }
+            ],
+            "hideIfUnavailable": false,
             "outcome": {
               "type": "combat",
-              "encounterId": "enc_omnicorp_patrol_sector09",
+              "encounterId": "enc_glassline_transit_standoff",
               "previewFirst": true
             }
           },
           {
-            "id": "opt_conduit_overload",
-            "text": "Overload nearby power conduit with EtherTech discharge [EtherTech DC 13]",
+            "id": "retreat",
+            "text": "Withdraw to the clinic",
             "conditions": [],
-            "check": {
-              "passText": "You discharge an ether wave into the high-voltage breaker, blinding their optical suites and escaping!",
-              "failText": "The breaker sparks harmlessly; the enforcers advance on your position!",
-              "attribute": "etherTech",
-              "difficulty": "Moderate",
-              "targetDc": 13,
-              "modifiers": [],
-              "partialEffects": []
-            },
-            "effects": [
+            "effects": [],
+            "hideIfUnavailable": false,
+            "outcome": {
+              "type": "poi",
+              "poiId": "poi_glassline_clinic",
+              "mapId": "map_slums_sec09"
+            }
+          }
+        ],
+        "speaker": {
+          "type": "npc",
+          "npcId": "npc_ash_crow",
+          "name": "Ash Crow"
+        }
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_annex_entry",
+    "name": "The Glassline Door",
+    "description": "Cinematic entry scene.",
+    "tags": [
+      "Glassline",
+      "VerticalSlice",
+      "Checkpoint:Before Combat"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "fullscreenScene",
+      "backgroundImage": "bg_sector09_slums",
+      "ambientGlow": "purple",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "door",
+        "type": "choice",
+        "text": "The old station opens into a cathedral of black glass. Ether-light moves behind the walls like something remembering how to breathe.",
+        "conditions": [],
+        "effects": [],
+        "choices": [
+          {
+            "id": "use_shard",
+            "text": "Present the access shard",
+            "conditions": [
               {
-                "type": "addItem",
-                "itemId": "itm_cyberware_fiber",
-                "quantity": 2
-              },
-              {
-                "type": "changeMoney",
-                "amount": 120,
-                "mode": "add"
-              },
-              {
-                "type": "changeStat",
-                "stat": "currentEther",
-                "delta": -10,
-                "mode": "add"
+                "type": "hasItem",
+                "itemId": "itm_glassline_access_shard",
+                "quantity": 1,
+                "operator": ">=",
+                "requireEquipped": false
               }
             ],
+            "effects": [
+              {
+                "type": "removeItem",
+                "itemId": "itm_glassline_access_shard",
+                "quantity": 1
+              },
+              {
+                "type": "advanceQuest",
+                "questId": "qst_glassline_signal",
+                "targetStageId": "stage_confrontation"
+              }
+            ],
+            "hideIfUnavailable": true,
             "outcome": {
-              "type": "showResult",
-              "title": "Conduit Overload",
-              "resultText": "You unleash an ether arc into the high-voltage breaker, blinding the enforcers and shorting their optical suites! You slip away into the shadows with salvaged parts.",
-              "status": "Success"
+              "type": "poi",
+              "poiId": "poi_glassline_facility",
+              "mapId": "map_slums_sec09"
             }
           },
           {
-            "id": "opt_escape_safehouse",
-            "text": "Attempt emergency retreat through drainage shafts [Body DC 11]",
-            "conditions": [],
-            "check": {
-              "attribute": "body",
-              "difficulty": "Moderate",
-              "targetDc": 11,
-              "modifiers": [],
-              "partialEffects": []
-            },
-            "outcome": {
-              "type": "poi",
-              "mapId": "map_slums_sec09",
-              "poiId": "poi_sec09_hideout"
-            },
+            "id": "use_spike",
+            "text": "Burn the bypass spike",
+            "conditions": [
+              {
+                "type": "hasItem",
+                "itemId": "itm_bypass_spike",
+                "quantity": 1,
+                "operator": ">=",
+                "requireEquipped": false
+              }
+            ],
             "effects": [
               {
-                "type": "movePlayer",
-                "mapId": "map_slums_sec09",
-                "poiId": "poi_sec09_hideout"
+                "type": "removeItem",
+                "itemId": "itm_bypass_spike",
+                "quantity": 1
+              },
+              {
+                "type": "advanceQuest",
+                "questId": "qst_glassline_signal",
+                "targetStageId": "stage_confrontation"
               }
-            ]
+            ],
+            "hideIfUnavailable": true,
+            "outcome": {
+              "type": "poi",
+              "poiId": "poi_glassline_facility",
+              "mapId": "map_slums_sec09"
+            }
+          },
+          {
+            "id": "hack",
+            "text": "Ghost the lock [EtherTech / Intrusion]",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "advanceQuest",
+                "questId": "qst_glassline_signal",
+                "targetStageId": "stage_confrontation"
+              }
+            ],
+            "hideIfUnavailable": false,
+            "outcome": {
+              "type": "poi",
+              "poiId": "poi_glassline_facility",
+              "mapId": "map_slums_sec09"
+            },
+            "check": {
+              "attribute": "etherTech",
+              "skill": "intrusion",
+              "difficulty": "Hard",
+              "targetDc": 15,
+              "modifiers": [],
+              "passEffects": [
+                {
+                  "type": "setFlag",
+                  "flag": "annex_silent_entry",
+                  "value": true
+                }
+              ],
+              "partialEffects": [
+                {
+                  "type": "changeStat",
+                  "stat": "currentEther",
+                  "delta": -8,
+                  "mode": "add"
+                }
+              ],
+              "failEffects": [
+                {
+                  "type": "changeStat",
+                  "stat": "currentHp",
+                  "delta": -6,
+                  "mode": "add"
+                }
+              ]
+            }
           }
-        ]
+        ],
+        "speaker": {
+          "type": "narrator",
+          "name": "Narrator"
+        },
+        "image": "bg_sector09_slums"
       }
     ],
-    "isOneShot": false,
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_annex_lockdown",
+    "name": "Lockdown",
+    "description": "",
+    "tags": [
+      "Glassline",
+      "VerticalSlice"
+    ],
+    "type": "encounter",
+    "conditions": [],
     "triggerConditions": [],
-    "availabilityConditions": [
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "standard",
+      "ambientGlow": "cyan",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
       {
-        "type": "time",
-        "field": "hour",
-        "operator": ">=",
-        "value": 8
+        "id": "lockdown",
+        "type": "choice",
+        "text": "The core doors seal. Warden Kest raises a weapon, then hesitates as the ether signal speaks through every pane.",
+        "conditions": [],
+        "effects": [],
+        "choices": [
+          {
+            "id": "engage",
+            "text": "Break the lockdown",
+            "conditions": [],
+            "effects": [],
+            "hideIfUnavailable": false,
+            "outcome": {
+              "type": "combat",
+              "encounterId": "enc_glassline_annex_core",
+              "previewFirst": true
+            }
+          }
+        ],
+        "speaker": {
+          "type": "npc",
+          "npcId": "npc_warden_kest",
+          "name": "Warden Kest"
+        }
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_glassline_final_choice",
+    "name": "Who Owns a Memory?",
+    "description": "",
+    "tags": [
+      "Glassline",
+      "VerticalSlice",
+      "Checkpoint:Before Final Choice"
+    ],
+    "type": "choice",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "standard",
+      "ambientGlow": "cyan",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "choice",
+        "type": "choice",
+        "text": "The recovered signal contains erased residents’ identities—and OmniCorp access keys worth a fortune.",
+        "conditions": [],
+        "effects": [],
+        "choices": [
+          {
+            "id": "release",
+            "text": "Release the archive to Glassline",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "archive_released",
+                "value": true
+              },
+              {
+                "type": "changeFactionReputation",
+                "factionId": "fac_undercity_drifters",
+                "delta": 20
+              },
+              {
+                "type": "changeFactionReputation",
+                "factionId": "fac_ether_syndicate",
+                "delta": 5
+              },
+              {
+                "type": "changeFactionReputation",
+                "factionId": "fac_omnicorp",
+                "delta": -20
+              },
+              {
+                "type": "advanceQuest",
+                "questId": "qst_glassline_signal",
+                "targetStageId": "stage_return"
+              }
+            ],
+            "hideIfUnavailable": false,
+            "nextStepId": "return"
+          },
+          {
+            "id": "sell",
+            "text": "Sell the keys to the Syndicate",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "archive_sold",
+                "value": true
+              },
+              {
+                "type": "changeMoney",
+                "amount": 600,
+                "mode": "add"
+              },
+              {
+                "type": "changeFactionReputation",
+                "factionId": "fac_ether_syndicate",
+                "delta": 25
+              },
+              {
+                "type": "changeFactionReputation",
+                "factionId": "fac_omnicorp",
+                "delta": -10
+              },
+              {
+                "type": "advanceQuest",
+                "questId": "qst_glassline_signal",
+                "targetStageId": "stage_return"
+              }
+            ],
+            "hideIfUnavailable": false,
+            "nextStepId": "return"
+          },
+          {
+            "id": "deal",
+            "text": "Return the archive to Kest",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "archive_returned",
+                "value": true
+              },
+              {
+                "type": "changeFactionReputation",
+                "factionId": "fac_omnicorp",
+                "delta": 25
+              },
+              {
+                "type": "changeFactionReputation",
+                "factionId": "fac_ether_syndicate",
+                "delta": -15
+              },
+              {
+                "type": "advanceQuest",
+                "questId": "qst_glassline_signal",
+                "targetStageId": "stage_return"
+              }
+            ],
+            "hideIfUnavailable": false,
+            "nextStepId": "return"
+          }
+        ],
+        "speaker": {
+          "type": "npc",
+          "npcId": "npc_mira_vesk",
+          "name": "Mira Vesk",
+          "title": "Glassline Runner"
+        }
       },
       {
-        "type": "time",
-        "field": "hour",
-        "operator": "<",
-        "value": 22
+        "id": "return",
+        "type": "narration",
+        "text": "Mira nods toward the safehouse. “Whatever we chose, Glassline will feel it by morning.”",
+        "conditions": [],
+        "effects": [],
+        "choices": [],
+        "speaker": {
+          "type": "npc",
+          "npcId": "npc_mira_vesk",
+          "name": "Mira Vesk",
+          "title": "Glassline Runner"
+        },
+        "outcome": {
+          "type": "poi",
+          "poiId": "poi_glassline_safehouse",
+          "mapId": "map_slums_sec09"
+        }
       }
-    ]
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_glassline_epilogue",
+    "name": "Glassline Remembers",
+    "description": "",
+    "tags": [
+      "Glassline",
+      "VerticalSlice",
+      "Checkpoint:Base After Quest"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "fullscreenScene",
+      "backgroundImage": "bg_sector09_slums",
+      "ambientGlow": "purple",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "epilogue",
+        "type": "choice",
+        "text": "By dawn the market whispers your decision. Sable arrives at the safehouse with a medical case and nowhere else to go.",
+        "conditions": [],
+        "effects": [],
+        "choices": [
+          {
+            "id": "recruit_sable",
+            "text": "Offer Sable a room",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "recruitNpc",
+                "npcId": "npc_doctor_sable",
+                "asCompanion": true
+              },
+              {
+                "type": "changeRelationship",
+                "npcId": "npc_doctor_sable",
+                "delta": 20
+              },
+              {
+                "type": "setFlag",
+                "flag": "sable_resident",
+                "value": true
+              },
+              {
+                "type": "completeQuest",
+                "questId": "qst_glassline_signal",
+                "outcome": "Success",
+                "grantRewards": true
+              }
+            ],
+            "hideIfUnavailable": false,
+            "outcome": {
+              "type": "gameplayScreen",
+              "screen": "Base"
+            }
+          },
+          {
+            "id": "keep_independent",
+            "text": "Keep the safehouse independent",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "completeQuest",
+                "questId": "qst_glassline_signal",
+                "outcome": "Success",
+                "grantRewards": true
+              }
+            ],
+            "hideIfUnavailable": false,
+            "outcome": {
+              "type": "showResult",
+              "title": "Glassline, For Now",
+              "resultText": "The district survives another night."
+            }
+          }
+        ],
+        "speaker": {
+          "type": "narrator",
+          "name": "Narrator"
+        },
+        "image": "bg_sector09_slums"
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_flavor_rain",
+    "name": "Rain on Neon",
+    "description": "",
+    "tags": [
+      "Glassline",
+      "VerticalSlice"
+    ],
+    "type": "flavor",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "standard",
+      "ambientGlow": "cyan",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "rain",
+        "type": "narration",
+        "text": "Rain threads through the market holo-signs, turning every face into a shifting mask.",
+        "conditions": [],
+        "effects": [],
+        "choices": [],
+        "outcome": {
+          "type": "returnToOrigin"
+        }
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_flavor_memorial",
+    "name": "Platform Memorial",
+    "description": "",
+    "tags": [
+      "Glassline",
+      "VerticalSlice"
+    ],
+    "type": "flavor",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "standard",
+      "ambientGlow": "cyan",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "memorial",
+        "type": "narration",
+        "text": "Names scratched into the station tile pulse faintly when the ether storm passes.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "memorial_seen",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "outcome": {
+          "type": "returnToOrigin"
+        }
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_flavor_clinic",
+    "name": "Last Clean Bandage",
+    "description": "",
+    "tags": [
+      "Glassline",
+      "VerticalSlice"
+    ],
+    "type": "flavor",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "standard",
+      "ambientGlow": "cyan",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "bandage",
+        "type": "narration",
+        "text": "Sable quietly gives her last clean bandage to a child and pretends not to notice you watching.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "changeRelationship",
+            "npcId": "npc_doctor_sable",
+            "delta": 2
+          }
+        ],
+        "choices": [],
+        "outcome": {
+          "type": "returnToOrigin"
+        }
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
   }
 ]

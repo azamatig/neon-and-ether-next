@@ -20,6 +20,7 @@ import { handleAdvanceTimeEffect } from './handlers/time-effect.ts';
 import { handleChangePoiStateEffect, handleTravelPoiEffect } from './handlers/poi-effect.ts';
 import { handleGrantRewardsEffect } from './handlers/reward-effect.ts';
 import { handleWeatherEffect } from './handlers/weather-effect.ts';
+import { handleApplyStatusEffect } from './handlers/status-effect.ts';
 
 export class EffectRegistry {
   private handlers = new Map<string, EffectHandler<any>>();
@@ -53,6 +54,7 @@ export class EffectRegistry {
     this.registerHandler('grantRewards', handleGrantRewardsEffect);
     this.registerHandler('setWeather', handleWeatherEffect);
     this.registerHandler('changeWeather', handleWeatherEffect);
+    this.registerHandler('applyStatusEffect', handleApplyStatusEffect);
   }
 
   /**

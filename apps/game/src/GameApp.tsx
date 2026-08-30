@@ -23,6 +23,12 @@ export const GameApp: React.FC = () => {
     resolvedPlayer,
     activeMap,
     currentWeather,
+    baseResidents,
+    baseJobs,
+    getBaseRoomOptions,
+    getBaseUpgradeOptions,
+    executeBaseManagementCommand,
+    executeCharacterManagementCommand,
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,
@@ -141,7 +147,7 @@ export const GameApp: React.FC = () => {
               }
             >
               <div className="flex-1 min-h-[460px] relative flex flex-col">
-                {isBaseMode ? <BaseScreen base={gameState.base} onReturn={returnToMap}/> : isPoiMode ? (
+                {isBaseMode ? <BaseScreen base={gameState.base} onReturn={returnToMap} roomOptions={getBaseRoomOptions} upgradeOptions={getBaseUpgradeOptions} residents={baseResidents} jobs={baseJobs} onBuildRoom={(slotId,roomDefinitionId)=>executeBaseManagementCommand({type:'BuildRoom',slotId,roomDefinitionId})} onInstallUpgrade={(roomInstanceId,upgradeId)=>executeBaseManagementCommand({type:'InstallUpgrade',roomInstanceId,upgradeId})} onAssign={(npcId,jobId,roomId)=>{if(jobId)executeCharacterManagementCommand({type:'AssignJob',npcId,jobId});if(roomId)executeCharacterManagementCommand({type:'AssignRoom',npcId,roomId});}}/> : isPoiMode ? (
                   <PoiScreen
                     environment={currentWeather}
                     poi={selectedPoi}

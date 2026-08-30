@@ -168,5 +168,60 @@
     "perks": [],
     "temporaryModifiers": [],
     "statusEffects": []
+  },
+  {
+    "id": "enm_transit_scavenger",
+    "name": "Glassline Tunnel Scavenger",
+    "description": "A desperate tunnel fighter who may surrender when isolated.",
+    "tags": [
+      "Humanoid",
+      "Scavenger",
+      "Surrenderable"
+    ],
+    "factionId": "fac_undercity_drifters",
+    "level": 1,
+    "tier": "Standard",
+    "attributes": {
+      "body": 13,
+      "reflexes": 12,
+      "mind": 10,
+      "etherTech": 8,
+      "presence": 11
+    },
+    "vitals": {
+      "maxHp": 42,
+      "currentHp": 42,
+      "maxEther": 0,
+      "currentEther": 0,
+      "actionPointsMax": 6,
+      "actionPointsCurrent": 6,
+      "initiative": 11,
+      "armorRating": 4,
+      "etherResistance": 5
+    },
+    "aiArchetype": "RangedFlanker",
+    "equippedWeaponId": "wpn_thermal_pistol",
+    "lootTable": [
+      {
+        "itemId": "itm_signal_scrap",
+        "dropRate": 1,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ],
+    "grantedXp": 35,
+    "bountyCredits": 20,
+    "portraitIcon": "Crosshair",
+    "combatAIProfileId": "ai_flanker",
+    "abilityIds": [
+      "ability_thermal_burst"
+    ],
+    "skills": {
+      "combat": 2
+    },
+    "traits": [],
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": []
   }
 ]

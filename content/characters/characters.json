@@ -74,16 +74,137 @@
     "availabilityConditions": []
   },
   {
-    "id": "npc_kaelen_rourke",
-    "name": "Kaelen Rourke",
-    "description": "Seasoned Syndicate broker who survived three OmniCorp purges and controls Sector 09's illicit data trade.",
+    "id": "npc_mira_vesk",
+    "name": "Mira Vesk",
+    "description": "A sharp-eyed courier who knows every service tunnel in Glassline.",
     "tags": [
-      "NPC",
-      "Fixer",
-      "Broker",
+      "Companion",
+      "Story",
+      "Runner"
+    ],
+    "title": "Glassline Runner",
+    "factionId": "fac_undercity_drifters",
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": true,
+    "level": 4,
+    "attributes": {
+      "body": 14,
+      "reflexes": 12,
+      "mind": 15,
+      "etherTech": 11,
+      "presence": 16
+    },
+    "vitals": {
+      "maxHp": 52,
+      "currentHp": 52,
+      "maxEther": 20,
+      "currentEther": 20,
+      "actionPointsMax": 7,
+      "actionPointsCurrent": 7,
+      "initiative": 12,
+      "armorRating": 5,
+      "etherResistance": 8
+    },
+    "position": {
+      "x": 6,
+      "y": 3
+    },
+    "facing": "West",
+    "inventory": [],
+    "portraitIcon": "Shield",
+    "defaultBehavior": "Idle",
+    "abilityIds": [],
+    "traits": [
+      "Technical",
+      "Negotiator"
+    ],
+    "initialRelationship": {
+      "status": "independent",
+      "affinity": 5,
+      "trust": 0,
+      "fear": 0,
+      "loyalty": 0
+    },
+    "skills": {
+      "negotiation": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "progressionDefinitionId": "progression_companion",
+    "availabilityConditions": []
+  },
+  {
+    "id": "npc_doctor_sable",
+    "name": "Dr. Iona Sable",
+    "description": "A clinic operator holding an impossible line with failing equipment.",
+    "tags": [
+      "Resident",
+      "Medic",
+      "Recruitable"
+    ],
+    "title": "Street Clinician",
+    "factionId": "fac_undercity_drifters",
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": false,
+    "level": 4,
+    "attributes": {
+      "body": 14,
+      "reflexes": 12,
+      "mind": 15,
+      "etherTech": 11,
+      "presence": 16
+    },
+    "vitals": {
+      "maxHp": 52,
+      "currentHp": 52,
+      "maxEther": 20,
+      "currentEther": 20,
+      "actionPointsMax": 7,
+      "actionPointsCurrent": 7,
+      "initiative": 12,
+      "armorRating": 5,
+      "etherResistance": 8
+    },
+    "position": {
+      "x": 6,
+      "y": 3
+    },
+    "facing": "West",
+    "inventory": [],
+    "portraitIcon": "Shield",
+    "defaultBehavior": "Idle",
+    "abilityIds": [],
+    "traits": [
+      "Medical"
+    ],
+    "initialRelationship": {
+      "status": "independent",
+      "affinity": 5,
+      "trust": 0,
+      "fear": 0,
+      "loyalty": 0
+    },
+    "skills": {
+      "negotiation": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "progressionDefinitionId": "progression_companion",
+    "availabilityConditions": []
+  },
+  {
+    "id": "npc_nix_vale",
+    "name": "Nix Vale",
+    "description": "A meticulous trader who prices loyalty as carefully as ammunition.",
+    "tags": [
+      "Merchant",
       "Syndicate"
     ],
-    "title": "Sector-09 Fixer",
+    "title": "Night-Market Quartermaster",
     "factionId": "fac_ether_syndicate",
     "isPlayer": false,
     "isMerchant": true,
@@ -112,28 +233,19 @@
       "y": 3
     },
     "facing": "West",
-    "inventory": [
-      {
-        "itemId": "wpn_thermal_pistol",
-        "quantity": 1,
-        "isEquipped": true
-      }
-    ],
-    "dialogueTreeId": "dlg_rourke_first_contact",
+    "inventory": [],
     "portraitIcon": "Shield",
     "defaultBehavior": "Idle",
     "abilityIds": [],
     "traits": [
-      "Technical",
-      "Negotiator",
-      "Detainable"
+      "Negotiator"
     ],
     "initialRelationship": {
       "status": "independent",
-      "affinity": 25,
-      "trust": 15,
+      "affinity": 5,
+      "trust": 0,
       "fear": 0,
-      "loyalty": 5
+      "loyalty": 0
     },
     "skills": {
       "negotiation": 2
@@ -142,20 +254,129 @@
     "temporaryModifiers": [],
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
-    "shopId": "shop_rourke_exchange",
-    "availabilityConditions": [
-      {
-        "type": "time",
-        "field": "hour",
-        "operator": ">=",
-        "value": 8
-      },
-      {
-        "type": "time",
-        "field": "hour",
-        "operator": "<",
-        "value": 22
-      }
-    ]
+    "shopId": "shop_glassline_nightmarket",
+    "availabilityConditions": []
+  },
+  {
+    "id": "npc_warden_kest",
+    "name": "Warden Kest",
+    "description": "The annex warden, wounded and uncertain whether duty is worth dying for.",
+    "tags": [
+      "Faction",
+      "Ambiguous"
+    ],
+    "title": "OmniCorp Liaison",
+    "factionId": "fac_omnicorp",
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": false,
+    "level": 4,
+    "attributes": {
+      "body": 14,
+      "reflexes": 12,
+      "mind": 15,
+      "etherTech": 11,
+      "presence": 16
+    },
+    "vitals": {
+      "maxHp": 52,
+      "currentHp": 52,
+      "maxEther": 20,
+      "currentEther": 20,
+      "actionPointsMax": 7,
+      "actionPointsCurrent": 7,
+      "initiative": 12,
+      "armorRating": 5,
+      "etherResistance": 8
+    },
+    "position": {
+      "x": 6,
+      "y": 3
+    },
+    "facing": "West",
+    "inventory": [],
+    "portraitIcon": "Shield",
+    "defaultBehavior": "Idle",
+    "abilityIds": [],
+    "traits": [
+      "Negotiator",
+      "Detainable"
+    ],
+    "initialRelationship": {
+      "status": "independent",
+      "affinity": 5,
+      "trust": 0,
+      "fear": 0,
+      "loyalty": 0
+    },
+    "skills": {
+      "negotiation": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "progressionDefinitionId": "progression_companion",
+    "availabilityConditions": []
+  },
+  {
+    "id": "npc_ash_crow",
+    "name": "Ash Crow",
+    "description": "A territorial scavenger defending a nest beneath the dead platforms.",
+    "tags": [
+      "Ambiguous",
+      "Scavenger"
+    ],
+    "title": "Transit Scavenger",
+    "factionId": "fac_undercity_drifters",
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": false,
+    "level": 4,
+    "attributes": {
+      "body": 14,
+      "reflexes": 12,
+      "mind": 15,
+      "etherTech": 11,
+      "presence": 16
+    },
+    "vitals": {
+      "maxHp": 52,
+      "currentHp": 52,
+      "maxEther": 20,
+      "currentEther": 20,
+      "actionPointsMax": 7,
+      "actionPointsCurrent": 7,
+      "initiative": 12,
+      "armorRating": 5,
+      "etherResistance": 8
+    },
+    "position": {
+      "x": 6,
+      "y": 3
+    },
+    "facing": "West",
+    "inventory": [],
+    "portraitIcon": "Shield",
+    "defaultBehavior": "Idle",
+    "abilityIds": [],
+    "traits": [
+      "Technical",
+      "Detainable"
+    ],
+    "initialRelationship": {
+      "status": "independent",
+      "affinity": 5,
+      "trust": 0,
+      "fear": 0,
+      "loyalty": 0
+    },
+    "skills": {
+      "negotiation": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "progressionDefinitionId": "progression_companion",
+    "availabilityConditions": []
   }
 ]

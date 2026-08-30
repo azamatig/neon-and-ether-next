@@ -1,23 +1,25 @@
 [
   {
     "id": "map_slums_sec09",
-    "name": "Sector-09 Neon Slums",
-    "description": "A sprawling labyrinth of decaying tenements, neon-lit alleys, and leaking ether conduits in the shadow of OmniCorp mega-structures.",
+    "name": "Glassline Ward",
+    "description": "A rain-blackened district where a community safehouse, night market and failing clinic sit beneath the sealed Glassline security annex.",
     "tags": [
       "Slums",
       "Undercity",
       "Sector09",
       "Neon"
     ],
-    "district": "Sector-09 Undercity",
-    "subregion": "Lower Conduits",
+    "district": "Glassline Ward",
+    "subregion": "Lower Transit Ring",
     "backgroundImage": "bg_sector09_slums",
     "poiIds": [
-      "poi_sec09_hideout",
-      "poi_sec09_market",
-      "poi_sec09_terminal"
+      "poi_glassline_safehouse",
+      "poi_glassline_market",
+      "poi_glassline_clinic",
+      "poi_glassline_transit",
+      "poi_glassline_facility"
     ],
-    "defaultPoiId": "poi_sec09_hideout",
+    "defaultPoiId": "poi_glassline_safehouse",
     "connectedMapIds": [],
     "ambientEtherLevel": 40,
     "securityLevel": 2,
@@ -25,15 +27,32 @@
     "recommendedLevel": 1,
     "regions": [
       {
-        "id": "reg_residential",
-        "name": "Tenement Sprawl",
-        "description": "Dense residential stacks connected by precarious sky-bridges.",
+        "id": "reg_glassline_streets",
+        "name": "Glassline Streets",
+        "description": "Covered markets and residential alleys.",
         "securityLevel": 1,
+        "controllingFactionId": "fac_ether_syndicate",
+        "weatherProfileId": "weather_profile_urban",
         "bounds": {
-          "x": 5,
+          "x": 4,
           "y": 8,
-          "width": 42,
-          "height": 40
+          "width": 58,
+          "height": 80
+        },
+        "metadata": {}
+      },
+      {
+        "id": "reg_corporate_cordon",
+        "name": "Corporate Cordon",
+        "description": "Sealed transit and security infrastructure.",
+        "securityLevel": 4,
+        "controllingFactionId": "fac_omnicorp",
+        "weatherProfileId": "weather_profile_urban",
+        "bounds": {
+          "x": 64,
+          "y": 8,
+          "width": 32,
+          "height": 80
         },
         "metadata": {}
       }
@@ -43,26 +62,40 @@
     },
     "routes": [
       {
-        "id": "route_hideout_market",
-        "fromPoiId": "poi_sec09_hideout",
-        "toPoiId": "poi_sec09_market",
+        "id": "route_safehouse_market",
+        "fromPoiId": "poi_glassline_safehouse",
+        "toPoiId": "poi_glassline_market",
         "bidirectional": true,
         "travelCost": 1,
-        "metadata": {
-          "routeType": "alley"
-        },
-        "travelTimeMinutes": 15
+        "travelTimeMinutes": 10,
+        "metadata": {}
       },
       {
-        "id": "route_market_terminal",
-        "fromPoiId": "poi_sec09_market",
-        "toPoiId": "poi_sec09_terminal",
+        "id": "route_market_clinic",
+        "fromPoiId": "poi_glassline_market",
+        "toPoiId": "poi_glassline_clinic",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 10,
+        "metadata": {}
+      },
+      {
+        "id": "route_clinic_transit",
+        "fromPoiId": "poi_glassline_clinic",
+        "toPoiId": "poi_glassline_transit",
         "bidirectional": true,
         "travelCost": 2,
-        "metadata": {
-          "routeType": "service-tunnel"
-        },
-        "travelTimeMinutes": 30
+        "travelTimeMinutes": 20,
+        "metadata": {}
+      },
+      {
+        "id": "route_transit_facility",
+        "fromPoiId": "poi_glassline_transit",
+        "toPoiId": "poi_glassline_facility",
+        "bidirectional": true,
+        "travelCost": 2,
+        "travelTimeMinutes": 15,
+        "metadata": {}
       }
     ],
     "defaultTravelTimeMinutes": 30,

@@ -1,39 +1,94 @@
 [
   {
-    "id": "poi_sec09_hideout",
-    "name": "Sector-09 Safehouse & Stash",
-    "description": "A fortified subterranean shelter shielded with lead lining and dampening runes. Contains your field workbench, equipment stash, and biometric recovery pod.",
+    "id": "poi_glassline_safehouse",
+    "name": "Glassline Safehouse",
+    "description": "A shielded courier cellar serving as home, workshop, and refuge.",
     "tags": [
       "Safehouse",
+      "Base",
       "Rest",
-      "Workbench",
-      "Home"
+      "Checkpoint:Start"
     ],
     "mapId": "map_slums_sec09",
     "mapPosition": {
-      "x": 20,
-      "y": 32
+      "x": 14,
+      "y": 72
     },
-    "district": "Lower Undercity",
+    "district": "Glassline Ward",
+    "regionId": "reg_glassline_streets",
     "icon": "Home",
     "category": "Safehouse",
-    "dangerLevel": 0,
-    "ambientEtherLevel": 10,
-    "npcIds": [],
-    "questIds": [],
-    "eventIds": [],
     "visibilityConditions": [],
     "availabilityConditions": [],
     "actions": [
       {
-        "id": "act_rest_recover",
-        "label": "Rest & Restore Vitals",
-        "description": "Enter the biometric recovery tank to fully regenerate Health, Ether reserves, and Action Points.",
+        "id": "act_glassline_briefing",
+        "label": "Meet Mira in the signal room",
+        "description": "Begin the Glassline investigation.",
+        "icon": "MessageSquare",
+        "actionType": "Talk",
+        "conditions": [
+          {
+            "type": "questState",
+            "questId": "qst_glassline_signal",
+            "status": "NotStarted",
+            "operator": "=="
+          }
+        ],
+        "effects": [],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_glassline_briefing"
+        }
+      },
+      {
+        "id": "act_safehouse_search",
+        "label": "Search the old courier cache",
+        "description": "Inspect a forgotten floor compartment.",
+        "icon": "Search",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "safehouse_cache_looted",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "addItem",
+            "itemId": "con_ether_vial",
+            "quantity": 1
+          },
+          {
+            "type": "addItem",
+            "itemId": "itm_signal_scrap",
+            "quantity": 1
+          },
+          {
+            "type": "setFlag",
+            "flag": "safehouse_cache_looted",
+            "value": true
+          }
+        ],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "showResult",
+          "title": "Courier Cache",
+          "resultText": "One stabilized ether vial and a strip of resonant scrap survived the damp.",
+          "status": "Success"
+        }
+      },
+      {
+        "id": "act_safehouse_rest",
+        "label": "Rest in the shielded bunk",
+        "description": "",
         "icon": "Bed",
         "actionType": "Rest",
-        "cost": {
-          "ap": 0
-        },
         "conditions": [],
         "effects": [
           {
@@ -49,279 +104,664 @@
             "mode": "set"
           },
           {
-            "type": "changeStat",
-            "stat": "actionPointsCurrent",
-            "value": 8,
-            "mode": "set"
-          },
-          {
             "type": "advanceTime",
             "turns": 1,
-            "hours": 4
+            "hours": 6
           }
         ],
-        "isRepeatable": true
+        "hideIfUnavailable": false,
+        "isRepeatable": true,
+        "outcome": {
+          "type": "showResult",
+          "title": "Rested",
+          "resultText": "The safehouse dampeners grant six quiet hours."
+        }
       },
       {
-        "id": "act_access_workbench",
-        "label": "Access Tech Workbench",
-        "description": "Examine salvaged components, calibrate weapon conduits, and assemble ether catalysts.",
+        "id": "act_safehouse_workbench",
+        "label": "Open the workshop",
+        "description": "",
         "icon": "Wrench",
         "actionType": "Crafting",
-        "cost": {
-          "ap": 1
-        },
-        "conditions": [],
-        "effects": [
-          {
-            "type": "setFlag",
-            "flag": "workbench_inspected",
-            "value": true
-          }
-        ],
-        "isRepeatable": true
-      }
-    ],
-    "encounterIds": [],
-    "regionId": "reg_residential"
-  },
-  {
-    "id": "poi_sec09_market",
-    "name": "Neon Bazaar & Fixer Lounge",
-    "description": "A bustling black-market thoroughfare humming under crackling magenta holo-signs. Kaelen Rourke coordinates illicit transactions from the back of the Red Circuit Lounge.",
-    "tags": [
-      "Market",
-      "Fixer",
-      "Social",
-      "Trade"
-    ],
-    "mapId": "map_slums_sec09",
-    "mapPosition": {
-      "x": 48,
-      "y": 42
-    },
-    "district": "Lower Undercity",
-    "icon": "Store",
-    "category": "Market",
-    "dangerLevel": 1,
-    "ambientEtherLevel": 25,
-    "npcIds": [
-      "npc_kaelen_rourke"
-    ],
-    "questIds": [
-      "qst_subgrid_vault_heist"
-    ],
-    "eventIds": [],
-    "visibilityConditions": [],
-    "availabilityConditions": [
-      {
-        "type": "time",
-        "field": "hour",
-        "operator": ">=",
-        "value": 8
-      },
-      {
-        "type": "time",
-        "field": "hour",
-        "operator": "<",
-        "value": 22
-      }
-    ],
-    "actions": [
-      {
-        "id": "act_talk_rourke",
-        "label": "Speak with Kaelen Rourke",
-        "description": "Negotiate contract terms, trade rumors, or report progress on the Sub-Grid Vault heist.",
-        "icon": "MessageSquare",
-        "actionType": "Talk",
-        "dialogueTreeId": "dlg_rourke_first_contact",
-        "cost": {
-          "ap": 0
-        },
         "conditions": [],
         "effects": [],
-        "isRepeatable": true
+        "hideIfUnavailable": false,
+        "isRepeatable": true,
+        "outcome": {
+          "type": "gameplayScreen",
+          "screen": "Workbench",
+          "targetId": "room_safehouse_workshop"
+        }
       },
       {
-        "id": "act_browse_blackmarket",
-        "label": "Browse Illicit Tech Catalog",
-        "description": "Inspect weapons, neural cyberware, and stabilized ether injectors smuggled past OmniCorp customs.",
-        "icon": "ShoppingBag",
-        "actionType": "Market",
-        "cost": {
-          "ap": 0
-        },
+        "id": "act_safehouse_base",
+        "label": "Manage the safehouse",
+        "description": "",
+        "icon": "Home",
+        "actionType": "Custom",
         "conditions": [],
-        "effects": [
-          {
-            "type": "setFlag",
-            "flag": "market_visited",
-            "value": true
-          }
-        ],
-        "isRepeatable": true
+        "effects": [],
+        "hideIfUnavailable": false,
+        "isRepeatable": true,
+        "outcome": {
+          "type": "gameplayScreen",
+          "screen": "Base",
+          "targetId": "base_safehouse_sec09"
+        }
       },
       {
-        "id": "act_eavesdrop_enforcers",
-        "label": "Eavesdrop on Enforcer Comm Frequencies [Mind >= 14]",
-        "description": "Intercept low-band security radio broadcasts to map patrol movements and security shifts.",
-        "icon": "Radio",
-        "actionType": "Explore",
-        "cost": {
-          "ap": 2,
-          "ether": 5
-        },
+        "id": "act_safehouse_epilogue",
+        "label": "See what changed in Glassline",
+        "description": "",
+        "icon": "Sparkles",
+        "actionType": "Event",
         "conditions": [
           {
-            "type": "playerStat",
-            "stat": "mind",
-            "operator": ">=",
-            "value": 14
+            "type": "questState",
+            "questId": "qst_glassline_signal",
+            "status": "Active",
+            "stageId": "stage_return",
+            "operator": "=="
           }
         ],
-        "effects": [
-          {
-            "type": "setFlag",
-            "flag": "intel_patrol_schedules",
-            "value": true
-          },
-          {
-            "type": "advanceTime",
-            "turns": 1
-          }
-        ],
-        "isRepeatable": false
+        "effects": [],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_glassline_epilogue"
+        }
       }
     ],
+    "npcIds": [
+      "npc_mira_vesk"
+    ],
+    "questIds": [
+      "qst_glassline_signal"
+    ],
+    "eventIds": [
+      "evt_glassline_briefing"
+    ],
     "encounterIds": [],
-    "regionId": "reg_residential"
+    "dangerLevel": 0,
+    "ambientEtherLevel": 25,
+    "environmentalExposure": "indoor"
   },
   {
-    "id": "poi_sec09_terminal",
-    "name": "Sub-Grid Optical Terminal",
-    "description": "A reinforced sub-grid node routing encrypted telemetry between Sector 09 and the OmniCorp Mainframe. Heavy quantum firewalls pulse with defensive ether wards.",
+    "id": "poi_glassline_market",
+    "name": "Prism Night Market",
+    "description": "A covered market of rain curtains, counterfeit credentials, and whispered faction business.",
     "tags": [
-      "Terminal",
-      "Hacking",
-      "Infiltration",
-      "Heist"
+      "Market",
+      "Shop",
+      "Social"
     ],
     "mapId": "map_slums_sec09",
     "mapPosition": {
-      "x": 80,
-      "y": 28
+      "x": 38,
+      "y": 48
     },
-    "district": "Lower Undercity",
-    "icon": "Cpu",
-    "category": "Terminal",
-    "dangerLevel": 3,
-    "ambientEtherLevel": 45,
-    "npcIds": [],
-    "questIds": [
-      "qst_subgrid_vault_heist"
-    ],
-    "eventIds": [],
+    "district": "Glassline Ward",
+    "regionId": "reg_glassline_streets",
+    "icon": "Store",
+    "category": "Market",
     "visibilityConditions": [],
     "availabilityConditions": [],
     "actions": [
       {
-        "id": "act_infiltrate_terminal",
-        "label": "Ghost the Optical Firewall",
-        "description": "Take the covert branch: spoof patrol telemetry and extract the vault cipher without raising the alarm.",
-        "icon": "Terminal",
-        "actionType": "Terminal",
-        "cost": {
-          "ap": 2,
-          "ether": 10
-        },
-        "conditions": [
-          {
-            "type": "playerStat",
-            "stat": "etherTech",
-            "operator": ">=",
-            "value": 13
-          }
-        ],
-        "effects": [
-          {
-            "type": "advanceQuest",
-            "questId": "qst_subgrid_vault_heist",
-            "targetStageId": "stage_covert",
-            "completeObjectiveId": "obj_choose_approach"
-          },
-          {
-            "type": "setFlag",
-            "flag": "vault_route",
-            "value": "covert"
-          },
-          {
-            "type": "addItem",
-            "itemId": "itm_cyberware_fiber",
-            "quantity": 1
-          }
-        ],
-        "isRepeatable": false
-      },
-      {
-        "id": "act_assault_terminal",
-        "label": "Breach the Security Cordons",
-        "description": "Take the combat branch: trip the alarm and force a path through the mixed OmniCorp response team.",
-        "icon": "ShieldAlert",
-        "actionType": "Combat",
-        "cost": {
-          "ap": 1
-        },
+        "id": "act_market_trade",
+        "label": "Trade with Nix Vale",
+        "description": "Buy, sell, and inspect faction-sensitive prices.",
+        "icon": "ShoppingBag",
+        "actionType": "Market",
         "conditions": [],
-        "effects": [
-          {
-            "type": "advanceQuest",
-            "questId": "qst_subgrid_vault_heist",
-            "targetStageId": "stage_assault",
-            "completeObjectiveId": "obj_choose_approach"
-          },
-          {
-            "type": "setFlag",
-            "flag": "vault_route",
-            "value": "assault"
-          }
-        ],
+        "effects": [],
+        "hideIfUnavailable": false,
+        "isRepeatable": true,
         "outcome": {
-          "type": "combat",
-          "encounterId": "enc_omnicorp_patrol_sector09",
-          "previewFirst": true
-        },
-        "isRepeatable": false
+          "type": "gameplayScreen",
+          "screen": "Market",
+          "targetId": "shop_glassline_nightmarket"
+        }
       },
       {
-        "id": "act_secure_vault_data",
-        "label": "Transmit the Vault Cipher",
-        "description": "Complete the selected route and transmit the cipher to Rourke.",
+        "id": "act_market_sidequest",
+        "label": "Ask Nix about dead-air traffic",
+        "description": "",
         "icon": "Radio",
         "actionType": "Quest",
-        "cost": {
-          "ap": 1
-        },
         "conditions": [
           {
             "type": "questState",
-            "questId": "qst_subgrid_vault_heist",
-            "status": "Active"
+            "questId": "qst_market_signal",
+            "status": "NotStarted",
+            "operator": "=="
           }
         ],
         "effects": [
           {
-            "type": "completeQuest",
-            "questId": "qst_subgrid_vault_heist",
-            "outcome": "Success",
-            "grantRewards": true
+            "type": "startQuest",
+            "questId": "qst_market_signal"
           }
         ],
-        "isRepeatable": false
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "showResult",
+          "title": "Dead-Air Ledger",
+          "resultText": "Nix wants a clean capture of OmniCorp’s encrypted burst."
+        }
+      },
+      {
+        "id": "act_market_scan",
+        "label": "Scan the market antenna [Mind / Intrusion]",
+        "description": "",
+        "icon": "Terminal",
+        "actionType": "Terminal",
+        "conditions": [
+          {
+            "type": "questState",
+            "questId": "qst_market_signal",
+            "status": "Active",
+            "operator": "=="
+          }
+        ],
+        "effects": [],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "check": {
+          "attribute": "mind",
+          "skill": "intrusion",
+          "difficulty": "Moderate",
+          "targetDc": 12,
+          "modifiers": [],
+          "passEffects": [
+            {
+              "type": "completeQuest",
+              "questId": "qst_market_signal",
+              "outcome": "Success",
+              "grantRewards": true
+            },
+            {
+              "type": "changeFactionReputation",
+              "factionId": "fac_ether_syndicate",
+              "delta": 8
+            }
+          ],
+          "partialEffects": [
+            {
+              "type": "changeStat",
+              "stat": "currentEther",
+              "delta": -5,
+              "mode": "add"
+            }
+          ],
+          "failEffects": [],
+          "passOutcome": {
+            "type": "showResult",
+            "title": "Burst Captured",
+            "resultText": "Nix pays promptly and slides an access shard across the counter."
+          },
+          "failOutcome": {
+            "type": "showResult",
+            "title": "Signal Lost",
+            "resultText": "The corporate burst dissolves into static."
+          }
+        }
+      },
+      {
+        "id": "act_market_reaction_free",
+        "label": "Hear the district’s verdict",
+        "description": "",
+        "icon": "MessageSquare",
+        "actionType": "Talk",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "archive_released",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "showResult",
+          "title": "Names Returned",
+          "resultText": "People repeat recovered names aloud. Nix gives you a respectful nod."
+        }
+      },
+      {
+        "id": "act_market_reaction_sold",
+        "label": "Collect the Syndicate’s thanks",
+        "description": "",
+        "icon": "Coins",
+        "actionType": "Talk",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "archive_sold",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "changeMoney",
+            "amount": 100,
+            "mode": "add"
+          }
+        ],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "showResult",
+          "title": "Profitable Silence",
+          "resultText": "The archive is already being partitioned for buyers."
+        }
       }
     ],
-    "encounterIds": [
-      "enc_omnicorp_patrol_sector09"
+    "npcIds": [
+      "npc_nix_vale"
     ],
-    "regionId": "reg_residential"
+    "questIds": [
+      "qst_market_signal"
+    ],
+    "eventIds": [
+      "evt_flavor_rain"
+    ],
+    "encounterIds": [],
+    "dangerLevel": 1,
+    "ambientEtherLevel": 25,
+    "environmentalExposure": "sheltered",
+    "shopId": "shop_glassline_nightmarket"
+  },
+  {
+    "id": "poi_glassline_clinic",
+    "name": "Sable Street Clinic",
+    "description": "A failing community clinic lit by one stubborn blue surgical lamp.",
+    "tags": [
+      "Clinic",
+      "Medical",
+      "Recruitment"
+    ],
+    "mapId": "map_slums_sec09",
+    "mapPosition": {
+      "x": 54,
+      "y": 74
+    },
+    "district": "Glassline Ward",
+    "regionId": "reg_glassline_streets",
+    "icon": "Activity",
+    "category": "Landmark",
+    "visibilityConditions": [],
+    "availabilityConditions": [],
+    "actions": [
+      {
+        "id": "act_clinic_intel",
+        "label": "Ask Sable about the closed zone",
+        "description": "",
+        "icon": "MessageSquare",
+        "actionType": "Talk",
+        "conditions": [
+          {
+            "type": "questState",
+            "questId": "qst_glassline_signal",
+            "status": "Active",
+            "stageId": "stage_intel",
+            "operator": "=="
+          }
+        ],
+        "effects": [],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_clinic_frequency"
+        }
+      },
+      {
+        "id": "act_clinic_flavor",
+        "label": "Observe the night shift",
+        "description": "",
+        "icon": "Eye",
+        "actionType": "Explore",
+        "conditions": [],
+        "effects": [],
+        "hideIfUnavailable": false,
+        "isRepeatable": true,
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_flavor_clinic"
+        }
+      },
+      {
+        "id": "act_clinic_return_coolant",
+        "label": "Install cradle coolant",
+        "description": "",
+        "icon": "Wrench",
+        "actionType": "Quest",
+        "conditions": [
+          {
+            "type": "questState",
+            "questId": "qst_clinic_coolant",
+            "status": "Active",
+            "operator": "=="
+          },
+          {
+            "type": "hasItem",
+            "itemId": "itm_clinic_coolant",
+            "quantity": 1,
+            "operator": ">=",
+            "requireEquipped": false
+          }
+        ],
+        "effects": [
+          {
+            "type": "removeItem",
+            "itemId": "itm_clinic_coolant",
+            "quantity": 1
+          },
+          {
+            "type": "completeQuest",
+            "questId": "qst_clinic_coolant",
+            "outcome": "Success",
+            "grantRewards": true
+          },
+          {
+            "type": "changeRelationship",
+            "npcId": "npc_doctor_sable",
+            "delta": 20
+          },
+          {
+            "type": "setFlag",
+            "flag": "clinic_cradle_repaired",
+            "value": true
+          }
+        ],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "showResult",
+          "title": "Cold Cradle Restored",
+          "resultText": "The recovery cradle hums back to life. Sable promises to help the safehouse after the annex job."
+        }
+      }
+    ],
+    "npcIds": [
+      "npc_doctor_sable"
+    ],
+    "questIds": [
+      "qst_clinic_coolant"
+    ],
+    "eventIds": [
+      "evt_clinic_frequency",
+      "evt_flavor_clinic"
+    ],
+    "encounterIds": [],
+    "dangerLevel": 1,
+    "ambientEtherLevel": 25,
+    "environmentalExposure": "indoor"
+  },
+  {
+    "id": "poi_glassline_transit",
+    "name": "Abandoned Glassline Station",
+    "description": "Platform Zero lies behind a maintenance shutter omitted from public maps.",
+    "tags": [
+      "Hidden",
+      "Transit",
+      "Infiltration",
+      "Checkpoint:Before Main Encounter"
+    ],
+    "mapId": "map_slums_sec09",
+    "mapPosition": {
+      "x": 72,
+      "y": 43
+    },
+    "district": "Glassline Ward",
+    "regionId": "reg_corporate_cordon",
+    "icon": "Terminal",
+    "category": "Transit",
+    "visibilityConditions": [
+      {
+        "type": "flag",
+        "flag": "transit_discovered",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "availabilityConditions": [],
+    "actions": [
+      {
+        "id": "act_transit_investigate",
+        "label": "Investigate Platform Zero",
+        "description": "",
+        "icon": "Eye",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "questState",
+            "questId": "qst_glassline_signal",
+            "status": "Active",
+            "stageId": "stage_access",
+            "operator": "=="
+          }
+        ],
+        "effects": [],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_transit_echo"
+        }
+      },
+      {
+        "id": "act_transit_search",
+        "label": "Search the derelict med-car",
+        "description": "",
+        "icon": "Search",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "transit_medcar_searched",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "addItem",
+            "itemId": "itm_clinic_coolant",
+            "quantity": 1
+          },
+          {
+            "type": "addItem",
+            "itemId": "itm_signal_scrap",
+            "quantity": 1
+          },
+          {
+            "type": "setFlag",
+            "flag": "transit_medcar_searched",
+            "value": true
+          }
+        ],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "showResult",
+          "title": "Sealed Medical Crate",
+          "resultText": "You recover sterile coolant and a resonant conductor strip.",
+          "status": "Success"
+        }
+      },
+      {
+        "id": "act_transit_memorial",
+        "label": "Read the platform memorial",
+        "description": "",
+        "icon": "Sparkles",
+        "actionType": "Explore",
+        "conditions": [],
+        "effects": [],
+        "hideIfUnavailable": false,
+        "isRepeatable": true,
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_flavor_memorial"
+        }
+      },
+      {
+        "id": "act_transit_annex",
+        "label": "Enter the annex service lock",
+        "description": "",
+        "icon": "Lock",
+        "actionType": "Travel",
+        "conditions": [
+          {
+            "type": "questState",
+            "questId": "qst_glassline_signal",
+            "status": "Active",
+            "operator": "=="
+          },
+          {
+            "type": "flag",
+            "flag": "annex_access_ready",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_annex_entry"
+        }
+      }
+    ],
+    "npcIds": [
+      "npc_ash_crow"
+    ],
+    "questIds": [
+      "qst_glassline_signal",
+      "qst_clinic_coolant"
+    ],
+    "eventIds": [
+      "evt_transit_echo",
+      "evt_flavor_memorial"
+    ],
+    "encounterIds": [
+      "enc_glassline_transit_standoff"
+    ],
+    "dangerLevel": 3,
+    "ambientEtherLevel": 25,
+    "environmentalExposure": "sheltered"
+  },
+  {
+    "id": "poi_glassline_facility",
+    "name": "Glassline Security Annex",
+    "description": "A sealed corporate archive embedded in black reflective glass.",
+    "tags": [
+      "Hidden",
+      "Security",
+      "Finale"
+    ],
+    "mapId": "map_slums_sec09",
+    "mapPosition": {
+      "x": 88,
+      "y": 24
+    },
+    "district": "Glassline Ward",
+    "regionId": "reg_corporate_cordon",
+    "icon": "ShieldAlert",
+    "category": "SecurityNode",
+    "visibilityConditions": [
+      {
+        "type": "flag",
+        "flag": "annex_access_ready",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "availabilityConditions": [
+      {
+        "type": "questState",
+        "questId": "qst_glassline_signal",
+        "status": "Active",
+        "operator": "=="
+      }
+    ],
+    "actions": [
+      {
+        "id": "act_facility_core",
+        "label": "Descend into the archive core",
+        "description": "",
+        "icon": "ShieldAlert",
+        "actionType": "Combat",
+        "conditions": [
+          {
+            "type": "questState",
+            "questId": "qst_glassline_signal",
+            "status": "Active",
+            "stageId": "stage_confrontation",
+            "operator": "=="
+          }
+        ],
+        "effects": [
+          {
+            "type": "advanceQuest",
+            "questId": "qst_glassline_signal",
+            "targetStageId": "stage_choice"
+          }
+        ],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_annex_lockdown"
+        }
+      },
+      {
+        "id": "act_facility_after",
+        "label": "Inspect the silent archive chamber",
+        "description": "",
+        "icon": "Eye",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "archive_released",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "hideIfUnavailable": true,
+        "isRepeatable": false,
+        "outcome": {
+          "type": "showResult",
+          "title": "Quiet Glass",
+          "resultText": "The panes now reflect ordinary faces instead of stolen memories."
+        }
+      }
+    ],
+    "npcIds": [
+      "npc_warden_kest"
+    ],
+    "questIds": [
+      "qst_glassline_signal"
+    ],
+    "eventIds": [
+      "evt_annex_entry",
+      "evt_annex_lockdown",
+      "evt_glassline_final_choice"
+    ],
+    "encounterIds": [
+      "enc_glassline_annex_core"
+    ],
+    "dangerLevel": 5,
+    "ambientEtherLevel": 25,
+    "environmentalExposure": "indoor"
   }
 ]

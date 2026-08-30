@@ -19,7 +19,8 @@ export type Direction = z.infer<typeof DirectionSchema>;
 // 1. Inventory Runtime State
 // -----------------------------------------------------------------------------
 
-export const InventoryItemSlotSchema = z.object({
+export const InventoryEntrySchema = z.object({
+  entryId: z.string().min(1).optional(),
   itemId: z.string().min(1, 'Item ID cannot be empty'),
   quantity: z.number().int().min(1).default(1),
   isEquipped: z.boolean().default(false),
@@ -29,13 +30,21 @@ export const InventoryItemSlotSchema = z.object({
   metadata: z.record(z.string(), z.any()).optional(),
 });
 
-export type InventoryItemSlot = z.infer<typeof InventoryItemSlotSchema>;
+export type InventoryEntry = z.infer<typeof InventoryEntrySchema>;
+export const InventoryItemSlotSchema = InventoryEntrySchema;
+export type InventoryItemSlot = InventoryEntry;
+
+export const EquipmentStateSchema = z.object({
+  slots: z.record(z.string(), z.string().nullable()).default({}),
+  appliedModifiers: z.record(z.string(), z.number()).default({}),
+});
+export type EquipmentState = z.infer<typeof EquipmentStateSchema>;
 
 export const InventoryStateSchema = z.object({
   items: z.array(InventoryItemSlotSchema).default([]),
   credits: z.number().int().min(0).default(0),
-  maxSlots: z.number().int().min(1).default(30),
-  maxWeight: z.number().min(0).default(100),
+  maxSlots: z.number().int().min(1).optional(),
+  maxWeight: z.number().min(0).optional(),
 });
 
 export type InventoryState = z.infer<typeof InventoryStateSchema>;
@@ -89,6 +98,7 @@ export const PlayerStateSchema = z.object({
     maxSlots: 30,
     maxWeight: 100,
   }),
+  equipment: EquipmentStateSchema.default({ slots: {}, appliedModifiers: {} }),
   activeStatusEffects: z.array(ActiveStatusEffectSchema).default([]),
 });
 

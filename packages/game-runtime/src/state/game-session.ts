@@ -26,6 +26,7 @@ import {
   PoiRuntimeState,
   PostCombatResolution,
   Vector2D,
+  EquipmentSlot,
 } from '@neon-ether/game-schema';
 import { DiceRoller, TypedEventEmitter } from '@neon-ether/engine';
 import {
@@ -60,6 +61,7 @@ import { EventRuntime, ResolvedEventState } from '../events/event-runtime.ts';
 import { QuestRuntime, QuestCommandResult, ResolvedQuestState } from '../quests/quest-runtime.ts';
 import { CombatEncounterEngine, ResolvedCombatPreview } from '../combat/combat-encounter-engine.ts';
 import type { RuntimeTraceEvent, RuntimeTraceSink } from '../observability/runtime-trace.ts';
+import { InventorySystem, InventoryCommandResult } from '../inventory/inventory-system.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   deserializeSaveGame,
@@ -124,6 +126,7 @@ export class GameSession {
   private eventRuntime: EventRuntime;
   private questRuntime: QuestRuntime;
   private combatEncounterEngine: CombatEncounterEngine;
+  private inventorySystem: InventorySystem;
   public events: TypedEventEmitter<GameRuntimeEvents>;
 
   constructor(
@@ -143,6 +146,7 @@ export class GameSession {
     this.conditionRegistry = conditionRegistry ?? new ConditionRegistry(true, report);
     this.effectRegistry = effectRegistry ?? new EffectRegistry(true);
     this.effectExecutor = new EffectExecutor(this.effectRegistry, report);
+    this.inventorySystem = new InventorySystem(contentRegistry, (effects, state) => { this.effectExecutor.executeBatch(effects, { state, contentRegistry }); });
     this.baseManagementSystem = new BaseManagementSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.actionExecutor = new ActionExecutor(this.conditionRegistry, this.effectExecutor);
     this.outcomeEngine = new GameplayOutcomeEngine();
@@ -153,6 +157,7 @@ export class GameSession {
 
     // Initial modular state
     this.state = createInitialGameStateFromContent(this.contentRegistry.exportSnapshot());
+    this.inventorySystem.hydrate(this.state);
   }
 
   // --- State Accessors ---
@@ -163,6 +168,28 @@ export class GameSession {
 
   public getPlayerState(): PlayerState {
     return structuredClone(this.state.player);
+  }
+
+  public getInventoryWeight(): number { return this.inventorySystem.getWeight(this.state.player.inventory); }
+  public addInventoryItem(itemId: string, quantity = 1): InventoryCommandResult {
+    const result = this.inventorySystem.add(this.state.player.inventory, itemId, quantity);
+    if (result.success) this.events.emit('STATE_CHANGED', this.state);
+    return result;
+  }
+  public removeInventoryItem(itemId: string, quantity = 1): InventoryCommandResult {
+    const result = this.inventorySystem.remove(this.state.player.inventory, itemId, quantity);
+    if (result.changedQuantity) this.events.emit('STATE_CHANGED', this.state);
+    return result;
+  }
+  public equipInventoryEntry(entryId: string, slot: EquipmentSlot): InventoryCommandResult {
+    const result = this.inventorySystem.equip(this.state, entryId, slot);
+    if (result.success) this.events.emit('STATE_CHANGED', this.state);
+    return result;
+  }
+  public unequipSlot(slotId: string): InventoryCommandResult {
+    const result = this.inventorySystem.unequip(this.state, slotId);
+    if (result.success) this.events.emit('STATE_CHANGED', this.state);
+    return result;
   }
 
   /** Applies HUD resource commands inside the runtime rather than mutating React snapshots. */
@@ -893,6 +920,7 @@ export class GameSession {
     const result = deserializeSaveGame(jsonOrSave);
     if (result.success && result.saveGame) {
       this.state = result.saveGame.state;
+      this.inventorySystem.hydrate(this.state);
       this.events.emit('STATE_CHANGED', this.state);
       this.logJournal('System', `Game session loaded successfully (Schema v${result.saveGame.metadata.schemaVersion}).`, {
         migrated: result.migrated,

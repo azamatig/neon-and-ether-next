@@ -17,6 +17,7 @@ import {
   PostCombatResolution,
 } from '@neon-ether/game-schema';
 import { DiceRoller } from '@neon-ether/engine';
+import { InventorySystem } from '../inventory/inventory-system.ts';
 import { GameState } from '../state/game-state.ts';
 import { ContentRegistry } from '../content/content-registry.ts';
 import { evaluateConditions } from '../conditions/condition-evaluator.ts';
@@ -451,13 +452,8 @@ export class CombatEncounterEngine {
     const remainingLoot: InventoryItemSlot[] = [];
     for (const slot of activeRes.availableLoot) {
       if (selectedItemIds.includes(slot.itemId)) {
-        // Add to player inventory
-        const existing = state.player.inventory.items.find((i) => i.itemId === slot.itemId && !i.isEquipped);
-        if (existing) {
-          existing.quantity += slot.quantity;
-        } else {
-          state.player.inventory.items.push({ ...slot });
-        }
+        const transfer = new InventorySystem(contentRegistry).add(state.player.inventory, slot.itemId, slot.quantity);
+        if (!transfer.success) { remainingLoot.push(slot); continue; }
         const itemDef = contentRegistry.getItem(slot.itemId);
         if (logJournal) logJournal('World', `Looted: ${itemDef?.name ?? slot.itemId} ×${slot.quantity}.`);
       } else {

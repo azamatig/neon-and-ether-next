@@ -9,7 +9,7 @@
       "Pistol",
       "Plasma"
     ],
-    "category": "Firearm",
+    "category": "weapon",
     "rarity": "StreetGrade",
     "weightKg": 1.4,
     "valueCredits": 450,
@@ -19,13 +19,25 @@
       18
     ],
     "rangeTiles": 7,
-    "statRequirements": {
-      "Reflexes": 12
-    },
     "icon": "Crosshair",
     "grantedAbilityIds": [
       "ability_thermal_burst"
-    ]
+    ],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "mainHand"
+    ],
+    "requirements": [
+      {
+        "type": "attribute",
+        "attribute": "reflexes",
+        "minimum": 12
+      }
+    ],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": []
   },
   {
     "id": "wpn_ether_baton",
@@ -37,7 +49,7 @@
       "Ether",
       "Shock"
     ],
-    "category": "Melee",
+    "category": "weapon",
     "rarity": "MilitarySpec",
     "weightKg": 2.1,
     "valueCredits": 620,
@@ -48,14 +60,30 @@
       22
     ],
     "rangeTiles": 1,
-    "statRequirements": {
-      "Body": 11,
-      "EtherTech": 13
-    },
     "icon": "Zap",
     "grantedAbilityIds": [
       "ability_arc_strike"
-    ]
+    ],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "mainHand"
+    ],
+    "requirements": [
+      {
+        "type": "attribute",
+        "attribute": "body",
+        "minimum": 11
+      },
+      {
+        "type": "attribute",
+        "attribute": "etherTech",
+        "minimum": 13
+      }
+    ],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": []
   },
   {
     "id": "cyb_neural_jack_v1",
@@ -67,25 +95,38 @@
       "Mind",
       "Hacking"
     ],
-    "category": "Cyberware",
+    "category": "armor",
     "rarity": "Prototype",
     "weightKg": 0.3,
     "valueCredits": 1200,
-    "statRequirements": {
-      "Mind": 14
-    },
     "modifiers": [
       {
-        "stat": "Mind",
+        "target": "mind",
+        "operation": "add",
         "value": 2
       },
       {
-        "stat": "EtherTech",
+        "target": "etherTech",
+        "operation": "add",
         "value": 1
       }
     ],
     "icon": "Cpu",
-    "grantedAbilityIds": []
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "body"
+    ],
+    "requirements": [
+      {
+        "type": "attribute",
+        "attribute": "mind",
+        "minimum": 14
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
   },
   {
     "id": "con_ether_vial",
@@ -97,13 +138,20 @@
       "Medical",
       "Stim"
     ],
-    "category": "Consumable",
+    "category": "consumable",
     "rarity": "Common",
     "weightKg": 0.2,
     "valueCredits": 75,
     "apUseCost": 1,
     "icon": "Activity",
-    "grantedAbilityIds": []
+    "grantedAbilityIds": [],
+    "stackable": true,
+    "maxStack": 99,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": []
   },
   {
     "id": "itm_cyberware_fiber",
@@ -114,11 +162,18 @@
       "Cyberware",
       "Tech"
     ],
-    "category": "CraftingMaterial",
+    "category": "material",
     "rarity": "StreetGrade",
     "weightKg": 0.1,
     "valueCredits": 110,
     "icon": "Layers",
-    "grantedAbilityIds": []
+    "grantedAbilityIds": [],
+    "stackable": true,
+    "maxStack": 99,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": []
   }
 ]

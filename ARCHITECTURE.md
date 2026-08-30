@@ -98,3 +98,12 @@ save snapshot to the Game only through a Vite-pruned `import.meta.env.DEV` boots
 The runtime exposes an optional presentation-neutral trace sink; it has no dependency
 on Editor or React. Editor panels, mutation helpers, and debug markers are excluded
 from the production Game bundle.
+
+## Inventory and equipment
+
+`InventorySystem` owns stacking, quantities, optional slot/weight capacity, equipment
+requirements, and modifier application. Item content only declares broad category,
+tags, compatible slot IDs, requirements, modifiers, and optional effects. Combat loot,
+effect handlers, and `GameSession` delegate inventory mutations to that system; none of
+them branch on concrete item IDs. Equipment is runtime state and content definitions
+remain immutable.

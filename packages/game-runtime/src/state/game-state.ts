@@ -104,6 +104,7 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
     position: overrides.position ?? { x: 4, y: 5 },
     facing: overrides.facing ?? 'South',
     inventory: overrides.inventory ?? createInitialInventoryState(),
+    equipment: overrides.equipment ?? { slots: {}, appliedModifiers: {} },
     activeStatusEffects: overrides.activeStatusEffects ?? [],
   };
 }

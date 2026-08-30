@@ -28,8 +28,8 @@ export class TurnBasedCombatEngine {
       ...(playerDefinition?.abilityIds ?? []),
       ...equippedItems.flatMap((item) => item.grantedAbilityIds),
     ]);
-    const weapon = equippedItems.find((item) => item.category === 'Firearm' || item.category === 'Melee');
-    const armor = equippedItems.filter((item) => item.category === 'Armor');
+    const weapon = equippedItems.find((item) => item.category === 'weapon');
+    const armor = equippedItems.filter((item) => item.category === 'armor');
     const combatants: Record<string, Combatant> = {
       [gameState.player.characterId]: {
         id: gameState.player.characterId,
@@ -43,7 +43,7 @@ export class TurnBasedCombatEngine {
         currentAp: gameState.player.vitals.actionPointsMax,
         maxAp: gameState.player.vitals.actionPointsMax,
         initiative: gameState.player.vitals.initiative,
-        armor: gameState.player.vitals.armorRating + armor.reduce((sum, item) => sum + (item.armorRating ?? 0), 0),
+        armor: gameState.player.vitals.armorRating,
         weaponId: weapon?.id,
         armorItemIds: armor.map((item) => item.id),
         abilityIds: [...playerAbilities],

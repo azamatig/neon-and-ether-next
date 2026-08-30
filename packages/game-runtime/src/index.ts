@@ -21,3 +21,4 @@ export * from './actions/poi-action-pipeline.ts';
 export * from './events/event-runtime.ts';
 export * from './quests/quest-runtime.ts';
 export * from './observability/runtime-trace.ts';
+export * from './inventory/index.ts';

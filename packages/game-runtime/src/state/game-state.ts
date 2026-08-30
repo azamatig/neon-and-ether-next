@@ -90,6 +90,7 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
       etherTech: 15,
       presence: 11,
     },
+    skills: overrides.skills ?? {},
     vitals: overrides.vitals ?? {
       maxHp: 38,
       currentHp: 38,
@@ -105,6 +106,10 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
     facing: overrides.facing ?? 'South',
     inventory: overrides.inventory ?? createInitialInventoryState(),
     equipment: overrides.equipment ?? { slots: {}, appliedModifiers: {} },
+    traits: overrides.traits ?? [],
+    perks: overrides.perks ?? [],
+    temporaryModifiers: overrides.temporaryModifiers ?? [],
+    statusEffects: overrides.statusEffects ?? [],
     activeStatusEffects: overrides.activeStatusEffects ?? [],
   };
 }
@@ -273,9 +278,14 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         level: playerBlueprint.level,
         factionId: playerBlueprint.factionId,
         attributes: { ...playerBlueprint.attributes },
+        skills: { ...playerBlueprint.skills },
         vitals: { ...playerBlueprint.vitals },
         position: { ...playerBlueprint.position },
         facing: playerBlueprint.facing,
+        traits: [...playerBlueprint.traits],
+        perks: [...playerBlueprint.perks],
+        temporaryModifiers: [...playerBlueprint.temporaryModifiers],
+        statusEffects: [...playerBlueprint.statusEffects],
         inventory: createInitialInventoryState({
           items: playerBlueprint.inventory.map((slot) => ({ ...slot })),
         }),

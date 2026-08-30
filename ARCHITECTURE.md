@@ -107,3 +107,12 @@ tags, compatible slot IDs, requirements, modifiers, and optional effects. Combat
 effect handlers, and `GameSession` delegate inventory mutations to that system; none of
 them branch on concrete item IDs. Equipment is runtime state and content definitions
 remain immutable.
+
+## Character RPG stats and checks
+
+Character definitions expose compatible base attributes, open-ended skill maps, derived
+stats, traits, perks, temporary modifiers, and status effects. `CharacterStatsSystem`
+produces effective snapshots without mutating base attributes. `SkillCheckSystem`
+resolves authored attribute/skill/difficulty/modifier definitions into five generic
+outcomes. POI and Event runtimes consume the same check definition and never branch on
+named skills such as hacking, strength, or charisma.

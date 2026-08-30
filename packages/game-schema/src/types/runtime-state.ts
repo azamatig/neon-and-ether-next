@@ -6,7 +6,7 @@
 
 import { z } from 'zod';
 import { Vector2DSchema } from './grid.ts';
-import { CharacterAttributesSchema, DerivedVitalsSchema } from './stats.ts';
+import { CharacterAttributesSchema, CharacterStatModifierSchema, CharacterStatusEffectSchema, DerivedVitalsSchema, SkillsSchema } from './stats.ts';
 import { QuestStatusSchema } from './quest.ts';
 import { CombatStateSchema } from './combat.ts';
 import { CharacterAssignmentSchema, CharacterRelationshipSchema } from './character-management.ts';
@@ -79,6 +79,7 @@ export const PlayerStateSchema = z.object({
     etherTech: 15,
     presence: 11,
   }),
+  skills: SkillsSchema,
   vitals: DerivedVitalsSchema.default({
     maxHp: 38,
     currentHp: 38,
@@ -99,6 +100,10 @@ export const PlayerStateSchema = z.object({
     maxWeight: 100,
   }),
   equipment: EquipmentStateSchema.default({ slots: {}, appliedModifiers: {} }),
+  traits: z.array(z.string()).default([]),
+  perks: z.array(z.string()).default([]),
+  temporaryModifiers: z.array(CharacterStatModifierSchema).default([]),
+  statusEffects: z.array(CharacterStatusEffectSchema).default([]),
   activeStatusEffects: z.array(ActiveStatusEffectSchema).default([]),
 });
 

@@ -2,6 +2,7 @@ import { Ability, CombatAction, Combatant, CombatState } from '@neon-ether/game-
 import { DiceRoller } from '@neon-ether/engine';
 import { ContentRegistry } from '../content/content-registry.ts';
 import { GameState } from '../state/game-state.ts';
+import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
 
 export interface CombatCommandResult {
   success: boolean;
@@ -30,20 +31,21 @@ export class TurnBasedCombatEngine {
     ]);
     const weapon = equippedItems.find((item) => item.category === 'weapon');
     const armor = equippedItems.filter((item) => item.category === 'armor');
+    const effectivePlayer = new CharacterStatsSystem().resolve(gameState.player);
     const combatants: Record<string, Combatant> = {
       [gameState.player.characterId]: {
         id: gameState.player.characterId,
         sourceId: gameState.player.characterId,
         name: gameState.player.name,
         team: 'Player',
-        currentHp: gameState.player.vitals.currentHp,
-        maxHp: gameState.player.vitals.maxHp,
-        currentEther: gameState.player.vitals.currentEther,
-        maxEther: gameState.player.vitals.maxEther,
-        currentAp: gameState.player.vitals.actionPointsMax,
-        maxAp: gameState.player.vitals.actionPointsMax,
-        initiative: gameState.player.vitals.initiative,
-        armor: gameState.player.vitals.armorRating,
+        currentHp: effectivePlayer.derivedStats.currentHp,
+        maxHp: effectivePlayer.derivedStats.maxHp,
+        currentEther: effectivePlayer.derivedStats.currentEther,
+        maxEther: effectivePlayer.derivedStats.maxEther,
+        currentAp: effectivePlayer.derivedStats.actionPointsMax,
+        maxAp: effectivePlayer.derivedStats.actionPointsMax,
+        initiative: effectivePlayer.derivedStats.initiative,
+        armor: effectivePlayer.derivedStats.armorRating,
         weaponId: weapon?.id,
         armorItemIds: armor.map((item) => item.id),
         abilityIds: [...playerAbilities],
@@ -55,15 +57,16 @@ export class TurnBasedCombatEngine {
     encounter.enemyGroups.forEach((group, groupIndex) => {
       const enemy = this.content.getEnemy(group.enemyId);
       if (!enemy) return;
+      const effectiveEnemy = new CharacterStatsSystem().resolve(enemy);
       for (let index = 0; index < group.count; index += 1) {
         const id = `enemy_${groupIndex}_${index}`;
         combatants[id] = {
           id, sourceId: enemy.id, name: group.nameOverride ?? enemy.name, team: 'Enemy',
-          currentHp: group.customHp ?? enemy.vitals.currentHp,
-          maxHp: group.customHp ?? enemy.vitals.maxHp,
-          currentEther: enemy.vitals.currentEther, maxEther: enemy.vitals.maxEther,
-          currentAp: enemy.vitals.actionPointsMax, maxAp: enemy.vitals.actionPointsMax,
-          initiative: enemy.vitals.initiative, armor: enemy.vitals.armorRating,
+          currentHp: group.customHp ?? effectiveEnemy.derivedStats.currentHp,
+          maxHp: group.customHp ?? effectiveEnemy.derivedStats.maxHp,
+          currentEther: effectiveEnemy.derivedStats.currentEther, maxEther: effectiveEnemy.derivedStats.maxEther,
+          currentAp: effectiveEnemy.derivedStats.actionPointsMax, maxAp: effectiveEnemy.derivedStats.actionPointsMax,
+          initiative: effectiveEnemy.derivedStats.initiative, armor: effectiveEnemy.derivedStats.armorRating,
           weaponId: enemy.equippedWeaponId, armorItemIds: [], abilityIds: enemy.abilityIds,
           aiProfileId: enemy.combatAIProfileId, statuses: [], isDefeated: false,
         };

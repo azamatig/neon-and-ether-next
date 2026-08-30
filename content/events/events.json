@@ -20,7 +20,7 @@
         "id": "step_ambush_intro",
         "type": "narration",
         "title": "Threat Vector Detected",
-        "text": "Warning klaxons echo through the damp concrete alley as scarlet searchlights snap directly onto your visor. Heavy boots rhythmically crunch broken glass—an OmniCorp tactical strike team has locked onto your neural signature!",
+        "text": "Warning klaxons echo through the damp concrete alley as scarlet searchlights snap directly onto your visor. Heavy boots rhythmically crunch broken glass\u2014an OmniCorp tactical strike team has locked onto your neural signature!",
         "speaker": {
           "type": "system",
           "name": "Tactical HUD",
@@ -44,10 +44,13 @@
             "text": "Overload nearby power conduit with EtherTech discharge [EtherTech DC 13]",
             "conditions": [],
             "check": {
-              "stat": "etherTech",
-              "difficulty": 13,
               "passText": "You discharge an ether wave into the high-voltage breaker, blinding their optical suites and escaping!",
-              "failText": "The breaker sparks harmlessly; the enforcers advance on your position!"
+              "failText": "The breaker sparks harmlessly; the enforcers advance on your position!",
+              "attribute": "etherTech",
+              "difficulty": "Moderate",
+              "targetDc": 13,
+              "modifiers": [],
+              "partialEffects": []
             },
             "effects": [
               {
@@ -79,8 +82,11 @@
             "text": "Attempt emergency retreat through drainage shafts [Body DC 11]",
             "conditions": [],
             "check": {
-              "stat": "body",
-              "difficulty": 11
+              "attribute": "body",
+              "difficulty": "Moderate",
+              "targetDc": 11,
+              "modifiers": [],
+              "partialEffects": []
             },
             "outcome": {
               "type": "poi",

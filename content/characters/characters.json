@@ -62,7 +62,14 @@
     "traits": [
       "Technical",
       "Medical"
-    ]
+    ],
+    "skills": {
+      "intrusion": 2,
+      "medicine": 1
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": []
   },
   {
     "id": "npc_kaelen_rourke",
@@ -125,6 +132,12 @@
       "trust": 15,
       "fear": 0,
       "loyalty": 5
-    }
+    },
+    "skills": {
+      "negotiation": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": []
   }
 ]

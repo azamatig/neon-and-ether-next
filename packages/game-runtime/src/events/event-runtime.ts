@@ -19,7 +19,7 @@ import { BatchConditionResult, evaluateConditions } from '../conditions/conditio
 import { ConditionRegistry, defaultConditionRegistry } from '../conditions/condition-registry.ts';
 import { BatchEffectExecutionResult, EffectExecutor, defaultEffectExecutor } from '../effects/effect-executor.ts';
 import { GameplayOutcomeEngine, defaultGameplayOutcomeEngine } from '../resolution/gameplay-outcome-engine.ts';
-import { resolveStatCheck, StatCheckResolution } from '../resolution/stat-check.ts';
+import { SkillCheckSystem } from '../resolution/skill-check.ts';
 
 export interface ResolvedEventChoice extends EventChoice {
   isAvailable: boolean;
@@ -27,7 +27,7 @@ export interface ResolvedEventChoice extends EventChoice {
   unmetReason?: string;
   statCheckInfo?: {
     stat: string;
-    difficulty: number;
+    difficulty: string;
   };
 }
 
@@ -187,7 +187,7 @@ export class EventRuntime {
         unmetReason,
         statCheckInfo: choice.check
           ? {
-              stat: choice.check.stat.toUpperCase(),
+              stat: `${choice.check.attribute}${choice.check.skill ? ` / ${choice.check.skill}` : ''}`,
               difficulty: choice.check.difficulty,
             }
           : undefined,
@@ -280,15 +280,8 @@ export class EventRuntime {
     // 1. If choice includes a stat check
     if (choice.check) {
       const checkDef = choice.check;
-      if (['body', 'reflexes', 'mind', 'etherTech', 'presence'].includes(checkDef.stat)) {
-        const rollRes = resolveStatCheck(
-          checkDef.stat.toUpperCase() as any,
-          state.player.attributes,
-          'Moderate',
-          this.diceRoller,
-          checkDef.difficulty,
-          choice.text
-        );
+      {
+        const rollRes = new SkillCheckSystem(this.diceRoller).resolve(checkDef, state.player);
 
         if (logJournal) {
           logJournal('SkillCheck', rollRes.logSummary);
@@ -297,6 +290,9 @@ export class EventRuntime {
         if (rollRes.isPassed) {
           effectsToRun = [...effectsToRun, ...(checkDef.passEffects ?? [])];
           if (checkDef.passOutcome) nextOutcome = checkDef.passOutcome;
+        } else if (rollRes.result === 'partialSuccess') {
+          effectsToRun = [...effectsToRun, ...(checkDef.partialEffects ?? [])];
+          if (checkDef.partialOutcome) nextOutcome = checkDef.partialOutcome;
         } else {
           effectsToRun = [...(checkDef.failEffects ?? [])];
           if (checkDef.failOutcome) nextOutcome = checkDef.failOutcome;

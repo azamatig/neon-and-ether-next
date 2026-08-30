@@ -45,7 +45,14 @@
     "combatAIProfileId": "ai_flanker",
     "abilityIds": [
       "ability_thermal_burst"
-    ]
+    ],
+    "skills": {
+      "combat": 2
+    },
+    "traits": [],
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": []
   },
   {
     "id": "enm_combat_drone_mk2",
@@ -93,7 +100,14 @@
     "combatAIProfileId": "ai_aggressive",
     "abilityIds": [
       "ability_arc_strike"
-    ]
+    ],
+    "skills": {
+      "combat": 3
+    },
+    "traits": [],
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": []
   },
   {
     "id": "enm_omnicorp_ether_adept",
@@ -146,6 +160,13 @@
     "abilityIds": [
       "ability_ether_patch",
       "ability_arc_strike"
-    ]
+    ],
+    "skills": {
+      "combat": 2
+    },
+    "traits": [],
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": []
   }
 ]

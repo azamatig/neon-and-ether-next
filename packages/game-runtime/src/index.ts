@@ -9,6 +9,7 @@ export * from './state/save-migration.ts';
 export * from './state/game-session.ts';
 export * from './content/content-registry.ts';
 export * from './resolution/stat-check.ts';
+export * from './resolution/skill-check.ts';
 export * from './resolution/gameplay-outcome-engine.ts';
 export * from './combat/turn-based-combat-engine.ts';
 export * from './characters/character-management-system.ts';
@@ -22,3 +23,5 @@ export * from './events/event-runtime.ts';
 export * from './quests/quest-runtime.ts';
 export * from './observability/runtime-trace.ts';
 export * from './inventory/index.ts';
+
+export * from './stats/index.ts';

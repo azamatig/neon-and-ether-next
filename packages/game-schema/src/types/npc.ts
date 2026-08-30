@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
-import { CharacterAttributesSchema, DerivedVitalsSchema } from './stats.ts';
+import { CharacterAttributesSchema, CharacterStatModifierSchema, CharacterStatusEffectSchema, DerivedVitalsSchema, SkillsSchema } from './stats.ts';
 import { Vector2DSchema } from './grid.ts';
 import { CharacterRelationshipSchema } from './character-management.ts';
 
@@ -21,6 +21,10 @@ export const NPCSchema = BaseEntitySchema.extend({
   level: z.number().int().min(1).default(1),
   attributes: CharacterAttributesSchema,
   vitals: DerivedVitalsSchema,
+  skills: SkillsSchema,
+  perks: z.array(z.string()).default([]),
+  temporaryModifiers: z.array(CharacterStatModifierSchema).default([]),
+  statusEffects: z.array(CharacterStatusEffectSchema).default([]),
   position: Vector2DSchema.default({ x: 0, y: 0 }),
   facing: z.enum(['North', 'South', 'East', 'West']).default('South'),
   inventory: z.array(CharacterInventorySlotSchema).default([]),

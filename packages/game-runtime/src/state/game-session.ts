@@ -62,6 +62,7 @@ import { QuestRuntime, QuestCommandResult, ResolvedQuestState } from '../quests/
 import { CombatEncounterEngine, ResolvedCombatPreview } from '../combat/combat-encounter-engine.ts';
 import type { RuntimeTraceEvent, RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import { InventorySystem, InventoryCommandResult } from '../inventory/inventory-system.ts';
+import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   deserializeSaveGame,
@@ -324,6 +325,7 @@ export class GameSession {
    */
   public getResolvedPlayerCharacter(): CharacterDefinition {
     const p = this.state.player;
+    const effective = new CharacterStatsSystem().resolve(p);
     return {
       id: p.characterId,
       name: p.name,
@@ -335,8 +337,12 @@ export class GameSession {
       isMerchant: false,
       isCompanion: false,
       level: p.level,
-      attributes: { ...p.attributes },
-      vitals: { ...p.vitals },
+      attributes: effective.attributes,
+      vitals: effective.derivedStats,
+      skills: { ...p.skills },
+      perks: [...p.perks],
+      temporaryModifiers: [...p.temporaryModifiers],
+      statusEffects: [...p.statusEffects],
       position: { ...p.position },
       facing: p.facing,
       inventory: p.inventory.items.map((slot) => ({ ...slot })),
@@ -368,6 +374,10 @@ export class GameSession {
       isCompanion: runtime?.isCompanion ?? false,
       level: 1,
       attributes: { body: 10, reflexes: 10, mind: 10, etherTech: 10, presence: 10 },
+      skills: {},
+      perks: [],
+      temporaryModifiers: [],
+      statusEffects: [],
       vitals: {
         maxHp: runtime?.maxHp ?? 25,
         currentHp: runtime?.currentHp ?? 25,

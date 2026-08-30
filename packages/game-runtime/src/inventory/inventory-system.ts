@@ -94,23 +94,20 @@ export class InventorySystem {
   }
 
   private recomputeModifiers(player: PlayerState): void {
-    for (const [target, delta] of Object.entries(player.equipment.appliedModifiers)) this.changeStat(player, target, -delta);
     const totals: Record<string, number> = {};
     for (const entryId of Object.values(player.equipment.slots)) {
-      const entry = entryId ? this.findEntry(player.inventory, entryId) : undefined; const item = entry && this.content.getItem(entry.itemId);
+      const entry = entryId ? this.findEntry(player.inventory, entryId) : undefined;
+      const item = entry && this.content.getItem(entry.itemId);
       for (const modifier of item?.modifiers ?? []) {
-        const current = this.readStat(player, modifier.target); const delta = modifier.operation === 'add' ? modifier.value : current * (modifier.value - 1);
+        const base = this.readStat(player, modifier.target);
+        const delta = modifier.operation === 'add' ? modifier.value : base * (modifier.value - 1);
         totals[modifier.target] = (totals[modifier.target] ?? 0) + delta;
       }
     }
-    for (const [target, delta] of Object.entries(totals)) this.changeStat(player, target, delta);
     player.equipment.appliedModifiers = totals;
-    player.vitals.currentHp = Math.min(player.vitals.currentHp, player.vitals.maxHp);
-    player.vitals.currentEther = Math.min(player.vitals.currentEther, player.vitals.maxEther);
   }
 
   private findEntry(inventory: InventoryState, id: string): InventoryEntry | undefined { return inventory.items.find((entry) => entry.entryId === id || (!entry.entryId && entry.itemId === id)); }
   private nextEntryId(inventory: InventoryState, itemId: string): string { let index = inventory.items.length + 1; while (inventory.items.some((entry) => entry.entryId === `${itemId}:${index}`)) index++; return `${itemId}:${index}`; }
   private readStat(player: PlayerState, target: string): number { return target in player.attributes ? (player.attributes as unknown as Record<string,number>)[target] : (player.vitals as unknown as Record<string,number>)[target] ?? 0; }
-  private changeStat(player: PlayerState, target: string, amount: number): void { const record = target in player.attributes ? player.attributes as unknown as Record<string,number> : player.vitals as unknown as Record<string,number>; record[target] = (record[target] ?? 0) + amount; }
 }

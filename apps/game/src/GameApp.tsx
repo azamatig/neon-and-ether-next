@@ -14,7 +14,7 @@ import { CombatPreviewContainer } from './components/CombatPreviewContainer.tsx'
 import { CombatResultContainer } from './components/CombatResultContainer.tsx';
 import { TurnBasedCombatScreen } from './components/TurnBasedCombatScreen.tsx';
 import { SaveStateModal } from './components/SaveStateModal.tsx';
-import { Badge, Button, Panel, PoiScreen, TerminalLog, WorldMapView } from '@neon-ether/shared-ui';
+import { Badge, BaseScreen, Button, Panel, PoiScreen, TerminalLog, WorldMapView } from '@neon-ether/shared-ui';
 import { Save } from 'lucide-react';
 
 export const GameApp: React.FC = () => {
@@ -68,6 +68,7 @@ export const GameApp: React.FC = () => {
   }
 
   const isPoiMode = gameState.world.mode === 'POI' && selectedPoi;
+  const isBaseMode = gameState.world.mode === 'Screen' && gameState.world.activeScreen === 'Base';
   const isEventMode = gameState.world.mode === 'Event' && activeEventState;
   const isCombatPreviewMode = gameState.world.mode === 'CombatPreview' && activeCombatPreview;
   const isCombatResultMode = gameState.world.mode === 'CombatResult' && activeCombatResolution;
@@ -139,7 +140,7 @@ export const GameApp: React.FC = () => {
               }
             >
               <div className="flex-1 min-h-[460px] relative flex flex-col">
-                {isPoiMode ? (
+                {isBaseMode ? <BaseScreen base={gameState.base} onReturn={returnToMap}/> : isPoiMode ? (
                   <PoiScreen
                     poi={selectedPoi}
                     map={activeMap}

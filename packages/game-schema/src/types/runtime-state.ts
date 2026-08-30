@@ -180,6 +180,7 @@ export const BaseRoomRuntimeStateSchema = z.object({
   productionProgress: z.number().min(0).max(100).default(0),
   upgradeFinishedTurn: z.number().int().optional(),
   installedUpgradeIds: z.array(z.string()).default([]),
+  modifiers: z.record(z.string(), z.number()).default({}),
   capacity: z.object({ residents: z.number().int().min(0), workers: z.number().int().min(0), storage: z.number().int().min(0) }),
 });
 
@@ -189,11 +190,12 @@ export const BaseStateSchema = z.object({
   baseId: z.string().default('base_player'),
   name: z.string().default('Player Base'),
   rooms: z.record(z.string(), BaseRoomRuntimeStateSchema).default({}),
-  roomSlots: z.record(z.string(), z.object({ slotId: z.string(), slotType: z.string(), roomInstanceId: z.string().nullable() })).default({}),
+  roomSlots: z.record(z.string(), z.object({ slotId: z.string(), slotType: z.string(), roomInstanceId: z.string().nullable(), isLocked: z.boolean().default(false) })).default({}),
   residentNpcIds: z.array(z.string()).default([]),
   storage: z.object({ items: z.array(InventoryItemSlotSchema).default([]), capacity: z.number().int().min(0).default(20) }).default({ items: [], capacity: 20 }),
   resources: z.record(z.string(), z.number().int().min(0)).default({}),
   unlockedUpgrades: z.array(z.string()).default([]),
+  modifiers: z.record(z.string(), z.number()).default({}),
   stationedCompanionIds: z.array(z.string()).default([]),
 });
 
@@ -312,6 +314,7 @@ export const WorldStateSchema = z.object({
     .nullable()
     .default(null),
   mode: GameModeSchema.default('Map'),
+  activeScreen: z.enum(['Market', 'Workbench', 'Inventory', 'Base', 'Journal', 'Dialogue']).nullable().default(null),
   pois: z.record(z.string(), PoiRuntimeStateSchema).default({}),
   containers: z.record(z.string(), ContainerRuntimeStateSchema).default({}),
   doors: z.record(z.string(), DoorRuntimeStateSchema).default({}),
@@ -377,6 +380,7 @@ export const GameStateSchema = z.object({
     storage: { items: [], capacity: 20 },
     resources: {},
     unlockedUpgrades: [],
+    modifiers: {},
     stationedCompanionIds: [],
   }),
   time: TimeStateSchema.default({

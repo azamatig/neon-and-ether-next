@@ -131,6 +131,7 @@ export function createInitialWorldState(overrides: Partial<WorldState> = {}): Wo
     activeEncounterId: overrides.activeEncounterId ?? undefined,
     activeOriginContext: overrides.activeOriginContext ?? undefined,
     mode: overrides.mode ?? 'Map',
+    activeScreen: overrides.activeScreen ?? null,
     pois: overrides.pois ?? {},
     containers: overrides.containers ?? {},
     doors: overrides.doors ?? {},
@@ -216,14 +217,15 @@ export function createInitialFactionRuntimeState(
 
 export function createInitialBaseState(overrides: Partial<BaseState> = {}): BaseState {
   return {
-    baseId: overrides.baseId ?? 'base_player',
-    name: overrides.name ?? 'Player Base',
+    baseId: overrides.baseId ?? '',
+    name: overrides.name ?? '',
     rooms: overrides.rooms ?? {},
     roomSlots: overrides.roomSlots ?? {},
     residentNpcIds: overrides.residentNpcIds ?? [],
     storage: overrides.storage ?? { items: [], capacity: 20 },
     resources: overrides.resources ?? {},
     unlockedUpgrades: overrides.unlockedUpgrades ?? [],
+    modifiers: overrides.modifiers ?? {},
     stationedCompanionIds: overrides.stationedCompanionIds ?? [],
   };
 }
@@ -280,7 +282,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
   const playerBlueprint = content.npcs.find((npc) => npc.isPlayer) ?? content.npcs[0];
   const initialMap = content.maps[0];
   const initialPoiId = initialMap?.defaultPoiId ?? initialMap?.poiIds[0] ?? null;
-  const baseDefinition = content.bases[0];
+  const baseDefinition = content.bases.find((base) => base.poiId === initialPoiId) ?? content.bases[0];
   const player = playerBlueprint
     ? createInitialPlayerState({
         characterId: playerBlueprint.id,
@@ -350,6 +352,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
       assignedNpcIds: [],
       productionProgress: 0,
       installedUpgradeIds: [],
+      modifiers: { ...definition.gameplayModifiers },
       capacity: { ...definition.capacity },
     }]] : [];
   }));
@@ -357,6 +360,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
     slotId: slot.id,
     slotType: slot.slotType,
     roomInstanceId: startingRooms.find((room) => room.slotId === slot.id)?.roomInstanceId ?? null,
+    isLocked: !slot.unlockedByDefault,
   }]));
 
   return createInitialGameState({
@@ -372,11 +376,12 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
     factions,
     shops,
     base: createInitialBaseState({
-      baseId: baseDefinition?.id ?? 'base_player',
-      name: baseDefinition?.name ?? 'Player Base',
+      baseId: baseDefinition?.id ?? '',
+      name: baseDefinition?.name ?? '',
       rooms,
       roomSlots,
       resources: baseDefinition?.startingResources ?? {},
+      modifiers: baseDefinition?.globalModifiers ?? {},
       storage: {
         items: [],
         capacity: (baseDefinition?.storageCapacity ?? 20) + Object.values(rooms).reduce((sum, room) => sum + room.capacity.storage, 0),

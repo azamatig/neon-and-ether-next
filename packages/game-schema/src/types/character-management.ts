@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
+import { ConditionSchema } from './conditions.ts';
+import { EffectSchema } from './effects.ts';
 
 export const CharacterRelationshipStatusSchema = z.enum([
   'independent', 'companion', 'employee', 'servant', 'prisoner', 'enslaved',
@@ -43,7 +45,16 @@ export const BaseJobDefinitionSchema = BaseEntitySchema.extend({
   allowedStatuses: z.array(CharacterRelationshipStatusSchema).default(['companion', 'employee', 'servant']),
   requiredTraits: z.array(z.string()).default([]),
   roomTypes: z.array(z.string()).default([]),
+  requiredRoomIds: z.array(z.string()).default([]),
+  requiredRoomTags: z.array(z.string()).default([]),
   maxWorkers: z.number().int().min(1).default(1),
+  npcRequirements: z.array(ConditionSchema).default([]),
+  requiredAttributes: z.record(z.string(), z.number().int()).default({}),
+  requiredSkills: z.record(z.string(), z.number().int()).default({}),
+  generatedResources: z.record(z.string(), z.number().int()).default({}),
+  modifiers: z.record(z.string(), z.number()).default({}),
+  effects: z.array(EffectSchema).default([]),
+  timeMinutes: z.number().int().min(0).optional(),
 });
 export type BaseJobDefinition = z.infer<typeof BaseJobDefinitionSchema>;
 

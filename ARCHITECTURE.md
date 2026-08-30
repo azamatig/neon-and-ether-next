@@ -173,3 +173,13 @@ preview, tactical combat, loot, and outcome resolution. Initial availability use
 shared Condition pipeline, while conditional encounter modifiers use the shared Effect
 pipeline at combat start. Quick playtest creates a normal injected `GameSession`; no
 editor-specific encounter DTO, combat state, or combat engine exists.
+
+## Base authoring and state
+
+Base, room, upgrade, and job editors mutate the canonical definitions indexed by
+`ContentRegistry`. Room categories and slot types are open string taxonomies; adding a
+new authored room never requires a runtime or React branch. Logical slot layout and
+upgrade-chain views are projections of those definitions, not separate layout data.
+`BaseState` and NPC assignment state remain SaveGame-only and identify their selected
+definitions by stable IDs. Development playtest mutations live only in the Editor
+controller and dispatch normal base/character management commands before opening Game.

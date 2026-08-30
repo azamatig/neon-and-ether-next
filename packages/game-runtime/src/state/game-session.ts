@@ -167,6 +167,10 @@ export class GameSession {
 
     // Initial modular state
     this.state = createInitialGameStateFromContent(this.contentRegistry.exportSnapshot());
+    const initialBase = this.contentRegistry.getBase(this.state.base.baseId);
+    if (initialBase && this.evaluateConditions(initialBase.unlockConditions).allMet) {
+      this.effectExecutor.executeBatch(initialBase.globalEffects, { state: this.state, contentRegistry: this.contentRegistry });
+    }
     this.inventorySystem.hydrate(this.state);
   }
 
@@ -304,6 +308,8 @@ export class GameSession {
   public getBaseUpgradeOptions(roomInstanceId: string): BaseOption<BaseUpgradeDefinition>[] {
     return this.baseManagementSystem.getUpgradeOptions(roomInstanceId, this.state);
   }
+
+  public getBaseWideUpgradeOptions(): BaseOption<BaseUpgradeDefinition>[] { return this.baseManagementSystem.getBaseUpgradeOptions(this.state); }
 
   public executeBaseManagementCommand(command: BaseManagementCommand): BaseManagementResult {
     const result = this.baseManagementSystem.execute(command, this.state);

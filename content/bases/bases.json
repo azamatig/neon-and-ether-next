@@ -5,10 +5,11 @@
     "description": "A modular underground base linked to the Sector-09 hideout.",
     "tags": ["PlayerBase", "Safehouse"],
     "poiId": "poi_sec09_hideout",
+    "maximumRoomSlots": 3,
     "roomSlots": [
-      { "id": "base_slot_utility", "slotType": "Utility", "allowedRoomTypes": ["Armory", "ServerRoom", "GeneratorHub"] },
-      { "id": "base_slot_support", "slotType": "Support", "allowedRoomTypes": ["MedBay", "Barracks", "EtherLaboratory"] },
-      { "id": "base_slot_expansion", "slotType": "Standard", "allowedRoomTypes": [] }
+      { "id": "base_slot_utility", "slotType": "Utility", "allowedRoomTypes": ["Armory", "ServerRoom", "GeneratorHub"], "unlockedByDefault": true },
+      { "id": "base_slot_support", "slotType": "Support", "allowedRoomTypes": ["MedBay", "Barracks", "EtherLaboratory"], "unlockedByDefault": true },
+      { "id": "base_slot_expansion", "slotType": "Standard", "allowedRoomTypes": [], "unlockedByDefault": false }
     ],
     "startingRooms": [
       { "slotId": "base_slot_utility", "roomDefinitionId": "room_safehouse_workshop", "roomInstanceId": "base_room_workshop" },

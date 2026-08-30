@@ -52,6 +52,7 @@ function createValue(source: SchemaLike): unknown {
 function referenceCollection(path: string[], content: GameContent): Array<{ id: string; name: string }> | null {
   const field = path.at(-1) ?? '';
   if (/shopId$/i.test(field)) return content.shops;
+  if (/baseId$/i.test(field)) return content.bases;
   if (/factionId$/i.test(field)) return content.factions;
   if (/dialogueTreeId$/i.test(field)) return content.dialogues.map((entity) => ({ id: entity.id, name: entity.title }));
   if (/abilityId(s)?$/i.test(field)) return content.abilities;
@@ -65,6 +66,9 @@ function referenceCollection(path: string[], content: GameContent): Array<{ id: 
   if (/poiId$/i.test(field)) return content.pois;
   if (/mapId$/i.test(field)) return content.maps;
   if (/roomId$/i.test(field)) return content.rooms;
+  if (/roomDefinitionId$/i.test(field)) return content.rooms;
+  if (/upgradeId$/i.test(field)) return content.baseUpgrades;
+  if (/jobId$/i.test(field)) return content.baseJobs;
   return null;
 }
 

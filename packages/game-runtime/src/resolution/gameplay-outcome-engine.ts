@@ -218,6 +218,7 @@ export class GameplayOutcomeEngine {
           state.world.activeOriginContext = outcome.originContext;
         }
         state.world.mode = 'Screen';
+        state.world.activeScreen = outcome.screen;
         return {
           applied: true,
           nextMode: 'Screen',

@@ -65,9 +65,13 @@ export class CharacterManagementSystem {
       if (!job.allowedStatuses.includes(runtime.relationship.status)) return { success: false, npcId: command.npcId, reason: `Status '${runtime.relationship.status}' cannot perform this job.` };
       const missingTrait = job.requiredTraits.find((trait) => !definition.traits.includes(trait));
       if (missingTrait) return { success: false, npcId: command.npcId, reason: `Missing required trait '${missingTrait}'.` };
+      const missingAttribute = Object.entries(job.requiredAttributes).find(([key, minimum]) => (definition.attributes[key as keyof typeof definition.attributes] ?? 0) < minimum);
+      if (missingAttribute) return { success: false, npcId: command.npcId, reason: `Requires attribute '${missingAttribute[0]}' at ${missingAttribute[1]}.` };
+      const missingSkill = Object.entries(job.requiredSkills).find(([key, minimum]) => (definition.skills[key] ?? 0) < minimum);
+      if (missingSkill) return { success: false, npcId: command.npcId, reason: `Requires skill '${missingSkill[0]}' at ${missingSkill[1]}.` };
       const assignedCount = Object.values(state.npcs).filter((npc) => npc.assignment.jobId === job.id && npc.npcId !== command.npcId).length;
       if (assignedCount >= job.maxWorkers) return { success: false, npcId: command.npcId, reason: 'Job capacity is full.' };
-      if (runtime.assignment.roomId && !this.isJobCompatibleWithRoom(job.roomTypes, runtime.assignment.roomId, state)) return { success: false, npcId: command.npcId, reason: 'Assigned room is incompatible with this job.' };
+      if (runtime.assignment.roomId && !this.isJobCompatibleWithRoom(job, runtime.assignment.roomId, state)) return { success: false, npcId: command.npcId, reason: 'Assigned room is incompatible with this job.' };
       runtime.assignment.jobId = job.id;
     }
     if (command.type === 'AssignRoom') {
@@ -75,7 +79,7 @@ export class CharacterManagementSystem {
       const room = roomState ? this.content.getRoom(roomState.definitionId) : undefined;
       if (!roomState?.isBuilt || !room) return { success: false, npcId: command.npcId, reason: 'Base room is not built.' };
       const job = runtime.assignment.jobId ? this.content.getBaseJob(runtime.assignment.jobId) : undefined;
-      if (job && !this.isJobCompatibleWithRoom(job.roomTypes, command.roomId, state)) return { success: false, npcId: command.npcId, reason: 'Room is incompatible with the assigned job.' };
+      if (job && !this.isJobCompatibleWithRoom(job, command.roomId, state)) return { success: false, npcId: command.npcId, reason: 'Room is incompatible with the assigned job.' };
       const residents = Object.values(state.npcs).filter((npc) => npc.assignment.roomId === command.roomId && npc.npcId !== command.npcId).length;
       const workers = Object.values(state.npcs).filter((npc) => npc.assignment.roomId === command.roomId && npc.assignment.jobId && npc.npcId !== command.npcId).length;
       if (residents >= roomState.capacity.residents) return { success: false, npcId: command.npcId, reason: 'Room resident capacity is full.' };
@@ -101,10 +105,13 @@ export class CharacterManagementSystem {
     return { success: true, npcId: command.npcId, relationship: { ...runtime.relationship }, assignment: { ...runtime.assignment } };
   }
 
-  private isJobCompatibleWithRoom(roomTypes: string[], roomId: string, state: GameState): boolean {
+  private isJobCompatibleWithRoom(job: import('@neon-ether/game-schema').BaseJobDefinition, roomId: string, state: GameState): boolean {
     const runtimeRoom = state.base.rooms[roomId];
     const room = runtimeRoom ? this.content.getRoom(runtimeRoom.definitionId) : undefined;
-    return Boolean(room && (roomTypes.length === 0 || roomTypes.includes(room.roomType)));
+    return Boolean(room &&
+      (job.roomTypes.length === 0 || job.roomTypes.includes(room.roomType)) &&
+      (job.requiredRoomIds.length === 0 || job.requiredRoomIds.includes(room.id)) &&
+      job.requiredRoomTags.every((tag) => room.tags.includes(tag)));
   }
 
   private syncLegacyProjections(state: GameState): void {

@@ -45,6 +45,17 @@ export class PlaytestController {
   }
   launchEncounter(encounterId: string): boolean { return this.session.startCombatEncounter(encounterId, false) && this.session.startTacticalCombat(encounterId); }
   launchEncounterInGame(encounterId: string): boolean { const started=this.launchEncounter(encounterId);if(started)this.openGame();return started; }
+  prepareBase(baseId: string): boolean {
+    const base=this.content.bases.find((entry)=>entry.id===baseId);if(!base)return false;
+    this.mutate((state)=>{state.base.baseId=base.id;state.base.name=base.name;state.base.resources={...base.startingResources};state.base.rooms={};state.base.roomSlots=Object.fromEntries(base.roomSlots.map((slot)=>[slot.id,{slotId:slot.id,slotType:slot.slotType,roomInstanceId:null,isLocked:!slot.unlockedByDefault}]));state.base.storage={items:[],capacity:base.storageCapacity};});
+    return true;
+  }
+  addBaseResources(resources: Record<string,number>): void { this.mutate((state)=>{for(const [id,amount] of Object.entries(resources))state.base.resources[id]=(state.base.resources[id]??0)+Math.max(0,Math.trunc(amount));}); }
+  unlockBaseSlot(slotId: string): void { this.mutate((state)=>{if(state.base.roomSlots[slotId])state.base.roomSlots[slotId].isLocked=false;}); }
+  buildBaseRoom(slotId:string,roomDefinitionId:string): boolean { return this.session.executeBaseManagementCommand({type:'BuildRoom',slotId,roomDefinitionId,roomInstanceId:`playtest_${slotId}`}).success; }
+  installBaseUpgrade(roomInstanceId:string,upgradeId:string): boolean { const definition=this.content.baseUpgrades.find((entry)=>entry.id===upgradeId);return this.session.executeBaseManagementCommand(definition?.target==='base'?{type:'InstallBaseUpgrade',upgradeId}:{type:'InstallUpgrade',roomInstanceId,upgradeId}).success; }
+  assignBaseJob(npcId:string,jobId:string,roomInstanceId?:string): boolean { this.mutate((state)=>{if(state.npcs[npcId])state.npcs[npcId].relationship.status='employee';});const job=this.session.executeCharacterManagementCommand({type:'AssignJob',npcId,jobId});if(!job.success)return false;return roomInstanceId?this.session.executeCharacterManagementCommand({type:'AssignRoom',npcId,roomId:roomInstanceId}).success:true; }
+  openBaseInGame(): void { this.mutate((state)=>{state.world.mode='Screen';state.world.activeScreen='Base';});this.openGame(); }
   setPlayerValue(group: 'attributes' | 'vitals', key: string, value: number): void { this.mutate((state) => { (state.player[group] as unknown as Record<string, number>)[key] = value; }); }
   addItem(itemId: string, quantity: number): void { this.mutate((state) => { const slot = state.player.inventory.items.find((item) => item.itemId === itemId); if (slot) slot.quantity += quantity; else state.player.inventory.items.push({ itemId, quantity, isEquipped: false }); }); }
   setMoney(credits: number): void { this.mutate((state) => { state.player.inventory.credits = Math.max(0, Math.trunc(credits)); }); }

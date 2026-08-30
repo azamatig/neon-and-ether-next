@@ -1,7 +1,7 @@
 /** Development-only schema-driven content editor. */
 import React, { useEffect, useMemo, useState } from 'react';
 import { ContentRegistry } from '@neon-ether/game-runtime';
-import { BaseRoomDefinitionSchema, CombatEncounterSchema, EnemySchema, GameContent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, PlayerBaseDefinitionSchema, POISchema, RecipeSchema, Quest, QuestSchema, ValidationIssue } from '@neon-ether/game-schema';
+import { BaseRoomDefinitionSchema, CombatEncounterSchema, EnemySchema, GameContent, GameEventSchema, GameMap, GameMapSchema, ItemSchema, NPCSchema, PlayerBaseDefinitionSchema, POISchema, RecipeSchema, ShopDefinitionSchema, Quest, QuestSchema, ValidationIssue } from '@neon-ether/game-schema';
 import { AlertTriangle, Bug, CheckCircle2, Copy, ListTree, Network, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { SchemaPropertyEditor } from './components/SchemaPropertyEditor.tsx';
 import { QuestGraphEditor } from './components/QuestGraphEditor.tsx';
@@ -9,11 +9,11 @@ import { MapEditor } from './components/MapEditor.tsx';
 import { ValidationPanel } from './components/ValidationPanel.tsx';
 import { PlaytestPanel } from './components/PlaytestPanel.tsx';
 
-type Category = 'items' | 'npcs' | 'enemies' | 'pois' | 'events' | 'quests' | 'maps' | 'encounters' | 'rooms' | 'bases' | 'recipes';
+type Category = 'items' | 'npcs' | 'enemies' | 'pois' | 'events' | 'quests' | 'maps' | 'encounters' | 'rooms' | 'bases' | 'recipes' | 'shops';
 type EditableEntity = GameContent[Category][number];
 
-const CATEGORY_LABELS: Record<Category, string> = { items: 'Items', npcs: 'NPCs', enemies: 'Enemies', pois: 'POIs', events: 'Events', quests: 'Quests', maps: 'Maps', encounters: 'Encounters', rooms: 'Rooms', bases: 'Bases', recipes: 'Recipes' };
-const CATEGORY_SCHEMAS = { items: ItemSchema, npcs: NPCSchema, enemies: EnemySchema, pois: POISchema, events: GameEventSchema, quests: QuestSchema, maps: GameMapSchema, encounters: CombatEncounterSchema, rooms: BaseRoomDefinitionSchema, bases: PlayerBaseDefinitionSchema, recipes: RecipeSchema } as const;
+const CATEGORY_LABELS: Record<Category, string> = { items: 'Items', npcs: 'NPCs', enemies: 'Enemies', pois: 'POIs', events: 'Events', quests: 'Quests', maps: 'Maps', encounters: 'Encounters', rooms: 'Rooms', bases: 'Bases', recipes: 'Recipes', shops: 'Shops' };
+const CATEGORY_SCHEMAS = { items: ItemSchema, npcs: NPCSchema, enemies: EnemySchema, pois: POISchema, events: GameEventSchema, quests: QuestSchema, maps: GameMapSchema, encounters: CombatEncounterSchema, rooms: BaseRoomDefinitionSchema, bases: PlayerBaseDefinitionSchema, recipes: RecipeSchema, shops: ShopDefinitionSchema } as const;
 
 function nextId(category: Category, entities: EditableEntity[]): string {
   const prefix = `${category.replace(/s$/, '')}_editor`;
@@ -35,6 +35,7 @@ function createTemplate(category: Category, id: string): EditableEntity {
   if (category === 'encounters') return { id, name: 'New Encounter', description: '', tags: [], enemyGroups: [], environment: { ambientEtherLevel: 20, lighting: 'Normal' }, threatLevel: 1, escapeRules: { allowed: true, conditions: [] }, lootTable: [], creditsReward: { min: 0, max: 0 }, xpReward: 0, survivingEnemyActions: [] } as EditableEntity;
   if (category === 'rooms') return { id, name: 'New Room', description: '', tags: [], roomType: 'Corridor', width: 6, height: 6, doorways: [], recommendedEnemies: [], recommendedPois: [], minSecurityLevel: 1, isHazardous: false, ambientEtherBonus: 0, buildCost: {}, requirements: [], capacity: { residents: 0, workers: 0, storage: 0 }, effects: [], allowedSlotTypes: ['Standard'], maxInstances: 1 } as EditableEntity;
   if (category === 'recipes') return { id, name: 'New Recipe', description: '', tags: [], category: 'misc', inputs: [], requirements: [], toolItemIds: [], roomIds: [], availableAt: ['poi', 'base', 'room'], output: { itemId: '', quantity: 1 }, timeCost: { turns: 1 }, conditions: [], effects: [], discoveredByDefault: true } as EditableEntity;
+  if (category === 'shops') return { id, name: 'New Shop', description: '', tags: [], inventorySource: 'stock', inventory: [], buyRules: { enabled: true, conditions: [], categories: [], requiredTags: [], priceMultiplier: 1 }, sellRules: { enabled: true, conditions: [], categories: [], requiredTags: [], priceMultiplier: 0.5 }, priceModifiers: [], restock: { enabled: true, intervalTurns: 24, restoreToInitial: true }, availabilityConditions: [] } as EditableEntity;
   return { id, name: 'New Base', description: '', tags: [], roomSlots: [{ id: 'slot_01', slotType: 'Standard', allowedRoomTypes: [] }], startingRooms: [], startingResources: {}, storageCapacity: 20 } as EditableEntity;
 }
 
@@ -130,7 +131,7 @@ export const EditorApp: React.FC = () => {
       </header>
       <div className="grid min-h-[680px] grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
         <aside className="rounded-xl border border-zinc-800 bg-black/40 p-3">
-          <div className="mb-3 grid grid-cols-5 gap-1">{(['items','npcs','enemies','pois','events','quests','maps','encounters','rooms','bases','recipes'] as Category[]).map((target) => <button key={target} onClick={() => selectCategory(target)} className={`rounded border p-2 text-[9px] uppercase ${category === target ? 'border-purple-400 bg-purple-500/15 text-purple-300' : 'border-zinc-800 text-zinc-500'}`}>{CATEGORY_LABELS[target]} <span className="block text-sm">{content?.[target].length ?? 0}</span></button>)}</div>
+          <div className="mb-3 grid grid-cols-5 gap-1">{(['items','npcs','enemies','pois','events','quests','maps','encounters','rooms','bases','recipes','shops'] as Category[]).map((target) => <button key={target} onClick={() => selectCategory(target)} className={`rounded border p-2 text-[9px] uppercase ${category === target ? 'border-purple-400 bg-purple-500/15 text-purple-300' : 'border-zinc-800 text-zinc-500'}`}>{CATEGORY_LABELS[target]} <span className="block text-sm">{content?.[target].length ?? 0}</span></button>)}</div>
           <label className="mb-3 flex items-center gap-2 rounded border border-zinc-800 bg-zinc-950 px-3"><Search className="h-4 w-4 text-zinc-500"/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, ID, tags…" className="w-full bg-transparent py-2 text-xs outline-none"/></label>
           <div className="mb-3 grid grid-cols-2 gap-2"><button onClick={createEntity} className="flex items-center justify-center gap-1 rounded border border-cyan-500/40 p-2 text-xs text-cyan-300"><Plus className="h-3 w-3"/> Create</button><button onClick={duplicateEntity} disabled={!selected} className="flex items-center justify-center gap-1 rounded border border-zinc-700 p-2 text-xs disabled:opacity-40"><Copy className="h-3 w-3"/> Duplicate</button></div>
           <div className="max-h-[520px] space-y-1 overflow-auto">{filtered.map((entity) => <button key={entity.id} onClick={() => setSelectedId(entity.id)} className={`w-full rounded border p-2 text-left ${selectedId === entity.id ? 'border-purple-400 bg-purple-950/40' : 'border-zinc-800 bg-zinc-950/50'}`}><span className="block truncate text-xs text-white">{entity.name}</span><span className="block truncate text-[10px] text-zinc-500">{entity.id}</span></button>)}</div>

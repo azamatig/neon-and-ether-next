@@ -91,6 +91,7 @@ export function validateDuplicateIds(content: GameContent): ValidationIssue[] {
   checkCollection(content.bases ?? [], 'PlayerBase');
   checkCollection(content.baseUpgrades ?? [], 'BaseUpgrade');
   checkCollection(content.progressionDefinitions ?? [], 'ProgressionDefinition');
+  checkCollection(content.shops ?? [], 'Shop');
 
   return issues;
 }
@@ -584,7 +585,7 @@ export function validateGameContent(rawContent: unknown, options: ContentValidat
       const rawCollection = collection && rawContent && typeof rawContent === 'object' ? (rawContent as Record<string, unknown>)[collection] : undefined;
       const rawEntity = Array.isArray(rawCollection) && index !== undefined ? rawCollection[index] : undefined;
       const targetId = rawEntity && typeof rawEntity === 'object' && typeof (rawEntity as {id?:unknown}).id === 'string' ? (rawEntity as {id:string}).id : issue.path.join('.');
-      const categories: Record<string, ValidationIssue['category']> = { items:'Item',npcs:'NPC',characters:'NPC',enemies:'Enemy',encounters:'CombatEncounter',pois:'POI',quests:'Quest',events:'GameEvent',maps:'Map',recipes:'Recipe',rooms:'Room',factions:'Faction',dialogues:'Dialogue',abilities:'Ability',statusEffects:'StatusEffect',combatAIProfiles:'CombatAI',characterManagementRules:'CharacterManagementRule',baseJobs:'BaseJob',partySlots:'PartySlot',bases:'PlayerBase',baseUpgrades:'BaseUpgrade' };
+      const categories: Record<string, ValidationIssue['category']> = { shops:'Shop',items:'Item',npcs:'NPC',characters:'NPC',enemies:'Enemy',encounters:'CombatEncounter',pois:'POI',quests:'Quest',events:'GameEvent',maps:'Map',recipes:'Recipe',rooms:'Room',factions:'Faction',dialogues:'Dialogue',abilities:'Ability',statusEffects:'StatusEffect',combatAIProfiles:'CombatAI',characterManagementRules:'CharacterManagementRule',baseJobs:'BaseJob',partySlots:'PartySlot',bases:'PlayerBase',baseUpgrades:'BaseUpgrade' };
       issues.push({
         severity: 'error',
         category: collection ? categories[collection] ?? 'Integrity' : 'Integrity',

@@ -64,6 +64,7 @@ import type { RuntimeTraceEvent, RuntimeTraceSink } from '../observability/runti
 import { InventorySystem, InventoryCommandResult } from '../inventory/inventory-system.ts';
 import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
 import { CraftingSystem, type CraftingContext, type CraftingResult } from '../crafting/crafting-system.ts';
+import { EconomySystem, type ShopView, type TradeResult } from '../economy/economy-system.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   deserializeSaveGame,
@@ -130,6 +131,7 @@ export class GameSession {
   private combatEncounterEngine: CombatEncounterEngine;
   private inventorySystem: InventorySystem;
   private craftingSystem: CraftingSystem;
+  private economySystem: EconomySystem;
   public events: TypedEventEmitter<GameRuntimeEvents>;
 
   constructor(
@@ -151,6 +153,7 @@ export class GameSession {
     this.effectExecutor = new EffectExecutor(this.effectRegistry, report);
     this.inventorySystem = new InventorySystem(contentRegistry, (effects, state) => { this.effectExecutor.executeBatch(effects, { state, contentRegistry }); });
     this.craftingSystem = new CraftingSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
+    this.economySystem = new EconomySystem(contentRegistry, this.conditionRegistry);
     this.baseManagementSystem = new BaseManagementSystem(contentRegistry, this.conditionRegistry, this.effectExecutor);
     this.actionExecutor = new ActionExecutor(this.conditionRegistry, this.effectExecutor);
     this.outcomeEngine = new GameplayOutcomeEngine();
@@ -201,6 +204,9 @@ export class GameSession {
     if (result.success) this.events.emit('STATE_CHANGED', this.state);
     return result;
   }
+  public getShop(shopId: string): ShopView | undefined { return this.economySystem.getShop(shopId, this.state); }
+  public buyFromShop(shopId: string, itemId: string, quantity = 1): TradeResult { const result=this.economySystem.buy(shopId,itemId,quantity,this.state);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result; }
+  public sellToShop(shopId: string, itemId: string, quantity = 1): TradeResult { const result=this.economySystem.sell(shopId,itemId,quantity,this.state);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result; }
 
   /** Applies HUD resource commands inside the runtime rather than mutating React snapshots. */
   public spendPlayerResource(resource: 'actionPoints' | 'ether', amount: number): PlayerResourceCommandResult {

@@ -133,3 +133,11 @@ required room definitions, location availability, output, time, conditions, and 
 The runtime derives built room access from `BaseState`; presentation only sends a typed
 location context. Inventory, Condition, and Effect systems remain the owners of their
 respective rules.
+
+## Shops and economy
+
+NPCs and POIs reference immutable `ShopDefinition` IDs. `EconomySystem` owns stock,
+buy/sell eligibility, atomic inventory transfers, lazy restocking, and final pricing.
+Price modifiers are authored data combining shared conditions (including relationship,
+faction reputation, and event flags), player traits, and map/POI filters. Item base value
+remains in `ItemDefinition`; no merchant-specific logic exists in runtime or React.

@@ -140,6 +140,7 @@
     "perks": [],
     "temporaryModifiers": [],
     "statusEffects": [],
-    "progressionDefinitionId": "progression_companion"
+    "progressionDefinitionId": "progression_companion",
+    "shopId": "shop_rourke_exchange"
   }
 ]

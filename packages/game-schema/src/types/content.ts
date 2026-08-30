@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ShopDefinitionSchema } from './shop.ts';
 import { ItemSchema } from './items.ts';
 import { NPCSchema } from './npc.ts';
 import { EnemySchema } from './enemy.ts';
@@ -19,6 +20,7 @@ import { BaseUpgradeDefinitionSchema, PlayerBaseDefinitionSchema } from './base-
 export const GameContentSchema = z.object({
   version: z.string().default('1.0.0'),
   items: z.array(ItemSchema).default([]),
+  shops: z.array(ShopDefinitionSchema).default([]),
   progressionDefinitions: z.array(ProgressionDefinitionSchema).default([]),
   npcs: z.array(NPCSchema).default([]),
   enemies: z.array(EnemySchema).default([]),

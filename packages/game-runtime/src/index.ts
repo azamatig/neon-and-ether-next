@@ -27,3 +27,4 @@ export * from './inventory/index.ts';
 export * from './stats/index.ts';
 export * from './progression/index.ts';
 export * from './crafting/index.ts';
+export * from './economy/index.ts';

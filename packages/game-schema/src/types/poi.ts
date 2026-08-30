@@ -140,6 +140,7 @@ export const POISchema = BaseEntitySchema.extend({
 
   // Linked NPCs stationed or visiting this POI
   npcIds: z.array(z.string()).default([]),
+  shopId: z.string().optional(),
 
   // Linked Quests / Events connected to this location
   questIds: z.array(z.string()).default([]),

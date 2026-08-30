@@ -17,6 +17,7 @@ export const NPCSchema = BaseEntitySchema.extend({
   factionId: z.string().default('Neutral'),
   isPlayer: z.boolean().default(false),
   isMerchant: z.boolean().default(false),
+  shopId: z.string().optional(),
   isCompanion: z.boolean().default(false),
   level: z.number().int().min(1).default(1),
   progressionDefinitionId: z.string().optional(),

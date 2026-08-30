@@ -31,6 +31,7 @@ import {
   Quest,
   Recipe,
   StatusEffectDefinition,
+  ShopDefinition,
   ValidationIssue,
   validateGameContent,
 } from '@neon-ether/game-schema';
@@ -118,6 +119,7 @@ export interface ContentLoadingOptions {
 
 export class ContentRegistry {
   public readonly items = new RegistryCollection<Item>('Item');
+  public readonly shops = new RegistryCollection<ShopDefinition>('Shop');
   public readonly progressionDefinitions = new RegistryCollection<ProgressionDefinition>('ProgressionDefinition');
   public readonly npcs = new RegistryCollection<NPC>('NPC');
   public readonly enemies = new RegistryCollection<Enemy>('Enemy');
@@ -173,6 +175,7 @@ export class ContentRegistry {
     for (const item of content.items ?? []) {
       this.items.set(item.id, item);
     }
+    for (const shop of content.shops ?? []) this.shops.set(shop.id, shop);
     for (const definition of content.progressionDefinitions ?? []) this.progressionDefinitions.set(definition.id, definition);
 
     // Index NPCs / Characters
@@ -267,6 +270,7 @@ export class ContentRegistry {
     return {
       version: this.version,
       items: this.items.getAll(),
+      shops: this.shops.getAll(),
       progressionDefinitions: this.progressionDefinitions.getAll(),
       npcs: this.npcs.getAll(),
       enemies: this.enemies.getAll(),
@@ -296,6 +300,7 @@ export class ContentRegistry {
 
   public clear(): void {
     this.items.clear();
+    this.shops.clear();
     this.progressionDefinitions.clear();
     this.npcs.clear();
     this.enemies.clear();

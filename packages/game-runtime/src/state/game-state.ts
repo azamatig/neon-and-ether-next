@@ -250,6 +250,7 @@ export function createInitialGameState(overrides: Partial<GameState> = {}): Game
     npcs: overrides.npcs ?? {},
     quests: overrides.quests ?? {},
     factions: overrides.factions ?? {},
+    shops: overrides.shops ?? {},
     base: overrides.base ?? createInitialBaseState(),
     time: overrides.time ?? createInitialTimeState(),
     companions: overrides.companions ?? [],
@@ -336,6 +337,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
     faction.id,
     createInitialFactionRuntimeState(faction.id, { reputation: faction.defaultPlayerReputation }),
   ]));
+  const shops = Object.fromEntries(content.shops.map((shop) => [shop.id, { shopId:shop.id, stock:Object.fromEntries(shop.inventory.map((entry)=>[entry.itemId,entry.quantity])), lastRestockTurn:0 }]));
   const startingRooms = baseDefinition?.startingRooms ?? [];
   const rooms = Object.fromEntries(startingRooms.flatMap((startingRoom) => {
     const definition = content.rooms.find((room) => room.id === startingRoom.roomDefinitionId);
@@ -368,6 +370,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
     }),
     npcs,
     factions,
+    shops,
     base: createInitialBaseState({
       baseId: baseDefinition?.id ?? 'base_player',
       name: baseDefinition?.name ?? 'Player Base',

@@ -48,6 +48,8 @@ export const InventoryStateSchema = z.object({
 });
 
 export type InventoryState = z.infer<typeof InventoryStateSchema>;
+export const ShopRuntimeStateSchema=z.object({shopId:z.string().min(1),stock:z.record(z.string(),z.number().int().min(0)).default({}),lastRestockTurn:z.number().int().min(0).default(0)});
+export type ShopRuntimeState=z.infer<typeof ShopRuntimeStateSchema>;
 
 // -----------------------------------------------------------------------------
 // 2. Player Runtime State
@@ -365,6 +367,7 @@ export const GameStateSchema = z.object({
   npcs: z.record(z.string(), NpcRuntimeStateSchema).default({}),
   quests: z.record(z.string(), QuestRuntimeStateSchema).default({}),
   factions: z.record(z.string(), FactionRuntimeStateSchema).default({}),
+  shops: z.record(z.string(), ShopRuntimeStateSchema).default({}),
   base: BaseStateSchema.default({
     baseId: 'base_player',
     name: 'Player Base',

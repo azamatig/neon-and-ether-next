@@ -5,6 +5,7 @@ export type ValidationCategory =
   | 'Ability' | 'StatusEffect' | 'CombatAI' | 'CharacterManagementRule' | 'BaseJob'
   | 'PartySlot' | 'PlayerBase' | 'BaseUpgrade' | 'Map' | 'Recipe' | 'Room'
   | 'ProgressionDefinition'
+  | 'Shop'
   | 'Faction' | 'Dialogue' | 'Asset' | 'Integrity';
 
 export interface ValidationIssue {

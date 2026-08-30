@@ -13,6 +13,7 @@ export const MapRegionInfoSchema = z.object({
   description: z.string().optional(),
   securityLevel: z.number().int().min(1).max(5).default(1),
   controllingFactionId: z.string().optional(),
+  ownerFactionId: z.string().optional(),
   bounds: z.object({
     x: z.number().min(0).max(100),
     y: z.number().min(0).max(100),
@@ -46,6 +47,7 @@ export const GameMapSchema = BaseEntitySchema.extend({
   ambientEtherLevel: z.number().int().min(0).max(100).default(25),
   securityLevel: z.number().int().min(1).max(5).default(1),
   controllingFactionId: z.string().optional(),
+  ownerFactionId: z.string().optional(),
   regions: z.array(MapRegionInfoSchema).default([]),
   routes: z.array(MapRouteSchema).default([]),
   metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),

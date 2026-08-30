@@ -1,5 +1,5 @@
 import { ContentRegistry, GameSession, type GameState, type RuntimeTraceEvent } from '@neon-ether/game-runtime';
-import type { CharacterRelationshipStatus, GameContent, QuestStatus } from '@neon-ether/game-schema';
+import type { CharacterRelationshipStatus, FactionRelationValue, GameContent, QuestStatus } from '@neon-ether/game-schema';
 
 export interface PlaytestLogEntry extends RuntimeTraceEvent { id: number; timestamp: string }
 type Listener = () => void;
@@ -61,7 +61,11 @@ export class PlaytestController {
   setMoney(credits: number): void { this.mutate((state) => { state.player.inventory.credits = Math.max(0, Math.trunc(credits)); }); }
   setFlag(flag: string, value?: string | number | boolean): void { this.mutate((state) => { if (value === undefined) delete state.world.flags[flag]; else state.world.flags[flag] = value; }); }
   setRelationship(npcId: string, status: CharacterRelationshipStatus, affinity: number): void { this.mutate((state) => { const npc = state.npcs[npcId]; if (npc) { npc.relationship.status = status; npc.relationship.affinity = Math.max(-100, Math.min(100, Math.trunc(affinity))); npc.isCompanion = status === 'companion'; } }); }
-  setFactionReputation(factionId: string, reputation: number): void { this.mutate((state) => { const faction = state.factions[factionId]; if (faction) faction.reputation = Math.max(-100, Math.min(100, Math.trunc(reputation))); }); }
+  setFactionReputation(factionId: string, reputation: number): void { this.session.executeEffect({type:'setFactionReputation',factionId,value:Math.max(-100,Math.min(100,Math.trunc(reputation)))}); }
+  setFactionMembership(factionId:string,membershipStatus:string):void { this.session.executeEffect({type:'setFactionMembership',factionId,membershipStatus}); }
+  setFactionRelation(factionId:string,targetFactionId:string,relation:FactionRelationValue):void { this.session.executeEffect({type:'changeFactionRelation',factionId,targetFactionId,relation}); }
+  setFactionHostility(factionId:string,hostile:boolean):void { this.session.executeEffect({type:'setFactionHostility',factionId,hostile}); }
+  discoverFaction(factionId:string,discovered:boolean):void { this.session.executeEffect({type:'discoverFaction',factionId,discovered}); }
   setPartyMember(npcId: string, enabled: boolean): void { this.mutate((state) => { const npc = state.npcs[npcId]; if (!npc) return; npc.isCompanion = enabled; npc.relationship.status = enabled ? 'companion' : 'independent'; npc.assignment.partySlotId = enabled ? (this.content.partySlots.find((slot) => !Object.values(state.npcs).some((other) => other.assignment.partySlotId === slot.id))?.id ?? null) : null; }); }
   setQuestState(questId: string, status: QuestStatus, stageId: string): void { this.mutate((state) => { const current = state.quests[questId]; state.quests[questId] = { questId, status, currentStageId: stageId, completedObjectiveIds: current?.completedObjectiveIds ?? [], failedObjectiveIds: current?.failedObjectiveIds ?? [], objectiveCounters: current?.objectiveCounters ?? {}, customVariables: current?.customVariables ?? {} }; }); }
   teleport(poiId: string): void { const poi = this.content.pois.find((candidate) => candidate.id === poiId); if (poi) this.launchLocation(poi.mapId, poi.id); }

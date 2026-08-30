@@ -12,7 +12,7 @@ import { handleChangeMoneyEffect } from './handlers/money-effect.ts';
 import { handleAdvanceQuestEffect, handleCompleteQuestEffect, handleStartQuestEffect } from './handlers/quest-effect.ts';
 import { handleChangeNpcStateEffect, handleRecruitNpcEffect } from './handlers/npc-effect.ts';
 import { handleChangeRelationshipEffect } from './handlers/relationship-effect.ts';
-import { handleChangeFactionReputationEffect } from './handlers/faction-effect.ts';
+import { handleFactionEffect } from './handlers/faction-effect.ts';
 import { handleStartCombatEffect } from './handlers/combat-effect.ts';
 import { handleTriggerEventEffect } from './handlers/event-effect.ts';
 import { handleMovePlayerEffect } from './handlers/player-effect.ts';
@@ -41,7 +41,7 @@ export class EffectRegistry {
     this.registerHandler('completeQuest', handleCompleteQuestEffect);
     this.registerHandler('changeNpcState', handleChangeNpcStateEffect);
     this.registerHandler('changeRelationship', handleChangeRelationshipEffect);
-    this.registerHandler('changeFactionReputation', handleChangeFactionReputationEffect);
+    for(const type of ['changeFactionReputation','setFactionReputation','changeFactionRelation','setFactionMembership','discoverFaction','setFactionHostility']) this.registerHandler(type,handleFactionEffect);
     this.registerHandler('startCombat', handleStartCombatEffect);
     this.registerHandler('triggerEvent', handleTriggerEventEffect);
     this.registerHandler('movePlayer', handleMovePlayerEffect);

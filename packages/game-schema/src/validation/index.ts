@@ -509,25 +509,14 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
         message: `Faction '${faction.name}' leader refers to missing npcId '${faction.leaderNpcId}'`,
       });
     }
-    for (const rivalId of faction.rivalFactionIds ?? []) {
-      if (!factionIds.has(rivalId)) {
+    for (const relation of faction.defaultRelations ?? []) {
+      if (!factionIds.has(relation.factionId)) {
         issues.push({
           severity: 'error',
           category: 'Faction',
           targetId: faction.id,
-          field: 'rivalFactionIds',
-          message: `Faction '${faction.name}' references missing rival faction '${rivalId}'`,
-        });
-      }
-    }
-    for (const allyId of faction.allyFactionIds ?? []) {
-      if (!factionIds.has(allyId)) {
-        issues.push({
-          severity: 'error',
-          category: 'Faction',
-          targetId: faction.id,
-          field: 'allyFactionIds',
-          message: `Faction '${faction.name}' references missing ally faction '${allyId}'`,
+          field: 'defaultRelations',
+          message: `Faction '${faction.name}' references missing faction '${relation.factionId}'`,
         });
       }
     }

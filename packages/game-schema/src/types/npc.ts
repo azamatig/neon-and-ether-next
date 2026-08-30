@@ -15,7 +15,8 @@ export type CharacterInventorySlot = z.infer<typeof CharacterInventorySlotSchema
 
 export const NPCSchema = BaseEntitySchema.extend({
   title: z.string().default('Citizen'),
-  factionId: z.string().default('Neutral'),
+  factionId: z.string().optional(),
+  factionIds: z.array(z.string()).default([]),
   isPlayer: z.boolean().default(false),
   isMerchant: z.boolean().default(false),
   shopId: z.string().optional(),

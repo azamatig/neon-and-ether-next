@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FactionRelationValueSchema } from './faction.ts';
 import { Vector2DSchema } from './grid.ts';
 
 /**
@@ -108,6 +109,13 @@ export const FactionReputationConditionSchema = z.object({
 
 export type FactionReputationCondition = z.infer<typeof FactionReputationConditionSchema>;
 
+export const FactionReputationTierConditionSchema = z.object({ type:z.literal('factionReputationTier'), factionId:z.string().min(1), tierId:z.string().min(1) });
+export const FactionMembershipConditionSchema = z.object({ type:z.literal('factionMembership'), factionId:z.string().min(1), membershipStatus:z.string().min(1) });
+export const FactionRelationConditionSchema = z.object({ type:z.literal('factionRelation'), factionId:z.string().min(1), targetFactionId:z.string().min(1), relation:FactionRelationValueSchema });
+export const FactionHostileConditionSchema = z.object({ type:z.literal('factionHostile'), factionId:z.string().min(1), hostile:z.boolean().default(true) });
+export const FactionDiscoveredConditionSchema = z.object({ type:z.literal('factionDiscovered'), factionId:z.string().min(1), discovered:z.boolean().default(true) });
+export type FactionStateCondition = z.infer<typeof FactionReputationTierConditionSchema>|z.infer<typeof FactionMembershipConditionSchema>|z.infer<typeof FactionRelationConditionSchema>|z.infer<typeof FactionHostileConditionSchema>|z.infer<typeof FactionDiscoveredConditionSchema>;
+
 /**
  * 8. Companion Present Condition: Checks if a companion NPC is recruited or present in party.
  */
@@ -160,6 +168,11 @@ export const AtomicConditionSchema = z.discriminatedUnion('type', [
   NpcStateConditionSchema,
   RelationshipConditionSchema,
   FactionReputationConditionSchema,
+  FactionReputationTierConditionSchema,
+  FactionMembershipConditionSchema,
+  FactionRelationConditionSchema,
+  FactionHostileConditionSchema,
+  FactionDiscoveredConditionSchema,
   CompanionPresentConditionSchema,
   BaseRoomExistsConditionSchema,
   RandomChanceConditionSchema,

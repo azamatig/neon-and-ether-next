@@ -138,6 +138,7 @@ export const NpcRuntimeStateSchema = z.object({
   behaviorOverride: z.enum(['Idle', 'Patrol', 'Guard', 'Wander']).optional(),
   dialogueTreeIdOverride: z.string().optional(),
   isHostile: z.boolean().default(false),
+  hostilityOverride: z.boolean().optional(),
   isMerchant: z.boolean().default(false),
   isCompanion: z.boolean().default(false),
   relationship: CharacterRelationshipSchema.default({ status: 'independent', affinity: 0, trust: 0, fear: 0, loyalty: 0 }),
@@ -205,13 +206,18 @@ export type BaseState = z.infer<typeof BaseStateSchema>;
 // 6. Faction Runtime State
 // -----------------------------------------------------------------------------
 
-export const FactionStandingSchema = z.enum(['Hostile', 'Unfriendly', 'Neutral', 'Friendly', 'Honored']);
+export const FactionStandingSchema = z.string();
 export type FactionStanding = z.infer<typeof FactionStandingSchema>;
 
 export const FactionRuntimeStateSchema = z.object({
   factionId: z.string().min(1),
   reputation: z.number().int().min(-100).max(100).default(0),
-  standing: FactionStandingSchema.default('Neutral'),
+  standing: FactionStandingSchema.default(''),
+  reputationTierId: z.string().default(''),
+  membershipStatus: z.string().default('none'),
+  isHostile: z.boolean().default(false),
+  hostilityOverride: z.boolean().optional(),
+  relations: z.record(z.string(), z.string()).default({}),
   tier: z.number().int().min(1).default(1),
   isDiscovered: z.boolean().default(true),
   flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),

@@ -152,6 +152,7 @@ export const POISchema = BaseEntitySchema.extend({
   dangerLevel: z.number().int().min(0).max(5).default(1),
   ambientEtherLevel: z.number().int().min(0).max(100).default(20),
   controllingFactionId: z.string().optional(),
+  ownerFactionId: z.string().optional(),
 });
 
 export type POI = z.infer<typeof POISchema>;

@@ -183,3 +183,15 @@ upgrade-chain views are projections of those definitions, not separate layout da
 `BaseState` and NPC assignment state remain SaveGame-only and identify their selected
 definitions by stable IDs. Development playtest mutations live only in the Editor
 controller and dispatch normal base/character management commands before opening Game.
+
+## Factions and reputation
+
+Faction definitions own configurable reputation tiers, default directional relations,
+membership vocabulary, hostility configuration, presentation metadata, and optional
+future area ownership references. `FactionRuntimeState` separately stores the player's
+reputation, resolved tier, membership, discovery/hostility overrides, and mutable
+relations. All consumers use shared Conditions, Effects, and existing modifier rules;
+shops, events, POIs, NPCs, quests, and combat contain no faction-specific branches.
+The Editor relation matrix writes the same directional relation list loaded by
+`ContentRegistry`; no diplomacy simulation, territory state machine, or faction AI is
+introduced.

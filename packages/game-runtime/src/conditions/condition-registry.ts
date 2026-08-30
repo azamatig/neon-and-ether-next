@@ -18,6 +18,7 @@ import { handleRandomChanceCondition } from './handlers/random-chance-condition.
 import { handleAndCondition, handleOrCondition, handleNotCondition } from './handlers/combinator-conditions.ts';
 import type { RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import { handleTimeCondition } from './handlers/time-condition.ts';
+import { handleFactionStateCondition } from './handlers/faction-state-condition.ts';
 
 export class ConditionRegistry {
   private handlers = new Map<string, ConditionHandler<any>>();
@@ -41,6 +42,7 @@ export class ConditionRegistry {
     this.registerHandler('npcState', handleNpcStateCondition);
     this.registerHandler('relationship', handleRelationshipCondition);
     this.registerHandler('factionReputation', handleFactionReputationCondition);
+    for(const type of ['factionReputationTier','factionMembership','factionRelation','factionHostile','factionDiscovered']) this.registerHandler(type,handleFactionStateCondition);
     this.registerHandler('companionPresent', handleCompanionPresentCondition);
     this.registerHandler('baseRoomExists', handleBaseRoomExistsCondition);
     this.registerHandler('randomChance', handleRandomChanceCondition);

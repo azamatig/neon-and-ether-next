@@ -31,6 +31,7 @@ import {
   TimeState,
   WorldState,
 } from '@neon-ether/game-schema';
+import { createFactionRuntime } from '../factions/faction-state.ts';
 
 export type {
   ActiveStatusEffect,
@@ -197,18 +198,15 @@ export function createInitialFactionRuntimeState(
   overrides: Partial<FactionRuntimeState> = {}
 ): FactionRuntimeState {
   const rep = overrides.reputation ?? 0;
-  let standing: FactionStanding = overrides.standing ?? 'Neutral';
-  if (!overrides.standing) {
-    if (rep >= 50) standing = 'Honored';
-    else if (rep >= 20) standing = 'Friendly';
-    else if (rep <= -50) standing = 'Hostile';
-    else if (rep <= -20) standing = 'Unfriendly';
-  }
-
   return {
     factionId,
     reputation: rep,
-    standing,
+    standing: overrides.standing ?? '',
+    reputationTierId: overrides.reputationTierId ?? '',
+    membershipStatus: overrides.membershipStatus ?? 'none',
+    isHostile: overrides.isHostile ?? false,
+    hostilityOverride: overrides.hostilityOverride,
+    relations: overrides.relations ?? {},
     tier: overrides.tier ?? 1,
     isDiscovered: overrides.isDiscovered ?? true,
     flags: overrides.flags ?? {},
@@ -337,7 +335,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
   ]));
   const factions = Object.fromEntries(content.factions.map((faction) => [
     faction.id,
-    createInitialFactionRuntimeState(faction.id, { reputation: faction.defaultPlayerReputation }),
+    createFactionRuntime(faction),
   ]));
   const shops = Object.fromEntries(content.shops.map((shop) => [shop.id, { shopId:shop.id, stock:Object.fromEntries(shop.inventory.map((entry)=>[entry.itemId,entry.quantity])), lastRestockTurn:0 }]));
   const startingRooms = baseDefinition?.startingRooms ?? [];

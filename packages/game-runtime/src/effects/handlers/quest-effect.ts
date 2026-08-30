@@ -1,6 +1,7 @@
 import { AdvanceQuestEffect, CompleteQuestEffect, StartQuestEffect } from '@neon-ether/game-schema';
 import { EffectHandler } from '../effect-handler.ts';
 import { handleGrantRewardsEffect } from './reward-effect.ts';
+import { handleFactionEffect } from './faction-effect.ts';
 
 export const handleStartQuestEffect: EffectHandler<StartQuestEffect> = (effect, context) => {
   const questDefinition = context.contentRegistry?.getQuest(effect.questId);
@@ -129,18 +130,7 @@ export const handleCompleteQuestEffect: EffectHandler<CompleteQuestEffect> = (ef
     if (questDefinition.reputationChanges) {
       for (const [facId, delta] of Object.entries(questDefinition.reputationChanges)) {
         if (typeof delta === 'number') {
-          if (!context.state.factions[facId]) {
-            context.state.factions[facId] = {
-              factionId: facId,
-              reputation: 0,
-              standing: 'Neutral',
-              tier: 1,
-              isDiscovered: true,
-              flags: {},
-            };
-          }
-          const prev = context.state.factions[facId].reputation;
-          context.state.factions[facId].reputation = Math.max(-100, Math.min(100, prev + delta));
+          handleFactionEffect({type:'changeFactionReputation',factionId:facId,delta},context);
         }
       }
     }

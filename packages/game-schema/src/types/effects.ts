@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { Vector2DSchema } from './grid.ts';
 import { PoiStatusSchema } from './world.ts';
 import { RewardDefinitionSchema } from './progression.ts';
+import { FactionRelationValueSchema } from './faction.ts';
 
 /**
  * 1. setFlag Effect: Sets a persistent global or local game state flag.
@@ -150,6 +151,12 @@ export const ChangeFactionReputationEffectSchema = z.object({
 });
 
 export type ChangeFactionReputationEffect = z.infer<typeof ChangeFactionReputationEffectSchema>;
+export const SetFactionReputationEffectSchema = z.object({type:z.literal('setFactionReputation'),factionId:z.string().min(1),value:z.number().int().min(-100).max(100)});
+export const ChangeFactionRelationEffectSchema = z.object({type:z.literal('changeFactionRelation'),factionId:z.string().min(1),targetFactionId:z.string().min(1),relation:FactionRelationValueSchema});
+export const SetFactionMembershipEffectSchema = z.object({type:z.literal('setFactionMembership'),factionId:z.string().min(1),membershipStatus:z.string().min(1)});
+export const DiscoverFactionEffectSchema = z.object({type:z.literal('discoverFaction'),factionId:z.string().min(1),discovered:z.boolean().default(true)});
+export const SetFactionHostilityEffectSchema = z.object({type:z.literal('setFactionHostility'),factionId:z.string().min(1),hostile:z.boolean()});
+export type FactionStateEffect = z.infer<typeof SetFactionReputationEffectSchema>|z.infer<typeof ChangeFactionRelationEffectSchema>|z.infer<typeof SetFactionMembershipEffectSchema>|z.infer<typeof DiscoverFactionEffectSchema>|z.infer<typeof SetFactionHostilityEffectSchema>;
 
 /**
  * 12. startCombat Effect: Triggers tactical combat encounter.
@@ -255,6 +262,11 @@ export const EffectSchema = z.discriminatedUnion('type', [
   ChangeNpcStateEffectSchema,
   ChangeRelationshipEffectSchema,
   ChangeFactionReputationEffectSchema,
+  SetFactionReputationEffectSchema,
+  ChangeFactionRelationEffectSchema,
+  SetFactionMembershipEffectSchema,
+  DiscoverFactionEffectSchema,
+  SetFactionHostilityEffectSchema,
   StartCombatEffectSchema,
   TriggerEventEffectSchema,
   MovePlayerEffectSchema,

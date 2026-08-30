@@ -29,3 +29,4 @@ export * from './progression/index.ts';
 export * from './crafting/index.ts';
 export * from './economy/index.ts';
 export * from './time/index.ts';
+export * from './factions/faction-state.ts';

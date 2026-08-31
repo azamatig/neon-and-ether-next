@@ -69,7 +69,7 @@
       "stage_choice": {
         "id": "stage_choice",
         "stageNumber": 5,
-        "title": "Decide the Archive’s Fate",
+        "title": "Decide the Archive\u2019s Fate",
         "journalEntry": "Choose who receives the recovered memory archive.",
         "objectives": [],
         "entryConditions": [],
@@ -108,7 +108,7 @@
   {
     "id": "qst_clinic_coolant",
     "name": "Cold Cradle",
-    "description": "Recover sterile coolant for Sable’s failing clinic cradle.",
+    "description": "Recover sterile coolant for Sable\u2019s failing clinic cradle.",
     "tags": [
       "SideQuest",
       "Clinic"
@@ -171,6 +171,117 @@
       "itm_glassline_access_shard"
     ],
     "isMainQuest": false,
+    "isRepeatable": false
+  },
+  {
+    "id": "qst_prologue_ares_vault",
+    "name": "The Ares Job",
+    "title": "The Ares Job",
+    "description": "Infiltrate the Ares Industries logistics perimeter and open a route into the deeper facility.",
+    "summary": "Region 1 of the Ares vault infiltration.",
+    "tags": [
+      "MainQuest",
+      "Prologue",
+      "Ares"
+    ],
+    "factionId": "fac_undercity_drifters",
+    "faction": "fac_undercity_drifters",
+    "recommendedLevel": 1,
+    "stages": {
+      "stage_01_service_entrance": {
+        "id": "stage_01_service_entrance",
+        "stageNumber": 1,
+        "title": "Cross the Service Entrance",
+        "journalEntry": "Enter the Ares logistics perimeter with Rhea and Dax.",
+        "objectives": [
+          {
+            "id": "obj_reach_warehouse",
+            "description": "Reach the warehouse floor.",
+            "objectiveType": "ReachLocation",
+            "targetId": "poi_prologue_warehouse",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false,
+            "approachType": "Infiltration"
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_02_warehouse"
+      },
+      "stage_02_warehouse": {
+        "id": "stage_02_warehouse",
+        "stageNumber": 2,
+        "title": "Prepare the Infiltration",
+        "journalEntry": "Search the warehouse and investigate the maintenance office.",
+        "objectives": [
+          {
+            "id": "obj_search_lockers",
+            "description": "Search the warehouse lockers.",
+            "objectiveType": "InteractPOI",
+            "targetId": "poi_prologue_warehouse",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": true,
+            "isCompleted": false
+          },
+          {
+            "id": "obj_breach_office",
+            "description": "Breach the maintenance terminal.",
+            "objectiveType": "HackNode",
+            "targetId": "minigame_prologue_ares_logistics_breach",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": true,
+            "isCompleted": false,
+            "approachType": "EtherTech"
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_03_freight_access"
+      },
+      "stage_03_freight_access": {
+        "id": "stage_03_freight_access",
+        "stageNumber": 3,
+        "title": "Reach Freight Access",
+        "journalEntry": "Regroup at the freight gate and enter the deeper Ares facility.",
+        "objectives": [
+          {
+            "id": "obj_enter_deeper_facility",
+            "description": "Open the freight gate.",
+            "objectiveType": "ReachLocation",
+            "targetId": "poi_prologue_freight_access",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false,
+            "approachType": "Infiltration"
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": []
+      }
+    },
+    "initialStageId": "stage_01_service_entrance",
+    "rewardCredits": 0,
+    "rewardXp": 0,
+    "rewardItemIds": [],
+    "reputationChanges": {},
+    "isMainQuest": true,
     "isRepeatable": false
   }
 ]

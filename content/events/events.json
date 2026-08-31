@@ -1,5 +1,167 @@
 [
   {
+    "id": "evt_new_game_intro",
+    "name": "Rain Over Glassline",
+    "description": "The authored opening scene for a newly created character.",
+    "tags": [
+      "NewGame",
+      "Intro",
+      "Scene"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "fullscreenScene",
+      "ambientGlow": "cyan",
+      "themeMood": "rain-darkened arrival",
+      "weatherPresentation": "inherit",
+      "backgroundImage": "bg_sector09_slums"
+    },
+    "steps": [
+      {
+        "id": "intro_arrival",
+        "type": "image",
+        "title": "ARES LOGISTICS PERIMETER // DAY 1 // 20:00",
+        "text": "Rain washes the Ares freight lights into pale bands. Two silhouettes wait beside the service entrance.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "intro_street",
+        "type": "narration",
+        "title": "A CITY YOU ALREADY KNOW",
+        "speaker": {
+          "type": "narrator",
+          "name": "Narrator"
+        },
+        "text": "You know which awnings hide a knife and which maintenance doors never quite latch. Glassline is cruel, but it has never been a mystery.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "origin.street",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "intro_corporate",
+        "type": "narration",
+        "title": "THE VIEW FROM BELOW",
+        "speaker": {
+          "type": "narrator",
+          "name": "Narrator"
+        },
+        "text": "The tower credentials in your pocket expired months ago. The habits they bought you did not. Every camera angle still looks like an invitation.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "origin.corporate",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "intro_research",
+        "type": "narration",
+        "title": "RESONANCE",
+        "speaker": {
+          "type": "narrator",
+          "name": "Narrator"
+        },
+        "text": "The signal should be noise. Instead, its harmonic structure follows the same impossible sequence you once found burned into an ether conduit.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "origin.research",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "intro_threshold",
+        "type": "transition",
+        "title": "THE ARES JOB",
+        "text": "Rhea and Dax are in position. The service entrance is the first controlled threshold.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [
+      {
+        "type": "setFlag",
+        "flag": "intro.started",
+        "value": true
+      }
+    ],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "intro.completed",
+        "value": true
+      },
+      {
+        "type": "setFlag",
+        "flag": "prologue.started",
+        "value": true
+      },
+      {
+        "type": "startQuest",
+        "questId": "qst_prologue_ares_vault",
+        "initialStageId": "stage_01_service_entrance"
+      },
+      {
+        "type": "recruitNpc",
+        "npcId": "npc_prologue_companion_female",
+        "asCompanion": true
+      },
+      {
+        "type": "recruitNpc",
+        "npcId": "npc_prologue_companion_male",
+        "asCompanion": true
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_female",
+        "location": {
+          "mapId": "map_prologue_ares_logistics",
+          "poiId": "poi_prologue_service_entrance"
+        }
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_male",
+        "location": {
+          "mapId": "map_prologue_ares_logistics",
+          "poiId": "poi_prologue_service_entrance"
+        }
+      }
+    ],
+    "completionOutcome": {
+      "type": "poi",
+      "poiId": "poi_prologue_service_entrance",
+      "mapId": "map_prologue_ares_logistics"
+    },
+    "skipOutcome": {
+      "type": "poi",
+      "poiId": "poi_prologue_service_entrance",
+      "mapId": "map_prologue_ares_logistics"
+    },
+    "isOneShot": true
+  },
+  {
     "id": "evt_glassline_briefing",
     "name": "Static Beneath Glass",
     "description": "Mira recruits Vane to investigate the sealed annex.",
@@ -20,7 +182,7 @@
       {
         "id": "briefing",
         "type": "choice",
-        "text": "“The annex is eating people’s memories,” Mira says. “Sable heard the security band. We need her frequency map.”",
+        "text": "\u201cThe annex is eating people\u2019s memories,\u201d Mira says. \u201cSable heard the security band. We need her frequency map.\u201d",
         "conditions": [],
         "effects": [],
         "choices": [
@@ -219,7 +381,7 @@
       {
         "id": "echo",
         "type": "choice",
-        "text": "Ash Crow and two scavengers block the flooded platform. “Pay, turn back, or prove you are not corporate.”",
+        "text": "Ash Crow and two scavengers block the flooded platform. \u201cPay, turn back, or prove you are not corporate.\u201d",
         "conditions": [],
         "effects": [],
         "choices": [
@@ -539,7 +701,7 @@
       {
         "id": "choice",
         "type": "choice",
-        "text": "The recovered signal contains erased residents’ identities—and OmniCorp access keys worth a fortune.",
+        "text": "The recovered signal contains erased residents\u2019 identities\u2014and OmniCorp access keys worth a fortune.",
         "conditions": [],
         "effects": [],
         "choices": [
@@ -651,7 +813,7 @@
       {
         "id": "return",
         "type": "narration",
-        "text": "Mira nods toward the safehouse. “Whatever we chose, Glassline will feel it by morning.”",
+        "text": "Mira nods toward the safehouse. \u201cWhatever we chose, Glassline will feel it by morning.\u201d",
         "conditions": [],
         "effects": [],
         "choices": [],
@@ -876,5 +1038,276 @@
     "entryEffects": [],
     "completionEffects": [],
     "isOneShot": true
+  },
+  {
+    "id": "evt_prologue_service_entrance",
+    "name": "Service Entrance",
+    "description": "Service Entrance",
+    "tags": [
+      "Prologue",
+      "Ares"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "dialogue",
+      "ambientGlow": "cyan",
+      "themeMood": "industrial infiltration",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "service_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "Camera sweep is slow. We cross together, then stay below the rack lights.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "service_dax",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "Freight gate is our only route deeper. I will keep it open when we get there.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "service_enter",
+        "type": "transition",
+        "title": "WAREHOUSE PERIMETER",
+        "text": "The service door seals behind the team.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.started",
+        "value": true
+      },
+      {
+        "type": "startQuest",
+        "questId": "qst_prologue_ares_vault",
+        "initialStageId": "stage_01_service_entrance"
+      },
+      {
+        "type": "recruitNpc",
+        "npcId": "npc_prologue_companion_female",
+        "asCompanion": true
+      },
+      {
+        "type": "recruitNpc",
+        "npcId": "npc_prologue_companion_male",
+        "asCompanion": true
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_female",
+        "location": {
+          "mapId": "map_prologue_ares_logistics",
+          "poiId": "poi_prologue_service_entrance"
+        }
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_male",
+        "location": {
+          "mapId": "map_prologue_ares_logistics",
+          "poiId": "poi_prologue_service_entrance"
+        }
+      }
+    ],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.service_entered",
+        "value": true
+      },
+      {
+        "type": "advanceQuest",
+        "questId": "qst_prologue_ares_vault",
+        "targetStageId": "stage_02_warehouse",
+        "completeObjectiveId": "obj_reach_warehouse"
+      }
+    ],
+    "isOneShot": true,
+    "completionOutcome": {
+      "type": "poi",
+      "poiId": "poi_prologue_warehouse",
+      "mapId": "map_prologue_ares_logistics"
+    }
+  },
+  {
+    "id": "evt_prologue_warehouse_companion",
+    "name": "Warehouse Check-In",
+    "description": "Warehouse Check-In",
+    "tags": [
+      "Prologue",
+      "Ares"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "dialogue",
+      "ambientGlow": "cyan",
+      "themeMood": "industrial infiltration",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "warehouse_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "Office terminal is still live. A clean route pull could save us trouble at freight access.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "warehouse_dax",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "Take what you need from the lockers. Past that gate, we do not stop.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.warehouse.companion_spoken",
+        "value": true
+      }
+    ],
+    "isOneShot": true,
+    "completionOutcome": {
+      "type": "returnToOrigin"
+    }
+  },
+  {
+    "id": "evt_prologue_freight_preparation",
+    "name": "Freight Access",
+    "description": "Freight Access",
+    "tags": [
+      "Prologue",
+      "Ares"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "cinematic",
+      "ambientGlow": "cyan",
+      "themeMood": "industrial infiltration",
+      "weatherPresentation": "inherit"
+    },
+    "steps": [
+      {
+        "id": "freight_route",
+        "type": "narration",
+        "title": "ROUTE CONFIRMED",
+        "text": "The stolen security route exposes a maintenance channel below the checkpoint.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.security_route_discovered",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.entry_advantage",
+            "value": true
+          }
+        ],
+        "choices": []
+      },
+      {
+        "id": "freight_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "Once the gate cycles, the perimeter cannot cover us. Stay close.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "freight_dax",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "Charges are set. Your call opens the door.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "freight_transition",
+        "type": "transition",
+        "title": "REGION 1 COMPLETE",
+        "text": "The freight lock disengages. Beyond it, Ares security is already moving.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.region_1_completed",
+        "value": true
+      },
+      {
+        "type": "advanceQuest",
+        "questId": "qst_prologue_ares_vault",
+        "targetStageId": "stage_03_freight_access",
+        "completeObjectiveId": "obj_enter_deeper_facility"
+      }
+    ],
+    "isOneShot": true,
+    "completionOutcome": {
+      "type": "showResult",
+      "title": "Deeper Access Open",
+      "resultText": "Region 1 complete. The next operation begins beyond the freight gate.",
+      "status": "Success"
+    }
   }
 ]

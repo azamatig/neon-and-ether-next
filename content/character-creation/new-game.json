@@ -1,0 +1,95 @@
+[
+  {
+    "id": "new_game_neon_ether",
+    "name": "Neon & Ether Campaign",
+    "description": "Default campaign entry.",
+    "tags": [
+      "campaign"
+    ],
+    "startingMapId": "map_prologue_ares_logistics",
+    "startingPoiId": "poi_prologue_service_entrance",
+    "startingEventId": "evt_new_game_intro",
+    "minimumAge": 18,
+    "maximumAge": 70,
+    "defaultAge": 28,
+    "portraits": [
+      {
+        "id": "portrait_drifer_01",
+        "name": "Drifter"
+      },
+      {
+        "id": "portrait_operator_01",
+        "name": "Operator"
+      },
+      {
+        "id": "portrait_ether_01",
+        "name": "Ether Adept"
+      }
+    ],
+    "attributePointBudget": 12,
+    "attributeRules": [
+      {
+        "attribute": "body",
+        "minimum": 8,
+        "maximum": 16,
+        "costPerPoint": 1
+      },
+      {
+        "attribute": "reflexes",
+        "minimum": 8,
+        "maximum": 16,
+        "costPerPoint": 1
+      },
+      {
+        "attribute": "mind",
+        "minimum": 8,
+        "maximum": 16,
+        "costPerPoint": 1
+      },
+      {
+        "attribute": "etherTech",
+        "minimum": 8,
+        "maximum": 16,
+        "costPerPoint": 1
+      },
+      {
+        "attribute": "presence",
+        "minimum": 8,
+        "maximum": 16,
+        "costPerPoint": 1
+      }
+    ],
+    "skillPointBudget": 3,
+    "skillRules": [
+      {
+        "skillId": "intrusion",
+        "name": "Intrusion",
+        "minimum": 0,
+        "maximum": 3,
+        "costPerRank": 1
+      },
+      {
+        "skillId": "medicine",
+        "name": "Medicine",
+        "minimum": 0,
+        "maximum": 3,
+        "costPerRank": 1
+      },
+      {
+        "skillId": "streetwise",
+        "name": "Streetwise",
+        "minimum": 0,
+        "maximum": 3,
+        "costPerRank": 1
+      }
+    ],
+    "startingPerkCount": 1,
+    "requireAllPointsSpent": true,
+    "startingQuestIds": [],
+    "startingTime": {
+      "day": 1,
+      "hour": 20,
+      "minute": 0
+    }
+  }
+]

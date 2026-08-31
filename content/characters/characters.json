@@ -378,5 +378,135 @@
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
     "availabilityConditions": []
+  },
+  {
+    "id": "npc_prologue_companion_female",
+    "name": "Rhea Voss",
+    "description": "Infiltration Specialist assigned to the Ares infiltration team.",
+    "tags": [
+      "Companion",
+      "Prologue",
+      "AresInfiltration"
+    ],
+    "title": "Infiltration Specialist",
+    "factionId": "fac_undercity_drifters",
+    "factionIds": [],
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": true,
+    "level": 1,
+    "progressionDefinitionId": "progression_companion",
+    "attributes": {
+      "body": 10,
+      "reflexes": 14,
+      "mind": 12,
+      "etherTech": 11,
+      "presence": 13
+    },
+    "vitals": {
+      "maxHp": 34,
+      "currentHp": 34,
+      "maxEther": 10,
+      "currentEther": 10,
+      "actionPointsMax": 6,
+      "actionPointsCurrent": 6,
+      "initiative": 14,
+      "armorRating": 2,
+      "etherResistance": 5
+    },
+    "skills": {
+      "stealth": 2,
+      "firearms": 1
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "position": {
+      "x": 0,
+      "y": 0
+    },
+    "facing": "East",
+    "inventory": [],
+    "portraitIcon": "Crosshair",
+    "defaultBehavior": "Idle",
+    "abilityIds": [
+      "ability_thermal_burst"
+    ],
+    "traits": [
+      "Reliable"
+    ],
+    "initialRelationship": {
+      "status": "companion",
+      "affinity": 10,
+      "trust": 10,
+      "fear": 0,
+      "loyalty": 10
+    },
+    "availabilityConditions": []
+  },
+  {
+    "id": "npc_prologue_companion_male",
+    "name": "Dax Mercer",
+    "description": "Security Breacher assigned to the Ares infiltration team.",
+    "tags": [
+      "Companion",
+      "Prologue",
+      "AresInfiltration"
+    ],
+    "title": "Security Breacher",
+    "factionId": "fac_undercity_drifters",
+    "factionIds": [],
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": true,
+    "level": 1,
+    "progressionDefinitionId": "progression_companion",
+    "attributes": {
+      "body": 14,
+      "reflexes": 11,
+      "mind": 10,
+      "etherTech": 12,
+      "presence": 11
+    },
+    "vitals": {
+      "maxHp": 34,
+      "currentHp": 34,
+      "maxEther": 10,
+      "currentEther": 10,
+      "actionPointsMax": 6,
+      "actionPointsCurrent": 6,
+      "initiative": 11,
+      "armorRating": 2,
+      "etherResistance": 5
+    },
+    "skills": {
+      "intrusion": 1,
+      "melee": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "position": {
+      "x": 0,
+      "y": 0
+    },
+    "facing": "East",
+    "inventory": [],
+    "portraitIcon": "Shield",
+    "defaultBehavior": "Idle",
+    "abilityIds": [
+      "ability_arc_strike"
+    ],
+    "traits": [
+      "Reliable"
+    ],
+    "initialRelationship": {
+      "status": "companion",
+      "affinity": 10,
+      "trust": 10,
+      "fear": 0,
+      "loyalty": 10
+    },
+    "availabilityConditions": []
   }
 ]

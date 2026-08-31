@@ -78,6 +78,9 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
   return {
     characterId: overrides.characterId ?? 'player',
     name: overrides.name ?? 'Player',
+    age: overrides.age,
+    portraitId: overrides.portraitId,
+    backgroundId: overrides.backgroundId,
     title: overrides.title ?? 'Drifter',
     level: overrides.level ?? 1,
     experience: overrides.experience ?? 0,
@@ -138,6 +141,7 @@ export function createInitialWorldState(overrides: Partial<WorldState> = {}): Wo
     doors: overrides.doors ?? {},
     ambientEtherModifier: overrides.ambientEtherModifier ?? 1.0,
     weatherByScope: overrides.weatherByScope ?? {},
+    activeMinigame:overrides.activeMinigame??null,
   };
 }
 

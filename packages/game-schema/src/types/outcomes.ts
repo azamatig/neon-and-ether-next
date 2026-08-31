@@ -68,6 +68,7 @@ export interface ReturnToOriginOutcome {
 export interface NoPresentationOutcome {
   type: 'noPresentation';
 }
+export interface MinigameOutcome{type:'minigame';minigameId:string;originContext?:OriginContext}
 
 export type GameplayOutcome =
   | ShowResultOutcome
@@ -78,7 +79,7 @@ export type GameplayOutcome =
   | GameplayScreenOutcome
   | SequenceOutcome
   | ReturnToOriginOutcome
-  | NoPresentationOutcome;
+  | NoPresentationOutcome|MinigameOutcome;
 
 export const ShowResultOutcomeSchema: z.ZodType<ShowResultOutcome> = z.object({
   type: z.literal('showResult'),
@@ -133,6 +134,7 @@ export const ReturnToOriginOutcomeSchema: z.ZodType<ReturnToOriginOutcome> = z.o
 export const NoPresentationOutcomeSchema: z.ZodType<NoPresentationOutcome> = z.object({
   type: z.literal('noPresentation'),
 });
+export const MinigameOutcomeSchema:z.ZodType<MinigameOutcome>=z.object({type:z.literal('minigame'),minigameId:z.string().min(1),originContext:OriginContextSchema.optional()});
 
 export const GameplayOutcomeSchema: z.ZodType<GameplayOutcome> = z.discriminatedUnion('type', [
   ShowResultOutcomeSchema as any,
@@ -144,4 +146,5 @@ export const GameplayOutcomeSchema: z.ZodType<GameplayOutcome> = z.discriminated
   SequenceOutcomeSchema as any,
   ReturnToOriginOutcomeSchema as any,
   NoPresentationOutcomeSchema as any,
+  MinigameOutcomeSchema as any,
 ]);

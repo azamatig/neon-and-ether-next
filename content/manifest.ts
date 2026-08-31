@@ -6,6 +6,9 @@
 import { GameContent, GameContentSchema } from '@neon-ether/game-schema';
 
 import progressionDefinitionsData from './progression/progression.json';
+import backgroundsData from './character-creation/backgrounds.json';
+import perksData from './character-creation/perks.json';
+import newGameDefinitionsData from './character-creation/new-game.json';
 import shopsData from './shops/shops.json';
 import itemsData from './items/items.json';
 import charactersData from './characters/characters.json';
@@ -29,12 +32,17 @@ import basesData from './bases/bases.json';
 import baseUpgradesData from './bases/upgrades.json';
 import weatherDefinitionsData from './weather/weather.json';
 import weatherProfilesData from './weather/profiles.json';
+import minigamesData from './minigames/minigames.json';
 
 export const gameContent: GameContent = GameContentSchema.parse({
   version: '1.0.0',
   items: itemsData,
   shops: shopsData,
   progressionDefinitions: progressionDefinitionsData,
+  backgrounds: backgroundsData,
+  perks: perksData,
+  newGameDefinitions: newGameDefinitionsData,
+  minigames:minigamesData,
   npcs: charactersData,
   characters: charactersData,
   enemies: enemiesData,

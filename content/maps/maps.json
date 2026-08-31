@@ -100,5 +100,91 @@
     ],
     "defaultTravelTimeMinutes": 30,
     "weatherProfileId": "weather_profile_urban"
+  },
+  {
+    "id": "map_prologue_ares_logistics",
+    "name": "Ares Logistics Perimeter",
+    "description": "A rain-swept freight perimeter surrounding an Ares Industries logistics hub.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Industrial",
+      "Infiltration"
+    ],
+    "district": "Ares Logistics Perimeter",
+    "subregion": "Warehouse Ring",
+    "backgroundImage": "bg_prologue_ares_logistics",
+    "poiIds": [
+      "poi_prologue_service_entrance",
+      "poi_prologue_warehouse",
+      "poi_prologue_maintenance_office",
+      "poi_prologue_freight_access"
+    ],
+    "defaultPoiId": "poi_prologue_service_entrance",
+    "connectedMapIds": [],
+    "ambientEtherLevel": 12,
+    "securityLevel": 3,
+    "controllingFactionId": "fac_omnicorp",
+    "recommendedLevel": 1,
+    "regions": [
+      {
+        "id": "reg_prologue_ares_warehouse_perimeter",
+        "name": "Warehouse Perimeter",
+        "description": "Service lanes, storage sheds, and controlled freight infrastructure.",
+        "securityLevel": 3,
+        "controllingFactionId": "fac_omnicorp",
+        "weatherProfileId": "weather_profile_urban",
+        "bounds": {
+          "x": 3,
+          "y": 5,
+          "width": 94,
+          "height": 90
+        },
+        "metadata": {}
+      }
+    ],
+    "metadata": {
+      "visualTheme": "ares-industrial-night"
+    },
+    "routes": [
+      {
+        "id": "route_prologue_service_warehouse",
+        "fromPoiId": "poi_prologue_service_entrance",
+        "toPoiId": "poi_prologue_warehouse",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_prologue_warehouse_office",
+        "fromPoiId": "poi_prologue_warehouse",
+        "toPoiId": "poi_prologue_maintenance_office",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_prologue_office_freight",
+        "fromPoiId": "poi_prologue_maintenance_office",
+        "toPoiId": "poi_prologue_freight_access",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_prologue_warehouse_freight",
+        "fromPoiId": "poi_prologue_warehouse",
+        "toPoiId": "poi_prologue_freight_access",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 8,
+        "metadata": {}
+      }
+    ],
+    "defaultTravelTimeMinutes": 8,
+    "weatherProfileId": "weather_profile_urban"
   }
 ]

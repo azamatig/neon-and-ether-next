@@ -249,7 +249,7 @@
         "outcome": {
           "type": "showResult",
           "title": "Dead-Air Ledger",
-          "resultText": "Nix wants a clean capture of OmniCorp’s encrypted burst."
+          "resultText": "Nix wants a clean capture of OmniCorp\u2019s encrypted burst."
         }
       },
       {
@@ -311,7 +311,7 @@
       },
       {
         "id": "act_market_reaction_free",
-        "label": "Hear the district’s verdict",
+        "label": "Hear the district\u2019s verdict",
         "description": "",
         "icon": "MessageSquare",
         "actionType": "Talk",
@@ -334,7 +334,7 @@
       },
       {
         "id": "act_market_reaction_sold",
-        "label": "Collect the Syndicate’s thanks",
+        "label": "Collect the Syndicate\u2019s thanks",
         "description": "",
         "icon": "Coins",
         "actionType": "Talk",
@@ -763,5 +763,423 @@
     "dangerLevel": 5,
     "ambientEtherLevel": 25,
     "environmentalExposure": "indoor"
+  },
+  {
+    "mapId": "map_prologue_ares_logistics",
+    "district": "Ares Logistics Perimeter",
+    "regionId": "reg_prologue_ares_warehouse_perimeter",
+    "tags": [
+      "Prologue",
+      "Ares"
+    ],
+    "visibilityConditions": [],
+    "questIds": [
+      "qst_prologue_ares_vault"
+    ],
+    "dangerLevel": 1,
+    "ambientEtherLevel": 10,
+    "controllingFactionId": "fac_omnicorp",
+    "id": "poi_prologue_service_entrance",
+    "name": "Service Entrance",
+    "description": "A recessed staff entrance watched by an aging badge reader and a single security camera.",
+    "mapPosition": {
+      "x": 15,
+      "y": 72
+    },
+    "image": "poi_prologue_service_entrance",
+    "icon": "DoorOpen",
+    "category": "SecurityNode",
+    "availabilityConditions": [],
+    "npcIds": [
+      "npc_prologue_companion_female",
+      "npc_prologue_companion_male"
+    ],
+    "eventIds": [
+      "evt_prologue_service_entrance"
+    ],
+    "encounterIds": [],
+    "environmentalExposure": "sheltered",
+    "actions": [
+      {
+        "id": "act_prologue_bypass_service_security",
+        "label": "Bypass the badge reader",
+        "description": "Loop the entrance sensor before crossing the threshold.",
+        "icon": "CircuitBoard",
+        "actionType": "Terminal",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.service_bypass_attempted",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.service_bypass_attempted",
+            "value": true
+          }
+        ],
+        "check": {
+          "attribute": "etherTech",
+          "skill": "intrusion",
+          "difficulty": "Easy",
+          "modifiers": [],
+          "passEffects": [
+            {
+              "type": "setFlag",
+              "flag": "prologue.service_security_bypassed",
+              "value": true
+            }
+          ],
+          "partialEffects": [
+            {
+              "type": "setFlag",
+              "flag": "prologue.service_security_bypassed",
+              "value": true
+            }
+          ],
+          "failEffects": [
+            {
+              "type": "setFlag",
+              "flag": "prologue.service_security_alerted",
+              "value": true
+            }
+          ],
+          "passText": "The reader accepts a clean maintenance loop.",
+          "partialText": "The loop holds, but the controller records an anomaly.",
+          "failText": "The reader rejects the splice and marks the port."
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_enter_with_team",
+        "label": "Enter with the team",
+        "description": "Check in with your companions and move into the warehouse.",
+        "icon": "Users",
+        "actionType": "Event",
+        "conditions": [],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_service_entrance"
+        },
+        "hideIfUnavailable": false,
+        "isRepeatable": false
+      }
+    ]
+  },
+  {
+    "mapId": "map_prologue_ares_logistics",
+    "district": "Ares Logistics Perimeter",
+    "regionId": "reg_prologue_ares_warehouse_perimeter",
+    "tags": [
+      "Prologue",
+      "Ares"
+    ],
+    "visibilityConditions": [],
+    "questIds": [
+      "qst_prologue_ares_vault"
+    ],
+    "dangerLevel": 1,
+    "ambientEtherLevel": 10,
+    "controllingFactionId": "fac_omnicorp",
+    "id": "poi_prologue_warehouse",
+    "name": "Warehouse",
+    "description": "Automated racks stand in dark aisles between dormant freight lifters.",
+    "mapPosition": {
+      "x": 39,
+      "y": 47
+    },
+    "image": "poi_prologue_warehouse",
+    "icon": "Warehouse",
+    "category": "Landmark",
+    "availabilityConditions": [
+      {
+        "type": "flag",
+        "flag": "prologue.service_entered",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "npcIds": [
+      "npc_prologue_companion_female",
+      "npc_prologue_companion_male"
+    ],
+    "eventIds": [
+      "evt_prologue_warehouse_companion"
+    ],
+    "encounterIds": [],
+    "environmentalExposure": "indoor",
+    "actions": [
+      {
+        "id": "act_prologue_search_lockers",
+        "label": "Search the staff lockers",
+        "description": "Look for supplies the evacuation crews left behind.",
+        "icon": "Search",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.warehouse.lockers_searched",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "changeMoney",
+            "amount": 65,
+            "mode": "add"
+          },
+          {
+            "type": "addItem",
+            "itemId": "con_trauma_patch",
+            "quantity": 1
+          },
+          {
+            "type": "addItem",
+            "itemId": "wpn_ether_baton",
+            "quantity": 1
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.warehouse.lockers_searched",
+            "value": true
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "Locker Cache",
+          "resultText": "You recover 65 credits, a trauma patch, and a compact ether baton.",
+          "status": "Success"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_warehouse_companion",
+        "label": "Check on the team",
+        "description": "Take a moment before approaching the secured freight lanes.",
+        "icon": "MessageSquare",
+        "actionType": "Talk",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.warehouse.companion_spoken",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_warehouse_companion"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      }
+    ]
+  },
+  {
+    "mapId": "map_prologue_ares_logistics",
+    "district": "Ares Logistics Perimeter",
+    "regionId": "reg_prologue_ares_warehouse_perimeter",
+    "tags": [
+      "Prologue",
+      "Ares"
+    ],
+    "visibilityConditions": [],
+    "questIds": [
+      "qst_prologue_ares_vault"
+    ],
+    "dangerLevel": 1,
+    "ambientEtherLevel": 10,
+    "controllingFactionId": "fac_omnicorp",
+    "id": "poi_prologue_maintenance_office",
+    "name": "Maintenance Office",
+    "description": "A glass-walled control room overlooks the freight conveyors and internal security routes.",
+    "mapPosition": {
+      "x": 65,
+      "y": 28
+    },
+    "image": "poi_prologue_maintenance_office",
+    "icon": "MonitorCog",
+    "category": "Terminal",
+    "availabilityConditions": [
+      {
+        "type": "flag",
+        "flag": "prologue.service_entered",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "npcIds": [],
+    "eventIds": [],
+    "encounterIds": [],
+    "environmentalExposure": "indoor",
+    "actions": [
+      {
+        "id": "act_prologue_breach_maintenance_node",
+        "label": "Breach the maintenance node",
+        "description": "Extract whichever payloads you can before the trace closes.",
+        "icon": "Binary",
+        "actionType": "Terminal",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.maintenance.breach_completed",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.maintenance.breach_started",
+            "value": true
+          }
+        ],
+        "outcome": {
+          "type": "minigame",
+          "minigameId": "minigame_prologue_ares_logistics_breach"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_search_maintenance_office",
+        "label": "Inspect the shift desk",
+        "description": "Search the abandoned desk for a physical route note.",
+        "icon": "FileSearch",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.maintenance.desk_searched",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.maintenance.desk_searched",
+            "value": true
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "Shift Desk",
+          "resultText": "The useful files were purged, but the terminal remains connected.",
+          "status": "Success"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      }
+    ]
+  },
+  {
+    "mapId": "map_prologue_ares_logistics",
+    "district": "Ares Logistics Perimeter",
+    "regionId": "reg_prologue_ares_warehouse_perimeter",
+    "tags": [
+      "Prologue",
+      "Ares"
+    ],
+    "visibilityConditions": [],
+    "questIds": [
+      "qst_prologue_ares_vault"
+    ],
+    "dangerLevel": 1,
+    "ambientEtherLevel": 10,
+    "controllingFactionId": "fac_omnicorp",
+    "id": "poi_prologue_freight_access",
+    "name": "Freight Access",
+    "description": "A pressure-rated freight gate separates the warehouse perimeter from the deeper Ares facility.",
+    "mapPosition": {
+      "x": 84,
+      "y": 61
+    },
+    "image": "poi_prologue_freight_access",
+    "icon": "ShieldAlert",
+    "category": "Transit",
+    "availabilityConditions": [
+      {
+        "type": "flag",
+        "flag": "prologue.service_entered",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "npcIds": [
+      "npc_prologue_companion_female",
+      "npc_prologue_companion_male"
+    ],
+    "eventIds": [
+      "evt_prologue_freight_preparation"
+    ],
+    "encounterIds": [],
+    "environmentalExposure": "sheltered",
+    "actions": [
+      {
+        "id": "act_prologue_review_security_route",
+        "label": "Review the security route",
+        "description": "Use the stolen route data to mark a safer approach.",
+        "icon": "Route",
+        "actionType": "Interact",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.security_route_discovered",
+            "operator": "==",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.freight.route_reviewed",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.freight.route_reviewed",
+            "value": true
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.entry_advantage",
+            "value": true
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "Route Prepared",
+          "resultText": "The team marks a maintenance channel beneath the main checkpoint.",
+          "status": "Success"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_enter_deeper_facility",
+        "label": "Enter the deeper facility",
+        "description": "Make final preparations and open the freight gate.",
+        "icon": "ArrowRight",
+        "actionType": "Event",
+        "conditions": [],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_freight_preparation"
+        },
+        "hideIfUnavailable": false,
+        "isRepeatable": false
+      }
+    ]
   }
 ]

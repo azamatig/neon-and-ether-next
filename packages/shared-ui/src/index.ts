@@ -13,3 +13,4 @@ export * from './components/WorldMapView.tsx';
 export * from './components/PoiScreen.tsx';
 export * from './components/BaseScreen.tsx';
 export * from './components/EnvironmentalLayer.tsx';
+export * from './components/Foundation.tsx';

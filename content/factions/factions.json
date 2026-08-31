@@ -3,36 +3,211 @@
     "id": "fac_ether_syndicate",
     "name": "Ether Syndicate",
     "description": "An underground network of technomancers and smugglers controlling raw ether distribution throughout the lower sectors.",
-    "tags": ["Underworld", "Technomancy", "Smugglers"],
+    "tags": [
+      "Underworld",
+      "Technomancy",
+      "Smugglers"
+    ],
     "ideology": "TechnoMysticism",
     "defaultPlayerReputation": 15,
     "headquartersMapId": "map_slums_sec09",
-    "leaderNpcId": "npc_kaelen_rourke",
+    "leaderNpcId": "npc_nix_vale",
     "colorHex": "#bc13fe",
-    "crestIcon": "Zap",
-    "techTier": 3
+    "techTier": 3,
+    "shortName": "Ether Syndicate",
+    "icon": "Zap",
+    "reputationTiers": [
+      {
+        "id": "hated",
+        "name": "Hated",
+        "minimumReputation": -100,
+        "hostile": true
+      },
+      {
+        "id": "hostile",
+        "name": "Hostile",
+        "minimumReputation": -50,
+        "hostile": true
+      },
+      {
+        "id": "unfriendly",
+        "name": "Unfriendly",
+        "minimumReputation": -20,
+        "hostile": false
+      },
+      {
+        "id": "neutral",
+        "name": "Neutral",
+        "minimumReputation": 0,
+        "hostile": false
+      },
+      {
+        "id": "friendly",
+        "name": "Friendly",
+        "minimumReputation": 20,
+        "hostile": false
+      },
+      {
+        "id": "trusted",
+        "name": "Trusted",
+        "minimumReputation": 50,
+        "hostile": false
+      },
+      {
+        "id": "allied",
+        "name": "Allied",
+        "minimumReputation": 80,
+        "hostile": false
+      }
+    ],
+    "defaultRelations": [],
+    "membershipStatuses": [
+      "none",
+      "associate",
+      "member",
+      "officer"
+    ],
+    "controlledAreaIds": []
   },
   {
     "id": "fac_omnicorp",
     "name": "OmniCorp Security Dynamics",
     "description": "Mega-corporation enforcing private martial law and monopolizing cyberware synthesis across the upper citadel.",
-    "tags": ["Corporate", "Security", "HighTech"],
+    "tags": [
+      "Corporate",
+      "Security",
+      "HighTech"
+    ],
     "ideology": "CorporateAuthoritarianism",
     "defaultPlayerReputation": -20,
-    "rivalFactionIds": ["fac_ether_syndicate"],
     "colorHex": "#00f2ff",
-    "crestIcon": "Shield",
-    "techTier": 4
+    "techTier": 4,
+    "shortName": "OmniCorp Security Dynamics",
+    "icon": "Shield",
+    "reputationTiers": [
+      {
+        "id": "hated",
+        "name": "Hated",
+        "minimumReputation": -100,
+        "hostile": true
+      },
+      {
+        "id": "hostile",
+        "name": "Hostile",
+        "minimumReputation": -50,
+        "hostile": true
+      },
+      {
+        "id": "unfriendly",
+        "name": "Unfriendly",
+        "minimumReputation": -20,
+        "hostile": false
+      },
+      {
+        "id": "neutral",
+        "name": "Neutral",
+        "minimumReputation": 0,
+        "hostile": false
+      },
+      {
+        "id": "friendly",
+        "name": "Friendly",
+        "minimumReputation": 20,
+        "hostile": false
+      },
+      {
+        "id": "trusted",
+        "name": "Trusted",
+        "minimumReputation": 50,
+        "hostile": false
+      },
+      {
+        "id": "allied",
+        "name": "Allied",
+        "minimumReputation": 80,
+        "hostile": false
+      }
+    ],
+    "defaultRelations": [
+      {
+        "factionId": "fac_ether_syndicate",
+        "relation": "hostile"
+      }
+    ],
+    "membershipStatuses": [
+      "none",
+      "associate",
+      "member",
+      "officer"
+    ],
+    "controlledAreaIds": []
   },
   {
     "id": "fac_undercity_drifters",
     "name": "Undercity Drifters",
     "description": "Independent scavengers, bio-hackers, and mercs surviving between corporate turf wars.",
-    "tags": ["Neutral", "Scavengers", "Mercenaries"],
+    "tags": [
+      "Neutral",
+      "Scavengers",
+      "Mercenaries"
+    ],
     "ideology": "MercenaryPragmatism",
     "defaultPlayerReputation": 0,
     "colorHex": "#94a3b8",
-    "crestIcon": "User",
-    "techTier": 2
+    "techTier": 2,
+    "shortName": "Undercity Drifters",
+    "icon": "User",
+    "reputationTiers": [
+      {
+        "id": "hated",
+        "name": "Hated",
+        "minimumReputation": -100,
+        "hostile": true
+      },
+      {
+        "id": "hostile",
+        "name": "Hostile",
+        "minimumReputation": -50,
+        "hostile": true
+      },
+      {
+        "id": "unfriendly",
+        "name": "Unfriendly",
+        "minimumReputation": -20,
+        "hostile": false
+      },
+      {
+        "id": "neutral",
+        "name": "Neutral",
+        "minimumReputation": 0,
+        "hostile": false
+      },
+      {
+        "id": "friendly",
+        "name": "Friendly",
+        "minimumReputation": 20,
+        "hostile": false
+      },
+      {
+        "id": "trusted",
+        "name": "Trusted",
+        "minimumReputation": 50,
+        "hostile": false
+      },
+      {
+        "id": "allied",
+        "name": "Allied",
+        "minimumReputation": 80,
+        "hostile": false
+      }
+    ],
+    "defaultRelations": [],
+    "membershipStatuses": [
+      "none",
+      "associate",
+      "member",
+      "officer"
+    ],
+    "controlledAreaIds": []
   }
 ]

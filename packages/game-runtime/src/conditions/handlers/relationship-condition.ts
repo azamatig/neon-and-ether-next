@@ -6,7 +6,7 @@ export const handleRelationshipCondition: ConditionHandler<RelationshipCondition
   condition,
   context
 ): ConditionEvaluationResult => {
-  const actual = context.state.npcs?.[condition.npcId]?.relationship ?? 0;
+  const actual = context.state.npcs?.[condition.npcId]?.relationship.affinity ?? 0;
   const expected = condition.value;
   const isMet = evaluateComparison(actual, condition.operator, expected);
 

@@ -16,14 +16,22 @@ import { handleCompanionPresentCondition } from './handlers/companion-present-co
 import { handleBaseRoomExistsCondition } from './handlers/base-room-exists-condition.ts';
 import { handleRandomChanceCondition } from './handlers/random-chance-condition.ts';
 import { handleAndCondition, handleOrCondition, handleNotCondition } from './handlers/combinator-conditions.ts';
+import type { RuntimeTraceSink } from '../observability/runtime-trace.ts';
+import { handleTimeCondition } from './handlers/time-condition.ts';
+import { handleFactionStateCondition } from './handlers/faction-state-condition.ts';
+import { handleWeatherCondition } from './handlers/weather-condition.ts';
 
 export class ConditionRegistry {
   private handlers = new Map<string, ConditionHandler<any>>();
 
-  constructor(registerDefaults: boolean = true) {
+  constructor(registerDefaults: boolean = true, private trace?: RuntimeTraceSink) {
     if (registerDefaults) {
       this.registerDefaultHandlers();
     }
+  }
+
+  public report(type: string, isMet: boolean, reason?: string): void {
+    this.trace?.({ kind: 'ConditionChecked', message: `${type}: ${isMet ? 'passed' : 'failed'}`, details: { type, isMet, reason } });
   }
 
   private registerDefaultHandlers(): void {
@@ -35,9 +43,12 @@ export class ConditionRegistry {
     this.registerHandler('npcState', handleNpcStateCondition);
     this.registerHandler('relationship', handleRelationshipCondition);
     this.registerHandler('factionReputation', handleFactionReputationCondition);
+    for(const type of ['factionReputationTier','factionMembership','factionRelation','factionHostile','factionDiscovered']) this.registerHandler(type,handleFactionStateCondition);
     this.registerHandler('companionPresent', handleCompanionPresentCondition);
     this.registerHandler('baseRoomExists', handleBaseRoomExistsCondition);
     this.registerHandler('randomChance', handleRandomChanceCondition);
+    this.registerHandler('time', handleTimeCondition);
+    for(const type of ['currentWeather','weatherTag','environmentTag']) this.registerHandler(type,handleWeatherCondition);
 
     // Combinators
     this.registerHandler('and', handleAndCondition);

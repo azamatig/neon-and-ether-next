@@ -1,0 +1,5 @@
+[
+  { "id": "ai_aggressive", "name": "Aggressive", "tags": ["Offense"], "aggression": 0.9, "preferredTarget": "LowestHp", "abilityPriority": ["ability_arc_strike"] },
+  { "id": "ai_flanker", "name": "Flanker", "tags": ["Mobile"], "aggression": 0.7, "preferredTarget": "LowestHp", "abilityPriority": ["ability_thermal_burst"] },
+  { "id": "ai_support", "name": "Support", "tags": ["Defense"], "aggression": 0.35, "preferredTarget": "LowestHp", "abilityPriority": ["ability_ether_patch", "ability_arc_strike"] }
+]

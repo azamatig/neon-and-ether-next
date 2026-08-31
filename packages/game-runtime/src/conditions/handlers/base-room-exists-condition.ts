@@ -6,7 +6,8 @@ export const handleBaseRoomExistsCondition: ConditionHandler<BaseRoomExistsCondi
   condition,
   context
 ): ConditionEvaluationResult => {
-  const room = context.state.base?.rooms?.[condition.roomId];
+  const room = context.state.base?.rooms?.[condition.roomId]
+    ?? Object.values(context.state.base?.rooms ?? {}).find((candidate) => candidate.definitionId === condition.roomId);
   const isBuilt = room?.isBuilt ?? false;
   const currentLevel = room?.level ?? 0;
   const isMet = isBuilt && currentLevel >= (condition.minLevel ?? 1);

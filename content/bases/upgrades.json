@@ -1,0 +1,15 @@
+[
+  {
+    "id": "upgrade_room_capacity",
+    "name": "Expanded Utility Network",
+    "description": "Adds modular power and storage conduits to a compatible room.",
+    "tags": ["Capacity", "Infrastructure"],
+    "applicableRoomTypes": ["Armory", "ServerRoom", "MedBay", "Barracks"],
+    "cost": { "techScrap": 10, "etherCells": 2 },
+    "requirements": [],
+    "effects": [{ "type": "setFlag", "flag": "base_capacity_upgrade_installed", "value": true }],
+    "capacityDelta": { "residents": 1, "workers": 1, "storage": 5 },
+    "storageCapacityDelta": 0,
+    "repeatable": false
+  }
+]

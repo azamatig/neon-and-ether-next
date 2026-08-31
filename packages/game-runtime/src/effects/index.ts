@@ -14,3 +14,4 @@ export * from './handlers/combat-effect.ts';
 export * from './handlers/event-effect.ts';
 export * from './handlers/player-effect.ts';
 export * from './handlers/time-effect.ts';
+export * from './handlers/reward-effect.ts';

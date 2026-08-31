@@ -23,21 +23,25 @@ export function evaluateCondition(
   context: ConditionContext,
   registry: ConditionRegistry = defaultConditionRegistry
 ): ConditionEvaluationResult {
+  const finish = (result: ConditionEvaluationResult): ConditionEvaluationResult => {
+    registry.report(result.type, result.isMet, result.reason);
+    return result;
+  };
   if (!condition || !condition.type) {
-    return {
+    return finish({
       isMet: false,
       type: 'unknown',
       reason: 'Condition is undefined or missing type',
-    };
+    });
   }
 
   const handler = registry.getHandler(condition.type);
   if (!handler) {
-    return {
+    return finish({
       isMet: false,
       type: condition.type,
       reason: `No registered condition handler for type '${condition.type}'`,
-    };
+    });
   }
 
   const rawResult = handler(condition, context, (innerCond, innerCtx) =>
@@ -45,14 +49,14 @@ export function evaluateCondition(
   );
 
   if (typeof rawResult === 'boolean') {
-    return {
+    return finish({
       isMet: rawResult,
       type: condition.type,
       reason: rawResult ? `Condition '${condition.type}' passed` : `Condition '${condition.type}' failed`,
-    };
+    });
   }
 
-  return rawResult;
+  return finish(rawResult);
 }
 
 /**

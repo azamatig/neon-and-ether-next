@@ -1,5 +1,6 @@
 import { AddItemEffect, RemoveItemEffect } from '@neon-ether/game-schema';
 import { EffectHandler } from '../effect-handler.ts';
+import { InventorySystem } from '../../inventory/inventory-system.ts';
 
 export const handleAddItemEffect: EffectHandler<AddItemEffect> = (effect, context) => {
   const isPlayer = !effect.targetCharacterId || effect.targetCharacterId === context.state.player?.characterId;
@@ -29,6 +30,14 @@ export const handleAddItemEffect: EffectHandler<AddItemEffect> = (effect, contex
   }
 
   const quantityToAdd = effect.quantity ?? 1;
+  const itemDefinition = context.contentRegistry?.getItem(effect.itemId);
+  if (itemDefinition && context.contentRegistry && !effect.autoEquip && !effect.isEquipped) {
+    const result = new InventorySystem(context.contentRegistry).add(targetInventory, effect.itemId, quantityToAdd);
+    if (!result.success) return { success: false, type: 'addItem', message: result.reason ?? 'Could not add item.', error: 'INVENTORY_CAPACITY' };
+    const itemName = itemDefinition.name;
+    context.logJournal?.('System', `Acquired ${quantityToAdd}x ${itemName}.`, { itemId: effect.itemId, quantity: quantityToAdd });
+    return { success: true, type: 'addItem', message: `Added ${quantityToAdd}x '${effect.itemId}' to ${targetName}'s inventory`, mutationSummary: { characterId: isPlayer ? context.state.player.characterId : effect.targetCharacterId, itemId: effect.itemId, quantityAdded: quantityToAdd } };
+  }
   const existingSlot = targetInventory.items.find(
     (slot) => slot.itemId === effect.itemId && !slot.isEquipped && !effect.autoEquip
   );

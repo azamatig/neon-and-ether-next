@@ -16,7 +16,8 @@ import {
   PostCombatActionDefinition,
   PostCombatResolution,
 } from '@neon-ether/game-schema';
-import { DiceRoller } from '@neon-ether/engine';
+import { DiceRoller, type RandomSource } from '@neon-ether/engine';
+import { InventorySystem } from '../inventory/inventory-system.ts';
 import { GameState } from '../state/game-state.ts';
 import { ContentRegistry } from '../content/content-registry.ts';
 import { evaluateConditions } from '../conditions/condition-evaluator.ts';
@@ -77,13 +78,13 @@ export class CombatEncounterEngine {
   private conditionRegistry: ConditionRegistry;
   private effectExecutor: EffectExecutor;
   private outcomeEngine: GameplayOutcomeEngine;
-  private diceRoller: DiceRoller;
+  private diceRoller: RandomSource;
 
   constructor(
     conditionRegistry: ConditionRegistry = defaultConditionRegistry,
     effectExecutor: EffectExecutor = defaultEffectExecutor,
     outcomeEngine: GameplayOutcomeEngine = defaultGameplayOutcomeEngine,
-    diceRoller: DiceRoller = new DiceRoller(1337)
+    diceRoller: RandomSource = new DiceRoller(1337)
   ) {
     this.conditionRegistry = conditionRegistry;
     this.effectExecutor = effectExecutor;
@@ -165,7 +166,7 @@ export class CombatEncounterEngine {
     if (escapeAllowed && escapeRules.conditions && escapeRules.conditions.length > 0) {
       const condRes = evaluateConditions(
         escapeRules.conditions,
-        { state, contentRegistry },
+        { state, contentRegistry, rollRandom:(min,max)=>this.diceRoller.integer(min,max) },
         this.conditionRegistry
       );
       if (!condRes.allMet) {
@@ -281,19 +282,20 @@ export class CombatEncounterEngine {
     roundsPlayed: number = 3,
     logJournal?: (category: any, text: string) => void
   ): CombatResolution {
+    this.outcomeEngine.bindState(state);
     const encounter = contentRegistry.getEncounter(encounterId);
     const encounterName = encounter?.name ?? 'Hostile Encounter';
 
     // 1. Calculate XP
-    const xpReward = encounter?.xpReward ?? 120;
-    state.player.experience += xpReward;
+    const xpReward = encounter?.xpReward ?? 0;
+    this.effectExecutor.execute({ type:'grantRewards', xp:xpReward, credits:0, items:[], skillXp:{}, perkPoints:0 }, { state, contentRegistry, logJournal,random:this.diceRoller });
 
     // 2. Generate Loot from drops
     const availableLoot: InventoryItemSlot[] = [];
     if (encounter?.lootTable) {
       for (const drop of encounter.lootTable) {
-        if (Math.random() <= drop.dropRate) {
-          const qty = Math.floor(Math.random() * (drop.maxQuantity - drop.minQuantity + 1)) + drop.minQuantity;
+        if (this.diceRoller.chance(drop.dropRate)) {
+          const qty = this.diceRoller.integer(drop.minQuantity,drop.maxQuantity);
           availableLoot.push({
             itemId: drop.itemId,
             quantity: qty,
@@ -303,15 +305,10 @@ export class CombatEncounterEngine {
       }
     }
 
-    // Always ensure at least some tactical loot if table empty
-    if (availableLoot.length === 0) {
-      availableLoot.push({ itemId: 'con_ether_vial', quantity: 2, isEquipped: false });
-    }
-
     // Random Credits reward
     const minCred = encounter?.creditsReward.min ?? 60;
     const maxCred = encounter?.creditsReward.max ?? 180;
-    const creditsFound = Math.floor(Math.random() * (maxCred - minCred + 1)) + minCred;
+    const creditsFound = this.diceRoller.integer(minCred,maxCred);
 
     // 3. Enemy casualties and surviving incapacitated enemies
     const enemyCasualties: { enemyId: string; name: string; count: number }[] = [];
@@ -389,6 +386,7 @@ export class CombatEncounterEngine {
     contentRegistry: ContentRegistry,
     logJournal?: (category: any, text: string) => void
   ): CombatResolution {
+    this.outcomeEngine.bindState(state);
     const encounter = contentRegistry.getEncounter(encounterId);
     const encounterName = encounter?.name ?? 'Hostile Encounter';
 
@@ -442,13 +440,15 @@ export class CombatEncounterEngine {
     contentRegistry: ContentRegistry,
     logJournal?: (category: any, text: string) => void
   ): boolean {
+    this.outcomeEngine.bindState(state);
     const activeRes = this.outcomeEngine.getActiveCombatResolution();
     if (!activeRes) return false;
 
     // Transfer Credits
     if (takeAllCredits && activeRes.creditsFound > 0) {
-      state.player.inventory.credits = (state.player.inventory.credits ?? 0) + activeRes.creditsFound;
-      if (logJournal) logJournal('World', `Looted ${activeRes.creditsFound} credits.`);
+      const credits = activeRes.creditsFound;
+      this.effectExecutor.execute({ type:'grantRewards', xp:0, credits, items:[], skillXp:{}, perkPoints:0 }, { state, contentRegistry, logJournal,random:this.diceRoller });
+      if (logJournal) logJournal('World', `Looted ${credits} credits.`);
       activeRes.creditsFound = 0;
     }
 
@@ -456,13 +456,8 @@ export class CombatEncounterEngine {
     const remainingLoot: InventoryItemSlot[] = [];
     for (const slot of activeRes.availableLoot) {
       if (selectedItemIds.includes(slot.itemId)) {
-        // Add to player inventory
-        const existing = state.player.inventory.items.find((i) => i.itemId === slot.itemId && !i.isEquipped);
-        if (existing) {
-          existing.quantity += slot.quantity;
-        } else {
-          state.player.inventory.items.push({ ...slot });
-        }
+        const transfer = new InventorySystem(contentRegistry).add(state.player.inventory, slot.itemId, slot.quantity);
+        if (!transfer.success) { remainingLoot.push(slot); continue; }
         const itemDef = contentRegistry.getItem(slot.itemId);
         if (logJournal) logJournal('World', `Looted: ${itemDef?.name ?? slot.itemId} ×${slot.quantity}.`);
       } else {
@@ -484,6 +479,7 @@ export class CombatEncounterEngine {
     contentRegistry: ContentRegistry,
     logJournal?: (category: any, text: string) => void
   ): PostCombatResolution {
+    this.outcomeEngine.bindState(state);
     const activeRes = this.outcomeEngine.getActiveCombatResolution();
     const targetEnemy = activeRes?.incapacitatedEnemies.find((e) => e.id === targetEnemyId);
     const enemyName = targetEnemy?.name ?? 'Hostile Survivor';
@@ -491,8 +487,17 @@ export class CombatEncounterEngine {
     let summaryText = '';
     switch (actionId) {
       case 'Search':
-        summaryText = `Searched ${enemyName}. Recovered encrypted Syndicate comm-pad.`;
-        state.player.inventory.items.push({ itemId: 'cyb_neural_jack_v1', quantity: 1, isEquipped: false });
+        summaryText = `Searched ${enemyName} for recoverable equipment.`;
+        const searchableDrop = targetEnemy
+          ? contentRegistry.getEnemy(targetEnemy.enemyId)?.lootTable[0]
+          : undefined;
+        if (searchableDrop) {
+          state.player.inventory.items.push({
+            itemId: searchableDrop.itemId,
+            quantity: searchableDrop.minQuantity,
+            isEquipped: false,
+          });
+        }
         if (targetEnemy) targetEnemy.canBeSearched = false;
         break;
 

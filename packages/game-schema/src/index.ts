@@ -4,9 +4,14 @@
  */
 
 export * from './types/base.ts';
+export * from './types/world.ts';
+export * from './types/weather.ts';
 export * from './types/stats.ts';
+export * from './types/progression.ts';
 export * from './types/grid.ts';
 export * from './types/items.ts';
+export * from './types/inventory-state.ts';
+export * from './types/shop.ts';
 export * from './types/npc.ts';
 export * from './types/character.ts';
 export * from './types/enemy.ts';
@@ -25,5 +30,8 @@ export * from './types/actions.ts';
 export * from './types/outcomes.ts';
 export * from './types/resolutions.ts';
 export * from './types/combat-encounter.ts';
+export * from './types/combat.ts';
+export * from './types/character-management.ts';
+export * from './types/base-management.ts';
 export * from './types/runtime-state.ts';
 export * from './validation/index.ts';

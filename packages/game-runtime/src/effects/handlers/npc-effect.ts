@@ -36,6 +36,8 @@ export const handleChangeNpcStateEffect: EffectHandler<ChangeNpcStateEffect> = (
 
   if (effect.isCompanion !== undefined) {
     npc.isCompanion = effect.isCompanion;
+    npc.relationship.status = effect.isCompanion ? 'companion' : 'independent';
+    if (!effect.isCompanion) npc.assignment.partySlotId = null;
   }
 
   if (effect.location) {
@@ -88,6 +90,12 @@ export const handleRecruitNpcEffect: EffectHandler<RecruitNpcEffect> = (effect, 
 
   if (npc) {
     npc.isCompanion = asCompanion;
+    npc.relationship.status = asCompanion ? 'companion' : 'independent';
+    if (asCompanion && !npc.assignment.partySlotId) {
+      const occupied = new Set(Object.values(context.state.npcs).map((entry) => entry.assignment.partySlotId));
+      npc.assignment.partySlotId = context.contentRegistry?.partySlots.getAll().find((slot) => !occupied.has(slot.id))?.id ?? null;
+    }
+    if (!asCompanion) npc.assignment.partySlotId = null;
   }
 
   const npcName = context.contentRegistry?.getCharacter(effect.npcId)?.name ?? effect.npcId;

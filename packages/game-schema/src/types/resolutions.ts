@@ -7,7 +7,7 @@
 import { z } from 'zod';
 import { ConditionSchema } from './conditions.ts';
 import { EffectSchema } from './effects.ts';
-import { InventoryItemSlotSchema } from './runtime-state.ts';
+import { InventoryItemSlotSchema } from './inventory-state.ts';
 import { GameplayOutcome, GameplayOutcomeSchema, OriginContextSchema } from './outcomes.ts';
 
 export const ActionResolutionSchema = z.object({

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { Vector2DSchema } from './grid.ts';
-import { PoiStatusSchema } from './runtime-state.ts';
+import { PoiStatusSchema } from './world.ts';
+import { RewardDefinitionSchema } from './progression.ts';
+import { FactionRelationValueSchema } from './faction.ts';
 
 /**
  * 1. setFlag Effect: Sets a persistent global or local game state flag.
@@ -149,6 +151,12 @@ export const ChangeFactionReputationEffectSchema = z.object({
 });
 
 export type ChangeFactionReputationEffect = z.infer<typeof ChangeFactionReputationEffectSchema>;
+export const SetFactionReputationEffectSchema = z.object({type:z.literal('setFactionReputation'),factionId:z.string().min(1),value:z.number().int().min(-100).max(100)});
+export const ChangeFactionRelationEffectSchema = z.object({type:z.literal('changeFactionRelation'),factionId:z.string().min(1),targetFactionId:z.string().min(1),relation:FactionRelationValueSchema});
+export const SetFactionMembershipEffectSchema = z.object({type:z.literal('setFactionMembership'),factionId:z.string().min(1),membershipStatus:z.string().min(1)});
+export const DiscoverFactionEffectSchema = z.object({type:z.literal('discoverFaction'),factionId:z.string().min(1),discovered:z.boolean().default(true)});
+export const SetFactionHostilityEffectSchema = z.object({type:z.literal('setFactionHostility'),factionId:z.string().min(1),hostile:z.boolean()});
+export type FactionStateEffect = z.infer<typeof SetFactionReputationEffectSchema>|z.infer<typeof ChangeFactionRelationEffectSchema>|z.infer<typeof SetFactionMembershipEffectSchema>|z.infer<typeof DiscoverFactionEffectSchema>|z.infer<typeof SetFactionHostilityEffectSchema>;
 
 /**
  * 12. startCombat Effect: Triggers tactical combat encounter.
@@ -230,9 +238,21 @@ export const AdvanceTimeEffectSchema = z.object({
   type: z.literal('advanceTime'),
   turns: z.number().int().min(0).default(1),
   hours: z.number().int().min(0).optional(),
+  minutes: z.number().int().min(0).optional(),
+  days: z.number().int().min(0).optional(),
 });
 
 export type AdvanceTimeEffect = z.infer<typeof AdvanceTimeEffectSchema>;
+
+export const GrantRewardsEffectSchema = RewardDefinitionSchema.extend({ type: z.literal('grantRewards') });
+export type GrantRewardsEffect = z.infer<typeof GrantRewardsEffectSchema>;
+export const SetWeatherEffectSchema = z.object({ type:z.literal('setWeather'), weatherId:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional(), durationMinutes:z.number().int().positive().optional() });
+export const ChangeWeatherEffectSchema = z.object({ type:z.literal('changeWeather'), weatherProfileId:z.string().optional(), mapId:z.string().optional(), regionId:z.string().optional() });
+export type SetWeatherEffect=z.infer<typeof SetWeatherEffectSchema>;
+export type ChangeWeatherEffect=z.infer<typeof ChangeWeatherEffectSchema>;
+/** Generic persistent character status application shared by combat, events, items, and environments. */
+export const ApplyStatusEffectSchema=z.object({type:z.literal('applyStatusEffect'),statusEffectId:z.string().min(1),durationTurns:z.number().int().positive(),targetCharacterId:z.string().optional()});
+export type ApplyStatusEffect=z.infer<typeof ApplyStatusEffectSchema>;
 
 /**
  * Universal Effect Discriminated Union.
@@ -249,6 +269,11 @@ export const EffectSchema = z.discriminatedUnion('type', [
   ChangeNpcStateEffectSchema,
   ChangeRelationshipEffectSchema,
   ChangeFactionReputationEffectSchema,
+  SetFactionReputationEffectSchema,
+  ChangeFactionRelationEffectSchema,
+  SetFactionMembershipEffectSchema,
+  DiscoverFactionEffectSchema,
+  SetFactionHostilityEffectSchema,
   StartCombatEffectSchema,
   TriggerEventEffectSchema,
   MovePlayerEffectSchema,
@@ -256,6 +281,10 @@ export const EffectSchema = z.discriminatedUnion('type', [
   ChangePoiStateEffectSchema,
   RecruitNpcEffectSchema,
   AdvanceTimeEffectSchema,
+  GrantRewardsEffectSchema,
+  SetWeatherEffectSchema,
+  ChangeWeatherEffectSchema,
+  ApplyStatusEffectSchema,
 ]);
 
 export type Effect = z.infer<typeof EffectSchema>;

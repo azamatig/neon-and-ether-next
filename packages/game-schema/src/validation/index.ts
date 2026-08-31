@@ -15,34 +15,10 @@ import { Recipe, RecipeSchema } from '../types/recipe.ts';
 import { BaseRoomDefinition, BaseRoomDefinitionSchema } from '../types/room.ts';
 import { Faction, FactionSchema } from '../types/faction.ts';
 import { DialogueTree, DialogueTreeSchema } from '../types/dialogue.ts';
+import type { ContentValidationOptions, ContentValidationReport, ValidationIssue } from './types.ts';
+import { validateContentGraph } from './content-graph-validator.ts';
 
-export interface ValidationIssue {
-  severity: 'error' | 'warning' | 'info';
-  category:
-    | 'Item'
-    | 'NPC'
-    | 'Enemy'
-    | 'POI'
-    | 'Quest'
-    | 'GameEvent'
-    | 'CombatEncounter'
-    | 'Map'
-    | 'Recipe'
-    | 'Room'
-    | 'Faction'
-    | 'Dialogue'
-    | 'Integrity';
-  targetId: string;
-  field?: string;
-  message: string;
-}
-
-export interface ContentValidationReport {
-  isValid: boolean;
-  errorsCount: number;
-  warningsCount: number;
-  issues: ValidationIssue[];
-}
+export * from './types.ts';
 
 /**
  * Validates duplicate IDs within each collection and across the entire manifest.
@@ -83,7 +59,7 @@ export function validateDuplicateIds(content: GameContent): ValidationIssue[] {
       if (globalIdMap.has(item.id)) {
         const existing = globalIdMap.get(item.id)!;
         issues.push({
-          severity: 'warning',
+          severity: 'error',
           category: 'Integrity',
           targetId: item.id,
           message: `ID collision: '${item.id}' is used in both '${existing.category}' and '${category}'`,
@@ -97,6 +73,7 @@ export function validateDuplicateIds(content: GameContent): ValidationIssue[] {
   checkCollection(content.items ?? [], 'Item');
   checkCollection(content.npcs ?? content.characters ?? [], 'NPC');
   checkCollection(content.enemies ?? [], 'Enemy');
+  checkCollection(content.encounters ?? [], 'CombatEncounter');
   checkCollection(content.pois ?? [], 'POI');
   checkCollection(content.quests ?? [], 'Quest');
   checkCollection(content.events ?? [], 'GameEvent');
@@ -105,6 +82,16 @@ export function validateDuplicateIds(content: GameContent): ValidationIssue[] {
   checkCollection(content.rooms ?? [], 'Room');
   checkCollection(content.factions ?? [], 'Faction');
   checkCollection(content.dialogues ?? [], 'Dialogue');
+  checkCollection(content.abilities ?? [], 'Ability');
+  checkCollection(content.statusEffects ?? [], 'StatusEffect');
+  checkCollection(content.combatAIProfiles ?? [], 'CombatAI');
+  checkCollection(content.characterManagementRules ?? [], 'CharacterManagementRule');
+  checkCollection(content.baseJobs ?? [], 'BaseJob');
+  checkCollection(content.partySlots ?? [], 'PartySlot');
+  checkCollection(content.bases ?? [], 'PlayerBase');
+  checkCollection(content.baseUpgrades ?? [], 'BaseUpgrade');
+  checkCollection(content.progressionDefinitions ?? [], 'ProgressionDefinition');
+  checkCollection(content.shops ?? [], 'Shop');
 
   return issues;
 }
@@ -124,12 +111,18 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
   const questIds = new Set((content.quests ?? []).map((q) => q.id));
   const dialogueIds = new Set((content.dialogues ?? []).map((d) => d.id));
   const poiIds = new Set((content.pois ?? []).map((p) => p.id));
+  const abilityIds = new Set((content.abilities ?? []).map((ability) => ability.id));
+  const statusEffectIds = new Set((content.statusEffects ?? []).map((effect) => effect.id));
+  const aiProfileIds = new Set((content.combatAIProfiles ?? []).map((profile) => profile.id));
+  const roomIds = new Set((content.rooms ?? []).map((room) => room.id));
+  const eventIds = new Set((content.events ?? []).map((event) => event.id));
+  const encounterIds = new Set((content.encounters ?? []).map((encounter) => encounter.id));
 
   // 1. Validate NPC references
   for (const npc of npcList) {
     if (npc.factionId && npc.factionId !== 'Neutral' && !factionIds.has(npc.factionId)) {
       issues.push({
-        severity: 'warning',
+        severity: 'error',
         category: 'NPC',
         targetId: npc.id,
         field: 'factionId',
@@ -160,13 +153,22 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
         }
       }
     }
+    for (const abilityId of npc.abilityIds ?? []) {
+      if (!abilityIds.has(abilityId)) issues.push({ severity: 'error', category: 'NPC', targetId: npc.id, field: 'abilityIds', message: `NPC '${npc.name}' references missing abilityId '${abilityId}'` });
+    }
+  }
+
+  for (const item of content.items ?? []) {
+    for (const abilityId of item.grantedAbilityIds ?? []) {
+      if (!abilityIds.has(abilityId)) issues.push({ severity: 'error', category: 'Item', targetId: item.id, field: 'grantedAbilityIds', message: `Item '${item.name}' references missing abilityId '${abilityId}'` });
+    }
   }
 
   // 2. Validate Enemy references
   for (const enemy of content.enemies ?? []) {
     if (enemy.factionId && enemy.factionId !== 'Hostile' && !factionIds.has(enemy.factionId)) {
       issues.push({
-        severity: 'warning',
+        severity: 'error',
         category: 'Enemy',
         targetId: enemy.id,
         field: 'factionId',
@@ -195,13 +197,41 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
         });
       }
     }
+    for (const abilityId of enemy.abilityIds ?? []) {
+      if (!abilityIds.has(abilityId)) issues.push({ severity: 'error', category: 'Enemy', targetId: enemy.id, field: 'abilityIds', message: `Enemy '${enemy.name}' references missing abilityId '${abilityId}'` });
+    }
+    if (enemy.combatAIProfileId && !aiProfileIds.has(enemy.combatAIProfileId)) {
+      issues.push({ severity: 'error', category: 'Enemy', targetId: enemy.id, field: 'combatAIProfileId', message: `Enemy '${enemy.name}' references missing combatAIProfileId '${enemy.combatAIProfileId}'` });
+    }
+  }
+
+  for (const ability of content.abilities ?? []) {
+    for (const effect of ability.effects) {
+      if (effect.statusEffectId && !statusEffectIds.has(effect.statusEffectId)) {
+        issues.push({ severity: 'error', category: 'Ability', targetId: ability.id, field: 'effects.statusEffectId', message: `Ability '${ability.name}' references missing statusEffectId '${effect.statusEffectId}'` });
+      }
+    }
+  }
+  for (const profile of content.combatAIProfiles ?? []) {
+    for (const abilityId of profile.abilityPriority) {
+      if (!abilityIds.has(abilityId)) issues.push({ severity: 'error', category: 'CombatAI', targetId: profile.id, field: 'abilityPriority', message: `Combat AI '${profile.name}' references missing abilityId '${abilityId}'` });
+    }
+  }
+
+  for (const base of content.bases ?? []) {
+    const slotIds = new Set(base.roomSlots.map((slot) => slot.id));
+    if (base.poiId && !poiIds.has(base.poiId)) issues.push({ severity: 'error', category: 'PlayerBase', targetId: base.id, field: 'poiId', message: `Base '${base.name}' references missing poiId '${base.poiId}'` });
+    for (const startingRoom of base.startingRooms) {
+      if (!slotIds.has(startingRoom.slotId)) issues.push({ severity: 'error', category: 'PlayerBase', targetId: base.id, field: 'startingRooms.slotId', message: `Base '${base.name}' references missing slotId '${startingRoom.slotId}'` });
+      if (!roomIds.has(startingRoom.roomDefinitionId)) issues.push({ severity: 'error', category: 'PlayerBase', targetId: base.id, field: 'startingRooms.roomDefinitionId', message: `Base '${base.name}' references missing roomDefinitionId '${startingRoom.roomDefinitionId}'` });
+    }
   }
 
   // 3. Validate POI references
   for (const poi of content.pois ?? []) {
     if (poi.mapId && !mapIds.has(poi.mapId)) {
       issues.push({
-        severity: 'warning',
+        severity: 'error',
         category: 'POI',
         targetId: poi.id,
         field: 'mapId',
@@ -212,7 +242,7 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
     for (const npcId of poi.npcIds ?? []) {
       if (!npcIds.has(npcId)) {
         issues.push({
-          severity: 'warning',
+          severity: 'error',
           category: 'POI',
           targetId: poi.id,
           field: 'npcIds',
@@ -224,13 +254,19 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
     for (const qId of poi.questIds ?? []) {
       if (!questIds.has(qId)) {
         issues.push({
-          severity: 'warning',
+          severity: 'error',
           category: 'POI',
           targetId: poi.id,
           field: 'questIds',
           message: `POI '${poi.name}' references missing questId '${qId}'`,
         });
       }
+    }
+    for (const eventId of poi.eventIds ?? []) {
+      if (!eventIds.has(eventId)) issues.push({ severity: 'error', category: 'POI', targetId: poi.id, field: 'eventIds', message: `POI '${poi.name}' references missing eventId '${eventId}'` });
+    }
+    for (const encounterId of poi.encounterIds ?? []) {
+      if (!encounterIds.has(encounterId)) issues.push({ severity: 'error', category: 'POI', targetId: poi.id, field: 'encounterIds', message: `POI '${poi.name}' references missing encounterId '${encounterId}'` });
     }
 
     for (const action of poi.actions ?? []) {
@@ -254,13 +290,15 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
       }
       if (action.questId && !questIds.has(action.questId)) {
         issues.push({
-          severity: 'warning',
+          severity: 'error',
           category: 'POI',
           targetId: `${poi.id}#${action.id}`,
           field: 'action.questId',
           message: `POI action '${action.label}' references missing questId '${action.questId}'`,
         });
       }
+      if (action.eventId && !eventIds.has(action.eventId)) issues.push({ severity: 'error', category: 'POI', targetId: `${poi.id}#${action.id}`, field: 'action.eventId', message: `POI action '${action.label}' references missing eventId '${action.eventId}'` });
+      if (action.targetPoiId && !poiIds.has(action.targetPoiId)) issues.push({ severity: 'error', category: 'POI', targetId: `${poi.id}#${action.id}`, field: 'action.targetPoiId', message: `POI action '${action.label}' references missing targetPoiId '${action.targetPoiId}'` });
     }
   }
 
@@ -269,7 +307,7 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
     const qFaction = quest.factionId || quest.faction;
     if (qFaction && qFaction !== 'Neutral' && !factionIds.has(qFaction)) {
       issues.push({
-        severity: 'warning',
+        severity: 'error',
         category: 'Quest',
         targetId: quest.id,
         field: 'factionId',
@@ -288,6 +326,9 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
     }
 
     for (const stage of Object.values(quest.stages ?? {})) {
+      if (quest.stages[stage.id] !== stage) {
+        issues.push({ severity: 'error', category: 'Quest', targetId: quest.id, field: `stages.${stage.id}.id`, message: `Quest stage record key must match stage id '${stage.id}'` });
+      }
       if (stage.nextStageId && !quest.stages[stage.nextStageId]) {
         issues.push({
           severity: 'error',
@@ -296,6 +337,16 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
           field: `stages.${stage.id}.nextStageId`,
           message: `Quest stage '${stage.id}' references missing nextStageId '${stage.nextStageId}'`,
         });
+      }
+      for (const action of stage.actions ?? []) {
+        if (action.targetStageId && !quest.stages[action.targetStageId]) {
+          issues.push({ severity: 'error', category: 'Quest', targetId: quest.id, field: `stages.${stage.id}.actions.${action.id}.targetStageId`, message: `Quest action '${action.id}' references missing targetStageId '${action.targetStageId}'` });
+        }
+      }
+      for (const branch of stage.branches ?? []) {
+        if (!quest.stages[branch.targetStageId]) {
+          issues.push({ severity: 'error', category: 'Quest', targetId: quest.id, field: `stages.${stage.id}.branches.${branch.id}.targetStageId`, message: `Quest branch '${branch.id}' references missing targetStageId '${branch.targetStageId}'` });
+        }
       }
     }
 
@@ -326,26 +377,28 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
 
   // 5. Validate Recipe references
   for (const recipe of content.recipes ?? []) {
-    if (!itemIds.has(recipe.resultItemId)) {
+    if (!itemIds.has(recipe.output.itemId)) {
       issues.push({
         severity: 'error',
         category: 'Recipe',
         targetId: recipe.id,
-        field: 'resultItemId',
-        message: `Recipe '${recipe.name}' result references missing itemId '${recipe.resultItemId}'`,
+        field: 'output.itemId',
+        message: `Recipe '${recipe.name}' output references missing itemId '${recipe.output.itemId}'`,
       });
     }
-    for (const ing of recipe.ingredients ?? []) {
+    for (const ing of recipe.inputs ?? []) {
       if (!itemIds.has(ing.itemId)) {
         issues.push({
           severity: 'error',
           category: 'Recipe',
           targetId: recipe.id,
-          field: 'ingredients',
-          message: `Recipe '${recipe.name}' ingredient references missing itemId '${ing.itemId}'`,
+          field: 'inputs',
+          message: `Recipe '${recipe.name}' input references missing itemId '${ing.itemId}'`,
         });
       }
     }
+    for (const toolId of recipe.toolItemIds) if (!itemIds.has(toolId)) issues.push({ severity:'error',category:'Recipe',targetId:recipe.id,field:'toolItemIds',message:`Recipe '${recipe.name}' references missing tool itemId '${toolId}'` });
+    for (const roomId of recipe.roomIds) if (!roomIds.has(roomId)) issues.push({ severity:'error',category:'Recipe',targetId:recipe.id,field:'roomIds',message:`Recipe '${recipe.name}' references missing roomId '${roomId}'` });
   }
 
   // 6. Validate GameEvent references
@@ -353,7 +406,7 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
     for (const step of event.steps ?? []) {
       if (step.speaker?.npcId && !npcIds.has(step.speaker.npcId)) {
         issues.push({
-          severity: 'warning',
+          severity: 'error',
           category: 'GameEvent',
           targetId: event.id,
           field: `steps.${step.id}.speaker.npcId`,
@@ -394,7 +447,7 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
     for (const connMapId of map.connectedMapIds ?? []) {
       if (!mapIds.has(connMapId)) {
         issues.push({
-          severity: 'warning',
+          severity: 'error',
           category: 'Map',
           targetId: map.id,
           field: 'connectedMapIds',
@@ -413,9 +466,21 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
         });
       }
     }
+    const regionIds = new Set((map.regions ?? []).map((region) => region.id));
+    for (const poiId of map.poiIds ?? []) {
+      const poi = (content.pois ?? []).find((candidate) => candidate.id === poiId);
+      if (poi?.regionId && !regionIds.has(poi.regionId)) {
+        issues.push({ severity: 'error', category: 'Map', targetId: map.id, field: `poiIds.${poiId}.regionId`, message: `POI '${poiId}' references missing regionId '${poi.regionId}' on map '${map.id}'` });
+      }
+    }
+    for (const route of map.routes ?? []) {
+      if (!map.poiIds.includes(route.fromPoiId)) issues.push({ severity: 'error', category: 'Map', targetId: map.id, field: `routes.${route.id}.fromPoiId`, message: `Route '${route.id}' starts at POI '${route.fromPoiId}' outside map '${map.id}'` });
+      if (!map.poiIds.includes(route.toPoiId)) issues.push({ severity: 'error', category: 'Map', targetId: map.id, field: `routes.${route.id}.toPoiId`, message: `Route '${route.id}' ends at POI '${route.toPoiId}' outside map '${map.id}'` });
+      if (route.fromPoiId === route.toPoiId) issues.push({ severity: 'error', category: 'Map', targetId: map.id, field: `routes.${route.id}`, message: `Route '${route.id}' must connect two different POIs` });
+    }
     if (map.defaultPoiId && !poiIds.has(map.defaultPoiId)) {
       issues.push({
-        severity: 'warning',
+        severity: 'error',
         category: 'Map',
         targetId: map.id,
         field: 'defaultPoiId',
@@ -428,7 +493,7 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
   for (const faction of content.factions ?? []) {
     if (faction.headquartersMapId && !mapIds.has(faction.headquartersMapId)) {
       issues.push({
-        severity: 'warning',
+        severity: 'error',
         category: 'Faction',
         targetId: faction.id,
         field: 'headquartersMapId',
@@ -437,32 +502,21 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
     }
     if (faction.leaderNpcId && !npcIds.has(faction.leaderNpcId)) {
       issues.push({
-        severity: 'warning',
+        severity: 'error',
         category: 'Faction',
         targetId: faction.id,
         field: 'leaderNpcId',
         message: `Faction '${faction.name}' leader refers to missing npcId '${faction.leaderNpcId}'`,
       });
     }
-    for (const rivalId of faction.rivalFactionIds ?? []) {
-      if (!factionIds.has(rivalId)) {
+    for (const relation of faction.defaultRelations ?? []) {
+      if (!factionIds.has(relation.factionId)) {
         issues.push({
-          severity: 'warning',
+          severity: 'error',
           category: 'Faction',
           targetId: faction.id,
-          field: 'rivalFactionIds',
-          message: `Faction '${faction.name}' references missing rival faction '${rivalId}'`,
-        });
-      }
-    }
-    for (const allyId of faction.allyFactionIds ?? []) {
-      if (!factionIds.has(allyId)) {
-        issues.push({
-          severity: 'warning',
-          category: 'Faction',
-          targetId: faction.id,
-          field: 'allyFactionIds',
-          message: `Faction '${faction.name}' references missing ally faction '${allyId}'`,
+          field: 'defaultRelations',
+          message: `Faction '${faction.name}' references missing faction '${relation.factionId}'`,
         });
       }
     }
@@ -492,7 +546,7 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
         }
         if (choice.questTriggerId && !questIds.has(choice.questTriggerId)) {
           issues.push({
-            severity: 'warning',
+            severity: 'error',
             category: 'Dialogue',
             targetId: `${tree.id}#${nodeId}`,
             field: `choices.${choice.id}.questTriggerId`,
@@ -509,52 +563,53 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
 /**
  * Complete validator running Zod schema validation, duplicate ID checks, and missing referential checks.
  */
-export function validateGameContent(rawContent: unknown): ContentValidationReport {
+export function validateGameContent(rawContent: unknown, options: ContentValidationOptions = {}): ContentValidationReport {
   const issues: ValidationIssue[] = [];
 
   const parsed = GameContentSchema.safeParse(rawContent);
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
+      const collection = typeof issue.path[0] === 'string' ? issue.path[0] : undefined;
+      const index = typeof issue.path[1] === 'number' ? issue.path[1] : undefined;
+      const rawCollection = collection && rawContent && typeof rawContent === 'object' ? (rawContent as Record<string, unknown>)[collection] : undefined;
+      const rawEntity = Array.isArray(rawCollection) && index !== undefined ? rawCollection[index] : undefined;
+      const targetId = rawEntity && typeof rawEntity === 'object' && typeof (rawEntity as {id?:unknown}).id === 'string' ? (rawEntity as {id:string}).id : issue.path.join('.');
+      const categories: Record<string, ValidationIssue['category']> = { shops:'Shop',items:'Item',npcs:'NPC',characters:'NPC',enemies:'Enemy',encounters:'CombatEncounter',pois:'POI',quests:'Quest',events:'GameEvent',maps:'Map',recipes:'Recipe',rooms:'Room',factions:'Faction',dialogues:'Dialogue',abilities:'Ability',statusEffects:'StatusEffect',combatAIProfiles:'CombatAI',characterManagementRules:'CharacterManagementRule',baseJobs:'BaseJob',partySlots:'PartySlot',bases:'PlayerBase',baseUpgrades:'BaseUpgrade' };
       issues.push({
         severity: 'error',
-        category: 'Integrity',
-        targetId: issue.path.join('.'),
+        category: collection ? categories[collection] ?? 'Integrity' : 'Integrity',
+        targetId,
         field: issue.path.join('.'),
         message: `Schema error at ${issue.path.join('.')}: ${issue.message}`,
       });
     }
+    return {
+      isValid: false,
+      errorsCount: issues.length,
+      warningsCount: 0,
+      infoCount: 0,
+      issues,
+    };
   }
 
-  // If parsed data is available or can be coerced
-  const content = (parsed.success ? parsed.data : (rawContent as GameContent)) ?? {
-    version: '1.0.0',
-    items: [],
-    npcs: [],
-    enemies: [],
-    pois: [],
-    quests: [],
-    events: [],
-    encounters: [],
-    maps: [],
-    recipes: [],
-    rooms: [],
-    factions: [],
-    dialogues: [],
-  };
+  const content = parsed.data;
 
   // Run Duplicate ID validation
   issues.push(...validateDuplicateIds(content));
 
   // Run Missing ID / Referential integrity validation
   issues.push(...validateMissingReferentialIds(content));
+  issues.push(...validateContentGraph(content, options));
 
   const errorsCount = issues.filter((i) => i.severity === 'error').length;
   const warningsCount = issues.filter((i) => i.severity === 'warning').length;
+  const infoCount = issues.filter((i) => i.severity === 'info').length;
 
   return {
     isValid: errorsCount === 0,
     errorsCount,
     warningsCount,
+    infoCount,
     issues,
   };
 }

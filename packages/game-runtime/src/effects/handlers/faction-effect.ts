@@ -1,49 +1,21 @@
-import { ChangeFactionReputationEffect } from '@neon-ether/game-schema';
+import { ChangeFactionReputationEffect, FactionStateEffect } from '@neon-ether/game-schema';
 import { EffectHandler } from '../effect-handler.ts';
+import { createFactionRuntime, refreshFactionRuntime } from '../../factions/faction-state.ts';
 
-export const handleChangeFactionReputationEffect: EffectHandler<ChangeFactionReputationEffect> = (effect, context) => {
-  if (!context.state.factions) {
-    context.state.factions = {};
-  }
+function stateFor(factionId:string,context:Parameters<EffectHandler<any>>[1]) {const definition=context.contentRegistry?.getFaction(factionId);if(!definition)return undefined;return context.state.factions[factionId]??(context.state.factions[factionId]=createFactionRuntime(definition));}
 
-  if (!context.state.factions[effect.factionId]) {
-    context.state.factions[effect.factionId] = {
-      factionId: effect.factionId,
-      reputation: 0,
-      standing: 'Neutral',
-      tier: 1,
-      isDiscovered: true,
-      flags: {},
-    };
-  }
-
-  const factionState = context.state.factions[effect.factionId];
-  const previousVal = factionState.reputation;
-  const newVal = Math.max(-100, Math.min(100, previousVal + effect.delta));
-  factionState.reputation = newVal;
-
-  if (newVal >= 50) factionState.standing = 'Honored';
-  else if (newVal >= 20) factionState.standing = 'Friendly';
-  else if (newVal <= -50) factionState.standing = 'Hostile';
-  else if (newVal <= -20) factionState.standing = 'Unfriendly';
-  else factionState.standing = 'Neutral';
-
-  const factionName = context.contentRegistry?.getFaction(effect.factionId)?.name ?? effect.factionId;
-
-  if (context.logJournal) {
-    const deltaStr = effect.delta >= 0 ? `+${effect.delta}` : `${effect.delta}`;
-    context.logJournal('World', `Reputation with [${factionName}] shifted: ${previousVal} -> ${newVal} (${deltaStr})`);
-  }
-
-  return {
-    success: true,
-    type: 'changeFactionReputation',
-    message: `Faction '${factionName}' reputation updated: ${previousVal} -> ${newVal}`,
-    mutationSummary: {
-      factionId: effect.factionId,
-      previousReputation: previousVal,
-      newReputation: newVal,
-      delta: effect.delta,
-    },
-  };
+export const handleFactionEffect: EffectHandler<ChangeFactionReputationEffect|FactionStateEffect> = (effect,context) => {
+  const state=stateFor(effect.factionId,context);const definition=context.contentRegistry?.getFaction(effect.factionId);
+  if(!state||!definition)return{success:false,type:effect.type,message:`Faction '${effect.factionId}' was not found.`};
+  const previous={...state,relations:{...state.relations}};
+  if(effect.type==='changeFactionReputation')state.reputation=Math.max(-100,Math.min(100,state.reputation+effect.delta));
+  if(effect.type==='setFactionReputation')state.reputation=effect.value;
+  if(effect.type==='changeFactionRelation')state.relations[effect.targetFactionId]=effect.relation;
+  if(effect.type==='setFactionMembership')state.membershipStatus=effect.membershipStatus;
+  if(effect.type==='discoverFaction')state.isDiscovered=effect.discovered;
+  if(effect.type==='setFactionHostility')state.hostilityOverride=effect.hostile;
+  refreshFactionRuntime(definition,state);
+  return{success:true,type:effect.type,message:`Faction '${definition.name}' state updated.`,mutationSummary:{factionId:effect.factionId,previous,current:{...state,relations:{...state.relations}}}};
 };
+
+export const handleChangeFactionReputationEffect = handleFactionEffect;

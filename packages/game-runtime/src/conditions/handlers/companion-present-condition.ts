@@ -6,7 +6,8 @@ export const handleCompanionPresentCondition: ConditionHandler<CompanionPresentC
   condition,
   context
 ): ConditionEvaluationResult => {
-  const isPresent = context.state.companions?.includes(condition.companionId) ?? false;
+  const npc = context.state.npcs?.[condition.companionId];
+  const isPresent = npc?.assignment.partySlotId !== null && npc?.assignment.partySlotId !== undefined;
   const isMet = condition.inParty ? isPresent : !isPresent;
 
   return {

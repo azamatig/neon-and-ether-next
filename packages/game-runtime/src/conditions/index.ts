@@ -2,6 +2,7 @@ export * from './condition-context.ts';
 export * from './condition-handler.ts';
 export * from './condition-registry.ts';
 export * from './condition-evaluator.ts';
+export * from './handlers/time-condition.ts';
 export * from './handlers/flag-condition.ts';
 export * from './handlers/player-stat-condition.ts';
 export * from './handlers/has-item-condition.ts';

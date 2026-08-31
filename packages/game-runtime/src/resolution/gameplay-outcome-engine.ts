@@ -30,23 +30,55 @@ export interface OutcomeExecutionResult {
 export const MAX_SEQUENCE_DEPTH = 10;
 
 export class GameplayOutcomeEngine {
-  private activeActionResolution: ActionResolution | null = null;
-  private activeCombatResolution: CombatResolution | null = null;
+  private state: GameState | null = null;
+
+  /** Binds the engine to serializable session state (also called after load). */
+  public bindState(state: GameState): void {
+    this.state = state;
+  }
 
   public getActiveActionResolution(): ActionResolution | null {
-    return this.activeActionResolution;
+    return this.state?.pendingGameplay.activeActionResolution ?? null;
   }
 
   public setActiveActionResolution(res: ActionResolution | null): void {
-    this.activeActionResolution = res;
+    if (!this.state) throw new Error('GameplayOutcomeEngine must be bound before use');
+    this.state.pendingGameplay.activeActionResolution = res;
+    this.state.pendingGameplay.phase = res ? 'actionResult' : null;
   }
 
   public getActiveCombatResolution(): CombatResolution | null {
-    return this.activeCombatResolution;
+    return this.state?.pendingGameplay.activeCombatResolution ?? null;
   }
 
   public setActiveCombatResolution(res: CombatResolution | null): void {
-    this.activeCombatResolution = res;
+    if (!this.state) throw new Error('GameplayOutcomeEngine must be bound before use');
+    this.state.pendingGameplay.activeCombatResolution = res;
+    this.state.pendingGameplay.phase = res ? 'combatResolution' : null;
+  }
+
+  public setPendingPhase(phase: GameState['pendingGameplay']['phase']): void {
+    if (!this.state) throw new Error('GameplayOutcomeEngine must be bound before use');
+    this.state.pendingGameplay.phase = phase;
+  }
+
+  public setLastPostCombatResolution(resolution: GameState['pendingGameplay']['lastPostCombatResolution']): void {
+    if (!this.state) throw new Error('GameplayOutcomeEngine must be bound before use');
+    this.state.pendingGameplay.lastPostCombatResolution = resolution;
+  }
+
+  /** Resolves an explicit continuation, followed by any deferred sequence tail. */
+  public continueOutcome(outcome: GameplayOutcome | undefined, state: GameState, contentRegistry: ContentRegistry): OutcomeExecutionResult {
+    const next = outcome ?? state.pendingGameplay.outcomeQueue.shift() ?? { type: 'returnToOrigin' as const };
+    const result = this.resolveOutcome(next, state, contentRegistry);
+    if (!this.isBlocking(result.nextMode) && state.pendingGameplay.outcomeQueue.length > 0) {
+      return this.continueOutcome(undefined, state, contentRegistry);
+    }
+    return result;
+  }
+
+  private isBlocking(mode: GameState['world']['mode']): boolean {
+    return ['ActionResult', 'Event', 'CombatPreview', 'TacticalCombat', 'CombatResult', 'Loot', 'PostCombat'].includes(mode);
   }
 
   /**
@@ -58,6 +90,9 @@ export class GameplayOutcomeEngine {
     contentRegistry: ContentRegistry,
     depth: number = 0
   ): OutcomeExecutionResult {
+    // Stateless callers may use the legacy default engine; the provided runtime
+    // state remains the source of truth rather than engine instance memory.
+    if (this.state !== state) this.bindState(state);
     if (depth > MAX_SEQUENCE_DEPTH) {
       console.warn(`[GameplayOutcomeEngine] Max outcome sequence depth (${MAX_SEQUENCE_DEPTH}) exceeded. Halting transition.`);
       return {
@@ -71,7 +106,7 @@ export class GameplayOutcomeEngine {
       case 'showResult': {
         state.world.mode = 'ActionResult';
         if (outcome.resultText || outcome.title) {
-          this.activeActionResolution = {
+          state.pendingGameplay.activeActionResolution = {
             actionId: 'custom_result',
             actionLabel: outcome.title ?? 'Action Result',
             title: outcome.title ?? 'Action Completed',
@@ -90,13 +125,14 @@ export class GameplayOutcomeEngine {
             discoveredIntel: [],
             nextOutcome: outcome.nextOutcome,
           };
-        } else if (this.activeActionResolution && outcome.nextOutcome) {
-          this.activeActionResolution.nextOutcome = outcome.nextOutcome;
+        } else if (state.pendingGameplay.activeActionResolution && outcome.nextOutcome) {
+          state.pendingGameplay.activeActionResolution.nextOutcome = outcome.nextOutcome;
         }
+        state.pendingGameplay.phase = 'actionResult';
         return {
           applied: true,
           nextMode: 'ActionResult',
-          activeActionResolution: this.activeActionResolution,
+          activeActionResolution: state.pendingGameplay.activeActionResolution,
         };
       }
 
@@ -218,6 +254,7 @@ export class GameplayOutcomeEngine {
           state.world.activeOriginContext = outcome.originContext;
         }
         state.world.mode = 'Screen';
+        state.world.activeScreen = outcome.screen;
         return {
           applied: true,
           nextMode: 'Screen',
@@ -266,10 +303,12 @@ export class GameplayOutcomeEngine {
 
       case 'sequence': {
         let lastResult: OutcomeExecutionResult = { applied: true, nextMode: state.world.mode };
-        for (const subOutcome of outcome.outcomes) {
+        for (let index = 0; index < outcome.outcomes.length; index += 1) {
+          const subOutcome = outcome.outcomes[index];
           lastResult = this.resolveOutcome(subOutcome, state, contentRegistry, depth + 1);
           // If a modal/blocking outcome was opened (e.g., showResult, Event, CombatPreview), halt immediate auto-transition
-          if (['ActionResult', 'Event', 'CombatPreview', 'TacticalCombat', 'Loot', 'PostCombat'].includes(lastResult.nextMode)) {
+          if (this.isBlocking(lastResult.nextMode)) {
+            state.pendingGameplay.outcomeQueue.unshift(...outcome.outcomes.slice(index + 1));
             break;
           }
         }

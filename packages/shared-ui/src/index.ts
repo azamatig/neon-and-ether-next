@@ -11,3 +11,5 @@ export * from './components/TerminalLog.tsx';
 export * from './components/TacticalGridCanvas.tsx';
 export * from './components/WorldMapView.tsx';
 export * from './components/PoiScreen.tsx';
+export * from './components/BaseScreen.tsx';
+export * from './components/EnvironmentalLayer.tsx';

@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
 import { ConditionSchema } from './conditions.ts';
 import { EffectSchema } from './effects.ts';
+import { SkillCheckDefinitionSchema } from './stats.ts';
 import { GameplayOutcome } from './outcomes.ts';
 
 /**
@@ -76,15 +77,14 @@ export type PoiActionType = z.infer<typeof PoiActionTypeSchema>;
 /**
  * Data-Driven POI Action Check schema.
  */
-export const PoiActionCheckSchema = z.object({
-  stat: z.enum(['body', 'reflexes', 'mind', 'etherTech', 'presence', 'credits', 'ap']).default('mind'),
-  difficulty: z.number().int().min(1).default(12),
+export const PoiActionCheckSchema = SkillCheckDefinitionSchema.extend({
   passEffects: z.array(EffectSchema).default([]),
+  partialEffects: z.array(EffectSchema).default([]),
   failEffects: z.array(EffectSchema).default([]),
   passOutcome: z.custom<GameplayOutcome>().optional(),
+  partialOutcome: z.custom<GameplayOutcome>().optional(),
   failOutcome: z.custom<GameplayOutcome>().optional(),
-  passText: z.string().optional(),
-  failText: z.string().optional(),
+  passText: z.string().optional(), partialText: z.string().optional(), failText: z.string().optional(),
 });
 
 export type PoiActionCheck = z.infer<typeof PoiActionCheckSchema>;
@@ -120,8 +120,10 @@ export type PoiAction = z.infer<typeof PoiActionSchema>;
  */
 export const POISchema = BaseEntitySchema.extend({
   mapId: z.string().min(1, 'Map ID is required'),
+  travelTimeMinutes: z.number().int().min(0).optional(),
   mapPosition: POIPositionSchema.default({ x: 50, y: 50 }),
   district: z.string().optional(),
+  regionId: z.string().optional(),
   image: z.string().optional(),
   icon: z.string().default('MapPin'),
   category: POICategorySchema.default('Landmark'),
@@ -139,15 +141,20 @@ export const POISchema = BaseEntitySchema.extend({
 
   // Linked NPCs stationed or visiting this POI
   npcIds: z.array(z.string()).default([]),
+  shopId: z.string().optional(),
 
   // Linked Quests / Events connected to this location
   questIds: z.array(z.string()).default([]),
   eventIds: z.array(z.string()).default([]),
+  encounterIds: z.array(z.string()).default([]),
 
   // Environmental Metrics
   dangerLevel: z.number().int().min(0).max(5).default(1),
   ambientEtherLevel: z.number().int().min(0).max(100).default(20),
   controllingFactionId: z.string().optional(),
+  ownerFactionId: z.string().optional(),
+  environmentalExposure: z.enum(['outdoor', 'sheltered', 'indoor']).default('outdoor'),
+  weatherVisualScale: z.number().min(0).max(1).optional(),
 });
 
 export type POI = z.infer<typeof POISchema>;

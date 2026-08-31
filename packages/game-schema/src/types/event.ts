@@ -5,9 +5,11 @@
  */
 
 import { z } from 'zod';
+import { WeatherVisualsSchema } from './weather.ts';
 import { BaseEntitySchema } from './base.ts';
 import { ConditionSchema } from './conditions.ts';
 import { EffectSchema } from './effects.ts';
+import { SkillCheckDefinitionSchema } from './stats.ts';
 import { GameplayOutcome, GameplayOutcomeSchema, OriginContextSchema } from './outcomes.ts';
 
 export const GameEventTypeSchema = z.enum([
@@ -31,15 +33,14 @@ export const EventSpeakerSchema = z.object({
 
 export type EventSpeaker = z.infer<typeof EventSpeakerSchema>;
 
-export const EventChoiceCheckSchema = z.object({
-  stat: z.enum(['body', 'reflexes', 'mind', 'etherTech', 'presence', 'credits', 'ap']).default('mind'),
-  difficulty: z.number().int().min(1).default(12),
+export const EventChoiceCheckSchema = SkillCheckDefinitionSchema.extend({
   passEffects: z.array(EffectSchema).default([]),
+  partialEffects: z.array(EffectSchema).default([]),
   failEffects: z.array(EffectSchema).default([]),
   passOutcome: z.custom<GameplayOutcome>().optional(),
+  partialOutcome: z.custom<GameplayOutcome>().optional(),
   failOutcome: z.custom<GameplayOutcome>().optional(),
-  passText: z.string().optional(),
-  failText: z.string().optional(),
+  passText: z.string().optional(), partialText: z.string().optional(), failText: z.string().optional(),
 });
 
 export type EventChoiceCheck = z.infer<typeof EventChoiceCheckSchema>;
@@ -97,6 +98,8 @@ export const EventPresentationSchema = z.object({
   ambientGlow: z.enum(['cyan', 'purple', 'rose', 'amber', 'emerald', 'none']).default('cyan'),
   icon: z.string().optional(),
   themeMood: z.string().optional(),
+  weatherPresentation: z.enum(['inherit','disabled','override']).default('inherit'),
+  weatherVisualOverride: WeatherVisualsSchema.optional(),
 });
 
 export type EventPresentation = z.infer<typeof EventPresentationSchema>;
@@ -105,7 +108,9 @@ export const GameEventSchema = BaseEntitySchema.extend({
   type: GameEventTypeSchema.default('flavor'),
   tags: z.array(z.string()).default([]),
   conditions: z.array(ConditionSchema).default([]),
-  presentation: EventPresentationSchema.default({ layoutStyle: 'standard', ambientGlow: 'cyan' }),
+  triggerConditions: z.array(ConditionSchema).default([]),
+  availabilityConditions: z.array(ConditionSchema).default([]),
+  presentation: EventPresentationSchema.default({ layoutStyle: 'standard', ambientGlow: 'cyan', weatherPresentation:'inherit' }),
   steps: z.array(EventStepSchema).min(1, 'Event must contain at least one step'),
   entryEffects: z.array(EffectSchema).default([]),
   completionEffects: z.array(EffectSchema).default([]),

@@ -14,14 +14,14 @@ import {
   PoiAction,
   PoiRuntimeState,
 } from '@neon-ether/game-schema';
-import { DiceRoller } from '@neon-ether/engine';
+import { DiceRoller, type RandomSource } from '@neon-ether/engine';
 import { GameState } from '../state/game-state.ts';
 import { ContentRegistry } from '../content/content-registry.ts';
 import { BatchConditionResult, evaluateConditions } from '../conditions/condition-evaluator.ts';
 import { ConditionRegistry, defaultConditionRegistry } from '../conditions/condition-registry.ts';
 import { BatchEffectExecutionResult, EffectExecutor, defaultEffectExecutor } from '../effects/effect-executor.ts';
 import { GameplayOutcomeEngine, defaultGameplayOutcomeEngine } from '../resolution/gameplay-outcome-engine.ts';
-import { resolveStatCheck, StatCheckResolution } from '../resolution/stat-check.ts';
+import { SkillCheckSystem, type SkillCheckResult } from '../resolution/skill-check.ts';
 
 export interface PoiActionPipelineResult {
   success: boolean;
@@ -29,7 +29,7 @@ export interface PoiActionPipelineResult {
   actionLabel: string;
   resolution: ActionResolution;
   effectResults?: BatchEffectExecutionResult;
-  statCheckResult?: StatCheckResolution;
+  statCheckResult?: SkillCheckResult;
   unmetReason?: string;
   nextOutcome?: GameplayOutcome;
 }
@@ -38,13 +38,13 @@ export class PoiActionPipeline {
   private conditionRegistry: ConditionRegistry;
   private effectExecutor: EffectExecutor;
   private outcomeEngine: GameplayOutcomeEngine;
-  private diceRoller: DiceRoller;
+  private diceRoller: RandomSource;
 
   constructor(
     conditionRegistry: ConditionRegistry = defaultConditionRegistry,
     effectExecutor: EffectExecutor = defaultEffectExecutor,
     outcomeEngine: GameplayOutcomeEngine = defaultGameplayOutcomeEngine,
-    diceRoller: DiceRoller = new DiceRoller(42)
+    diceRoller: RandomSource = new DiceRoller(42)
   ) {
     this.conditionRegistry = conditionRegistry;
     this.effectExecutor = effectExecutor;
@@ -64,7 +64,7 @@ export class PoiActionPipeline {
     // 1. Evaluate prerequisites
     const conditionResults = evaluateConditions(
       action.conditions ?? [],
-      { state, contentRegistry },
+      { state, contentRegistry, rollRandom:(min,max)=>this.diceRoller.integer(min,max) },
       this.conditionRegistry
     );
 
@@ -173,7 +173,7 @@ export class PoiActionPipeline {
     }
 
     // 3. Resolve skill checks if defined on action
-    let statCheckResult: StatCheckResolution | undefined;
+    let statCheckResult: SkillCheckResult | undefined;
     let effectsToExecute: Effect[] = [...(action.effects ?? [])];
     let resolvedOutcome: GameplayOutcome | undefined = action.outcome;
     let actionStatus: 'Success' | 'Failure' | 'PartialSuccess' = 'Success';
@@ -181,15 +181,8 @@ export class PoiActionPipeline {
 
     if (action.check) {
       const checkDef = action.check;
-      if (['body', 'reflexes', 'mind', 'etherTech', 'presence'].includes(checkDef.stat)) {
-        statCheckResult = resolveStatCheck(
-          checkDef.stat.toUpperCase() as any,
-          state.player.attributes,
-          'Moderate',
-          this.diceRoller,
-          checkDef.difficulty,
-          action.label
-        );
+      {
+        statCheckResult = new SkillCheckSystem(this.diceRoller).resolve(checkDef, state.player);
 
         if (logJournal) {
           logJournal('SkillCheck', statCheckResult.logSummary);
@@ -200,6 +193,11 @@ export class PoiActionPipeline {
           effectsToExecute = [...effectsToExecute, ...(checkDef.passEffects ?? [])];
           if (checkDef.passOutcome) resolvedOutcome = checkDef.passOutcome;
           if (checkDef.passText) resultSummaryText = checkDef.passText;
+        } else if (statCheckResult.result === 'partialSuccess') {
+          actionStatus = 'PartialSuccess';
+          effectsToExecute = [...effectsToExecute, ...(checkDef.partialEffects ?? [])];
+          if (checkDef.partialOutcome) resolvedOutcome = checkDef.partialOutcome;
+          if (checkDef.partialText) resultSummaryText = checkDef.partialText;
         } else {
           actionStatus = 'Failure';
           effectsToExecute = [...(checkDef.failEffects ?? [])];
@@ -214,6 +212,7 @@ export class PoiActionPipeline {
       state,
       contentRegistry,
       logJournal,
+      random:this.diceRoller,
     });
 
     // 5. Record POI action completion

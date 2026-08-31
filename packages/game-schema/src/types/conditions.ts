@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FactionRelationValueSchema } from './faction.ts';
 import { Vector2DSchema } from './grid.ts';
 
 /**
@@ -108,6 +109,13 @@ export const FactionReputationConditionSchema = z.object({
 
 export type FactionReputationCondition = z.infer<typeof FactionReputationConditionSchema>;
 
+export const FactionReputationTierConditionSchema = z.object({ type:z.literal('factionReputationTier'), factionId:z.string().min(1), tierId:z.string().min(1) });
+export const FactionMembershipConditionSchema = z.object({ type:z.literal('factionMembership'), factionId:z.string().min(1), membershipStatus:z.string().min(1) });
+export const FactionRelationConditionSchema = z.object({ type:z.literal('factionRelation'), factionId:z.string().min(1), targetFactionId:z.string().min(1), relation:FactionRelationValueSchema });
+export const FactionHostileConditionSchema = z.object({ type:z.literal('factionHostile'), factionId:z.string().min(1), hostile:z.boolean().default(true) });
+export const FactionDiscoveredConditionSchema = z.object({ type:z.literal('factionDiscovered'), factionId:z.string().min(1), discovered:z.boolean().default(true) });
+export type FactionStateCondition = z.infer<typeof FactionReputationTierConditionSchema>|z.infer<typeof FactionMembershipConditionSchema>|z.infer<typeof FactionRelationConditionSchema>|z.infer<typeof FactionHostileConditionSchema>|z.infer<typeof FactionDiscoveredConditionSchema>;
+
 /**
  * 8. Companion Present Condition: Checks if a companion NPC is recruited or present in party.
  */
@@ -141,6 +149,17 @@ export const RandomChanceConditionSchema = z.object({
 
 export type RandomChanceCondition = z.infer<typeof RandomChanceConditionSchema>;
 
+export const TimeConditionSchema = z.object({
+  type: z.literal('time'),
+  field: z.enum(['day','hour','minute','turnCount','timeOfDay']),
+  operator: ComparisonOperatorSchema.default('=='),
+  value: z.union([z.number(), z.enum(['Dawn','Day','Dusk','Night'])]),
+});
+export type TimeCondition = z.infer<typeof TimeConditionSchema>;
+export const CurrentWeatherConditionSchema = z.object({ type:z.literal('currentWeather'), weatherId:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
+export const WeatherTagConditionSchema = z.object({ type:z.literal('weatherTag'), tag:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
+export const EnvironmentTagConditionSchema = z.object({ type:z.literal('environmentTag'), tag:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
+
 /**
  * Base atomic condition types union.
  */
@@ -152,9 +171,18 @@ export const AtomicConditionSchema = z.discriminatedUnion('type', [
   NpcStateConditionSchema,
   RelationshipConditionSchema,
   FactionReputationConditionSchema,
+  FactionReputationTierConditionSchema,
+  FactionMembershipConditionSchema,
+  FactionRelationConditionSchema,
+  FactionHostileConditionSchema,
+  FactionDiscoveredConditionSchema,
   CompanionPresentConditionSchema,
   BaseRoomExistsConditionSchema,
   RandomChanceConditionSchema,
+  TimeConditionSchema,
+  CurrentWeatherConditionSchema,
+  WeatherTagConditionSchema,
+  EnvironmentTagConditionSchema,
 ]);
 
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;

@@ -5,6 +5,7 @@
 
 import { GameJournalEntry, GameState } from '../state/game-state.ts';
 import { ContentRegistry } from '../content/content-registry.ts';
+import type { RandomSource } from '@neon-ether/engine';
 
 export interface EffectExecutionContext {
   state: GameState;
@@ -12,4 +13,5 @@ export interface EffectExecutionContext {
   logJournal?: (category: GameJournalEntry['category'], text: string, metadata?: Record<string, any>) => void;
   emitEvent?: (eventName: string, payload: any) => void;
   customVariables?: Record<string, any>;
+  random?:RandomSource;
 }

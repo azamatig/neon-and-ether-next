@@ -1,5 +1,7 @@
 import { AdvanceQuestEffect, CompleteQuestEffect, StartQuestEffect } from '@neon-ether/game-schema';
 import { EffectHandler } from '../effect-handler.ts';
+import { handleGrantRewardsEffect } from './reward-effect.ts';
+import { handleFactionEffect } from './faction-effect.ts';
 
 export const handleStartQuestEffect: EffectHandler<StartQuestEffect> = (effect, context) => {
   const questDefinition = context.contentRegistry?.getQuest(effect.questId);
@@ -124,33 +126,11 @@ export const handleCompleteQuestEffect: EffectHandler<CompleteQuestEffect> = (ef
 
   // Grant rewards if successful and configured
   if (outcomeStatus === 'Completed' && effect.grantRewards && questDefinition) {
-    if (questDefinition.rewardCredits && questDefinition.rewardCredits > 0) {
-      context.state.player.inventory.credits = (context.state.player.inventory.credits ?? 0) + questDefinition.rewardCredits;
-    }
-    if (questDefinition.rewardItemIds && questDefinition.rewardItemIds.length > 0) {
-      for (const itemId of questDefinition.rewardItemIds) {
-        context.state.player.inventory.items.push({
-          itemId,
-          quantity: 1,
-          isEquipped: false,
-        });
-      }
-    }
+    handleGrantRewardsEffect({ type:'grantRewards', xp:questDefinition.rewardXp, credits:questDefinition.rewardCredits, items:questDefinition.rewardItemIds.map((itemId) => ({ itemId, quantity:1 })), skillXp:{}, perkPoints:0 }, context);
     if (questDefinition.reputationChanges) {
       for (const [facId, delta] of Object.entries(questDefinition.reputationChanges)) {
         if (typeof delta === 'number') {
-          if (!context.state.factions[facId]) {
-            context.state.factions[facId] = {
-              factionId: facId,
-              reputation: 0,
-              standing: 'Neutral',
-              tier: 1,
-              isDiscovered: true,
-              flags: {},
-            };
-          }
-          const prev = context.state.factions[facId].reputation;
-          context.state.factions[facId].reputation = Math.max(-100, Math.min(100, prev + delta));
+          handleFactionEffect({type:'changeFactionReputation',factionId:facId,delta},context);
         }
       }
     }

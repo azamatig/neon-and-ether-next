@@ -12,14 +12,15 @@ import {
   GameplayOutcome,
   OriginContext,
 } from '@neon-ether/game-schema';
-import { DiceRoller } from '@neon-ether/engine';
+import { DiceRoller, type RandomSource } from '@neon-ether/engine';
 import { GameState } from '../state/game-state.ts';
 import { ContentRegistry } from '../content/content-registry.ts';
 import { BatchConditionResult, evaluateConditions } from '../conditions/condition-evaluator.ts';
 import { ConditionRegistry, defaultConditionRegistry } from '../conditions/condition-registry.ts';
 import { BatchEffectExecutionResult, EffectExecutor, defaultEffectExecutor } from '../effects/effect-executor.ts';
 import { GameplayOutcomeEngine, defaultGameplayOutcomeEngine } from '../resolution/gameplay-outcome-engine.ts';
-import { resolveStatCheck, StatCheckResolution } from '../resolution/stat-check.ts';
+import { SkillCheckSystem } from '../resolution/skill-check.ts';
+import type { RuntimeTraceSink } from '../observability/runtime-trace.ts';
 
 export interface ResolvedEventChoice extends EventChoice {
   isAvailable: boolean;
@@ -27,7 +28,7 @@ export interface ResolvedEventChoice extends EventChoice {
   unmetReason?: string;
   statCheckInfo?: {
     stat: string;
-    difficulty: number;
+    difficulty: string;
   };
 }
 
@@ -55,18 +56,30 @@ export class EventRuntime {
   private conditionRegistry: ConditionRegistry;
   private effectExecutor: EffectExecutor;
   private outcomeEngine: GameplayOutcomeEngine;
-  private diceRoller: DiceRoller;
+  private diceRoller: RandomSource;
+  private trace?: RuntimeTraceSink;
 
   constructor(
     conditionRegistry: ConditionRegistry = defaultConditionRegistry,
     effectExecutor: EffectExecutor = defaultEffectExecutor,
     outcomeEngine: GameplayOutcomeEngine = defaultGameplayOutcomeEngine,
-    diceRoller: DiceRoller = new DiceRoller(777)
+    diceRoller: RandomSource = new DiceRoller(777),
+    trace?: RuntimeTraceSink,
   ) {
     this.conditionRegistry = conditionRegistry;
     this.effectExecutor = effectExecutor;
     this.outcomeEngine = outcomeEngine;
     this.diceRoller = diceRoller;
+    this.trace = trace;
+  }
+
+  /** Resolves authored trigger and availability rules without starting an event. */
+  public canTriggerEvent(event: GameEvent, state: GameState, contentRegistry: ContentRegistry): BatchConditionResult {
+    return evaluateConditions(
+      [...(event.conditions ?? []), ...(event.triggerConditions ?? []), ...(event.availabilityConditions ?? [])],
+      { state, contentRegistry, rollRandom:(min,max)=>this.diceRoller.integer(min,max) },
+      this.conditionRegistry
+    );
   }
 
   /**
@@ -84,6 +97,11 @@ export class EventRuntime {
       if (logJournal) logJournal('System', `Failed to start event [${eventId}]: Event not found.`);
       return false;
     }
+    const availability = this.canTriggerEvent(event, state, contentRegistry);
+    if (!availability.allMet) {
+      if (logJournal) logJournal('System', `Event [${eventId}] is unavailable: ${availability.failedConditions[0]?.reason ?? 'conditions unmet'}.`);
+      return false;
+    }
 
     // Set origin context if provided
     if (originContext) {
@@ -96,7 +114,7 @@ export class EventRuntime {
 
     // Execute entry effects
     if (event.entryEffects && event.entryEffects.length > 0) {
-      this.effectExecutor.executeBatch(event.entryEffects, { state, contentRegistry, logJournal });
+      this.effectExecutor.executeBatch(event.entryEffects, { state, contentRegistry, logJournal,random:this.diceRoller });
     }
 
     if (logJournal) {
@@ -158,7 +176,7 @@ export class EventRuntime {
     const resolvedChoices: ResolvedEventChoice[] = (currentStep.choices ?? []).map((choice) => {
       const condResult = evaluateConditions(
         choice.conditions ?? [],
-        { state, contentRegistry },
+        { state, contentRegistry, rollRandom:(min,max)=>this.diceRoller.integer(min,max) },
         this.conditionRegistry
       );
 
@@ -173,7 +191,7 @@ export class EventRuntime {
         unmetReason,
         statCheckInfo: choice.check
           ? {
-              stat: choice.check.stat.toUpperCase(),
+              stat: `${choice.check.attribute}${choice.check.skill ? ` / ${choice.check.skill}` : ''}`,
               difficulty: choice.check.difficulty,
             }
           : undefined,
@@ -215,7 +233,7 @@ export class EventRuntime {
 
     // Execute step effects if any
     if (currentStep?.effects && currentStep.effects.length > 0) {
-      this.effectExecutor.executeBatch(currentStep.effects, { state, contentRegistry, logJournal });
+      this.effectExecutor.executeBatch(currentStep.effects, { state, contentRegistry, logJournal,random:this.diceRoller });
     }
 
     // If step specifies an explicit step outcome
@@ -266,15 +284,9 @@ export class EventRuntime {
     // 1. If choice includes a stat check
     if (choice.check) {
       const checkDef = choice.check;
-      if (['body', 'reflexes', 'mind', 'etherTech', 'presence'].includes(checkDef.stat)) {
-        const rollRes = resolveStatCheck(
-          checkDef.stat.toUpperCase() as any,
-          state.player.attributes,
-          'Moderate',
-          this.diceRoller,
-          checkDef.difficulty,
-          choice.text
-        );
+      {
+        const rollRes = new SkillCheckSystem(this.diceRoller).resolve(checkDef, state.player);
+        this.trace?.({kind:'SkillCheck',message:`Event skill check: ${rollRes.result}`,details:{eventId:state.world.activeEventId,stepId:state.world.activeEventStepId,choiceId,attribute:checkDef.attribute,skill:checkDef.skill,difficulty:checkDef.difficulty,targetDc:rollRes.targetDc,roll:rollRes.roll,result:rollRes.result,passed:rollRes.isPassed}});
 
         if (logJournal) {
           logJournal('SkillCheck', rollRes.logSummary);
@@ -283,6 +295,9 @@ export class EventRuntime {
         if (rollRes.isPassed) {
           effectsToRun = [...effectsToRun, ...(checkDef.passEffects ?? [])];
           if (checkDef.passOutcome) nextOutcome = checkDef.passOutcome;
+        } else if (rollRes.result === 'partialSuccess') {
+          effectsToRun = [...effectsToRun, ...(checkDef.partialEffects ?? [])];
+          if (checkDef.partialOutcome) nextOutcome = checkDef.partialOutcome;
         } else {
           effectsToRun = [...(checkDef.failEffects ?? [])];
           if (checkDef.failOutcome) nextOutcome = checkDef.failOutcome;
@@ -292,7 +307,7 @@ export class EventRuntime {
 
     // 2. Execute Effects
     if (effectsToRun.length > 0) {
-      this.effectExecutor.executeBatch(effectsToRun, { state, contentRegistry, logJournal });
+      this.effectExecutor.executeBatch(effectsToRun, { state, contentRegistry, logJournal,random:this.diceRoller });
     }
 
     // 3. Resolve transition
@@ -321,7 +336,7 @@ export class EventRuntime {
   ): boolean {
     // 1. Run completion effects
     if (event.completionEffects && event.completionEffects.length > 0) {
-      this.effectExecutor.executeBatch(event.completionEffects, { state, contentRegistry, logJournal });
+      this.effectExecutor.executeBatch(event.completionEffects, { state, contentRegistry, logJournal,random:this.diceRoller });
     }
 
     // 2. Clear active event

@@ -1,52 +1,35 @@
 import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
-import { PrimaryStatSchema } from './stats.ts';
+import { ConditionSchema } from './conditions.ts';
+import { EffectSchema } from './effects.ts';
 
-export const RecipeCategorySchema = z.enum([
-  'WeaponMod',
-  'ChemSynthesis',
-  'EtherInfusion',
-  'CyberwareAssembly',
-  'Ammunition',
-  'Medical',
-]);
-
+export const RecipeCategorySchema = z.enum(['weapon','armor','consumable','material','upgrade','misc']);
 export type RecipeCategory = z.infer<typeof RecipeCategorySchema>;
-
-export const CraftingStationTypeSchema = z.enum([
-  'Workbench',
-  'EtherCrucible',
-  'BiotechLab',
-  'CyberdeckStation',
-  'FieldCrafting',
+export const RecipeInputSchema = z.object({ itemId:z.string().min(1), quantity:z.number().int().min(1).default(1) });
+export type RecipeInput = z.infer<typeof RecipeInputSchema>;
+export const RecipeOutputSchema = z.object({ itemId:z.string().min(1), quantity:z.number().int().min(1).default(1) });
+export type RecipeOutput = z.infer<typeof RecipeOutputSchema>;
+export const CraftingRequirementSchema = z.discriminatedUnion('type',[
+  z.object({type:z.literal('level'),minimum:z.number().int().min(1)}),
+  z.object({type:z.literal('attribute'),attribute:z.enum(['body','reflexes','mind','etherTech','presence']),minimum:z.number().int().min(1)}),
+  z.object({type:z.literal('skill'),skillId:z.string().min(1),minimum:z.number().int().min(0)}),
 ]);
+export const CraftingLocationSchema = z.enum(['poi','base','room']);
+export type CraftingLocation = z.infer<typeof CraftingLocationSchema>;
 
-export type CraftingStationType = z.infer<typeof CraftingStationTypeSchema>;
-
-export const RecipeIngredientSchema = z.object({
-  itemId: z.string().min(1, 'Ingredient itemId must not be empty'),
-  quantity: z.number().int().min(1).default(1),
-});
-
-export type RecipeIngredient = z.infer<typeof RecipeIngredientSchema>;
-
-export const RecipeSkillRequirementSchema = z.object({
-  stat: PrimaryStatSchema,
-  minLevel: z.number().int().min(1).default(1),
-});
-
-export type RecipeSkillRequirement = z.infer<typeof RecipeSkillRequirementSchema>;
-
+/** One recipe format is used at POIs, bases, and rooms/stations. */
 export const RecipeSchema = BaseEntitySchema.extend({
-  category: RecipeCategorySchema.default('ChemSynthesis'),
-  requiredStationType: CraftingStationTypeSchema.default('FieldCrafting'),
-  ingredients: z.array(RecipeIngredientSchema).min(1, 'A recipe requires at least one ingredient'),
-  resultItemId: z.string().min(1, 'Resulting itemId must not be empty'),
-  resultQuantity: z.number().int().min(1).default(1),
-  craftingTimeTurns: z.number().int().min(0).default(1),
-  etherCost: z.number().int().min(0).default(0),
-  requiredSkill: RecipeSkillRequirementSchema.optional(),
-  discoveredByDefault: z.boolean().default(true),
+  category:RecipeCategorySchema.default('misc'),
+  inputs:z.array(RecipeInputSchema).min(1),
+  requirements:z.array(CraftingRequirementSchema).default([]),
+  toolItemIds:z.array(z.string().min(1)).default([]),
+  roomIds:z.array(z.string().min(1)).default([]),
+  availableAt:z.array(CraftingLocationSchema).min(1).default(['poi','base','room']),
+  output:RecipeOutputSchema,
+  timeCost:z.object({turns:z.number().int().min(0).default(1)}).default({turns:1}),
+  conditions:z.array(ConditionSchema).default([]),
+  effects:z.array(EffectSchema).default([]),
+  discoveredByDefault:z.boolean().default(true),
 });
-
-export type Recipe = z.infer<typeof RecipeSchema>;
+export type RecipeDefinition = z.infer<typeof RecipeSchema>;
+export type Recipe = RecipeDefinition;

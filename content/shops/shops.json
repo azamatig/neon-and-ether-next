@@ -1,0 +1,82 @@
+[
+  {
+    "id": "shop_glassline_nightmarket",
+    "name": "Nix's Night-Market Ledger",
+    "description": "A practical inventory whose prices respond to Syndicate standing.",
+    "tags": [
+      "BlackMarket"
+    ],
+    "inventorySource": "stock",
+    "inventory": [
+      {
+        "itemId": "con_ether_vial",
+        "quantity": 8,
+        "maxQuantity": 8
+      },
+      {
+        "itemId": "con_trauma_patch",
+        "quantity": 5,
+        "maxQuantity": 5
+      },
+      {
+        "itemId": "arm_rainweave_coat",
+        "quantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemId": "itm_glassline_access_shard",
+        "quantity": 1,
+        "maxQuantity": 1
+      }
+    ],
+    "buyRules": {
+      "enabled": true,
+      "conditions": [],
+      "categories": [],
+      "requiredTags": [],
+      "priceMultiplier": 1
+    },
+    "sellRules": {
+      "enabled": true,
+      "conditions": [],
+      "categories": [],
+      "requiredTags": [],
+      "priceMultiplier": 0.55
+    },
+    "priceModifiers": [
+      {
+        "id": "syndicate_friend_discount",
+        "conditions": [
+          {
+            "type": "factionReputation",
+            "factionId": "fac_ether_syndicate",
+            "operator": ">=",
+            "value": 20
+          }
+        ],
+        "requiredPlayerTraits": [],
+        "mapIds": [
+          "map_slums_sec09"
+        ],
+        "poiIds": [
+          "poi_glassline_market"
+        ],
+        "buyMultiplier": 0.8,
+        "sellMultiplier": 1.1,
+        "flatAdjustment": 0
+      }
+    ],
+    "restock": {
+      "enabled": true,
+      "intervalTurns": 24,
+      "restoreToInitial": true
+    },
+    "availabilityConditions": [
+      {
+        "type": "factionHostile",
+        "factionId": "fac_ether_syndicate",
+        "hostile": false
+      }
+    ]
+  }
+]

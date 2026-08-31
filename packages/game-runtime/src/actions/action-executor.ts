@@ -10,6 +10,7 @@ import { BatchConditionResult, evaluateConditions } from '../conditions/conditio
 import { ConditionRegistry, defaultConditionRegistry } from '../conditions/condition-registry.ts';
 import { BatchEffectExecutionResult, EffectExecutor, defaultEffectExecutor } from '../effects/effect-executor.ts';
 import { EffectExecutionContext } from '../effects/effect-context.ts';
+import { DiceRoller, type RandomSource } from '@neon-ether/engine';
 
 export interface ActionExecutionResult {
   success: boolean;
@@ -24,13 +25,16 @@ export interface ActionExecutionResult {
 export class ActionExecutor {
   private conditionRegistry: ConditionRegistry;
   private effectExecutor: EffectExecutor;
+  private random:RandomSource;
 
   constructor(
     conditionRegistry: ConditionRegistry = defaultConditionRegistry,
-    effectExecutor: EffectExecutor = defaultEffectExecutor
+    effectExecutor: EffectExecutor = defaultEffectExecutor,
+    random:RandomSource=new DiceRoller(1337),
   ) {
     this.conditionRegistry = conditionRegistry;
     this.effectExecutor = effectExecutor;
+    this.random=random;
   }
 
   /**
@@ -44,7 +48,7 @@ export class ActionExecutor {
     // 1. Evaluate prerequisites/conditions
     const conditionResults = evaluateConditions(
       action.conditions ?? [],
-      { state, contentRegistry },
+      { state, contentRegistry, rollRandom:(min,max)=>this.random.integer(min,max) },
       this.conditionRegistry
     );
 

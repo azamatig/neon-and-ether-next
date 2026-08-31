@@ -1,0 +1,3 @@
+import type { ConditionHandler } from '../condition-handler.ts';
+import { WeatherSystem } from '../../weather/weather-system.ts';
+export const handleWeatherCondition:ConditionHandler<any>=(condition,context)=>{const mapId=condition.mapId??context.state.world.currentMapId;if(!context.contentRegistry||!mapId)return false;const resolved=new WeatherSystem(context.contentRegistry).resolveExisting(context.state,mapId,condition.regionId);if(!resolved)return false;if(condition.type==='currentWeather')return resolved.state.currentWeatherId===condition.weatherId;return resolved.tags.includes(condition.tag);};

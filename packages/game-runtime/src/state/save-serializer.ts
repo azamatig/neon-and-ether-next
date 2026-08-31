@@ -51,7 +51,7 @@ export function createSaveGame(
   const activeQuests = Object.values(state.quests).filter((q) => q.status === 'Active').length;
 
   const metadata: SaveGameMetadata = {
-    saveId: options.saveId ?? `save_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    saveId: options.saveId ?? `save_${Date.now()}_${state.rng.draws}`,
     slotName: options.slotName ?? 'AutoSave',
     schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
     timestamp: new Date().toISOString(),
@@ -163,7 +163,7 @@ export function deserializeSaveGame(
           playtimeSeconds: rawParsed.time?.elapsedRealSeconds ?? 0,
           playerLevel: rawParsed.player?.level ?? 1,
           playerName: rawParsed.player?.name ?? 'Unknown',
-          currentMapId: rawParsed.world?.currentMapId ?? rawParsed.currentMapId ?? 'map_slums_sec09',
+          currentMapId: rawParsed.world?.currentMapId ?? rawParsed.currentMapId ?? '',
           activeQuestCount: 0,
         },
         state: rawParsed,

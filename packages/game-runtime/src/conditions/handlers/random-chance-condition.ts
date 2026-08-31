@@ -6,8 +6,8 @@ export const handleRandomChanceCondition: ConditionHandler<RandomChanceCondition
   condition,
   context
 ): ConditionEvaluationResult => {
-  // Use context RNG or Math.random
-  const roll = context.rollRandom ? context.rollRandom(0, 100) / 100 : Math.random();
+  if (!context.rollRandom) return {isMet:false,type:'randomChance',reason:'Random condition requires an injected gameplay RNG.'};
+  const roll = context.rollRandom(0, 1_000_000) / 1_000_000;
   const isMet = roll <= condition.probability;
 
   return {

@@ -110,6 +110,14 @@ export function useGameRuntime() {
   const recipes = session.getContentRegistry().recipes.getAll();
   const availableRecipeIds = new Set(gameState.world.activeScreen === 'Workbench' ? session.getAvailableRecipes(craftingContext).map((recipe) => recipe.id) : []);
   const itemDefinitions = session.getContentRegistry().items.getAll();
+  const questDossiers = (Object.values(gameState.quests) as import('@neon-ether/game-schema').QuestRuntimeState[]).map((quest) => ({
+    runtime: quest,
+    definition: session.getContentRegistry().getQuest(quest.questId),
+  })).filter((quest) => quest.definition !== undefined);
+  const partyMembers = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[])
+    .filter((npc) => npc.assignment.partySlotId !== null)
+    .map((runtime) => ({ runtime, character: session.getResolvedNpcCharacter(runtime.npcId) }))
+    .filter((member) => member.character !== undefined);
 
   // --- Persistence & Savegame Handlers ---
 
@@ -175,6 +183,8 @@ export function useGameRuntime() {
     recipes,
     availableRecipeIds,
     itemDefinitions,
+    questDossiers,
+    partyMembers,
     lastCheck,
     saveStatus,
     openPoi: (poiId: string) => session.openPoi(poiId),
@@ -213,6 +223,9 @@ export function useGameRuntime() {
     sellToShop: (shopId: string, itemId: string) => session.sellToShop(shopId, itemId),
     craftRecipe: (recipeId: string) => session.craftRecipe(recipeId, craftingContext),
     returnToOrigin: () => session.resolveOutcome({ type: 'returnToOrigin' }),
+    equipInventoryEntry: (entryId: string, slotId: string) => session.equipInventoryEntry(entryId, { id: slotId, acceptsCategories: [], acceptsTags: [] }),
+    unequipSlot: (slotId: string) => session.unequipSlot(slotId),
+    dropInventoryItem: (itemId: string) => session.removeInventoryItem(itemId, 1),
     dismissCombatResult: () => session.dismissCombatResult(),
     saveToLocalSlot,
     loadFromLocalSlot,

@@ -14,8 +14,7 @@ import { CombatPreviewContainer } from './components/CombatPreviewContainer.tsx'
 import { CombatResultContainer } from './components/CombatResultContainer.tsx';
 import { TurnBasedCombatScreen } from './components/TurnBasedCombatScreen.tsx';
 import { SaveStateModal } from './components/SaveStateModal.tsx';
-import { Badge, BaseScreen, Button, Panel, PoiScreen, TerminalLog, WorldMapView } from '@neon-ether/shared-ui';
-import { Save } from 'lucide-react';
+import { BaseScreen, ExplorationHud, Panel, PoiScreen, TerminalLog, WorldMapView } from '@neon-ether/shared-ui';
 
 export const GameApp: React.FC = () => {
   const {
@@ -80,20 +79,20 @@ export const GameApp: React.FC = () => {
   const isCombatPreviewMode = gameState.world.mode === 'CombatPreview' && activeCombatPreview;
   const isCombatResultMode = ['CombatResult', 'Loot', 'PostCombat'].includes(gameState.world.mode) && activeCombatResolution;
   const isTacticalCombatMode = gameState.world.mode === 'TacticalCombat';
+  const isExplorationMode = Boolean(isPoiMode) || gameState.world.mode === 'Map';
 
   return (
     <div className="w-full h-full flex flex-col gap-3 font-sans">
-      {/* Top Tactical HUD */}
-      <TacticalHUD
+      {!isExplorationMode && <TacticalHUD
         player={resolvedPlayer}
         onEndTurn={resetTurnAp}
         onQuickEtherCast={() => spendEther(5)}
-      />
+      />}
 
       {/* Main Viewport & Sidebar Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-[520px]">
+      <div className={`min-h-0 flex-1 grid grid-cols-1 gap-3 ${isExplorationMode ? '' : 'lg:grid-cols-12'}`}>
         {/* District Map, POI Viewport, Event Screen, or Combat Viewport */}
-        <div className="lg:col-span-8 xl:col-span-9 flex flex-col">
+        <div className={`${isExplorationMode ? '' : 'lg:col-span-8 xl:col-span-9'} min-h-0 flex flex-col`}>
           {isEventMode ? (
             <EventContainer
               eventState={activeEventState}
@@ -120,34 +119,7 @@ export const GameApp: React.FC = () => {
               abilities={combatAbilities}
               onCommand={executeCombatAction}
             />
-          ) : (
-            <Panel
-              title={
-                isPoiMode
-                  ? `LOCATION PROTOCOL // ${selectedPoi.name.toUpperCase()}`
-                  : `DISTRICT TACTICAL MAP // ${activeMap.name.toUpperCase()}`
-              }
-              subtitle={`${activeMap.district} • Time: Day ${gameState.time.day}, ${String(gameState.time.hour).padStart(2, '0')}:${String(gameState.time.minute).padStart(2, '0')} (${gameState.time.timeOfDay})`}
-              glow="cyan"
-              className="h-full flex flex-col"
-              headerRight={
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setShowSaveModal(true)}
-                    leftIcon={<Save className="w-3.5 h-3.5 text-[#00f2ff]" />}
-                  >
-                    Save / State
-                  </Button>
-                  <Badge variant="purple" size="xs">
-                    ETHER: {activeMap.ambientEtherLevel}%
-                  </Badge>
-                </div>
-              }
-            >
-              <div className="flex-1 min-h-[460px] relative flex flex-col">
-                {isBaseMode ? <BaseScreen base={gameState.base} onReturn={returnToMap} roomOptions={getBaseRoomOptions} upgradeOptions={getBaseUpgradeOptions} residents={baseResidents} jobs={baseJobs} onBuildRoom={(slotId,roomDefinitionId)=>executeBaseManagementCommand({type:'BuildRoom',slotId,roomDefinitionId})} onInstallUpgrade={(roomInstanceId,upgradeId)=>executeBaseManagementCommand({type:'InstallUpgrade',roomInstanceId,upgradeId})} onAssign={(npcId,jobId,roomId)=>{if(jobId)executeCharacterManagementCommand({type:'AssignJob',npcId,jobId});if(roomId)executeCharacterManagementCommand({type:'AssignRoom',npcId,roomId});}}/> : isPoiMode ? (
+          ) : isBaseMode ? <BaseScreen base={gameState.base} onReturn={returnToMap} roomOptions={getBaseRoomOptions} upgradeOptions={getBaseUpgradeOptions} residents={baseResidents} jobs={baseJobs} onBuildRoom={(slotId,roomDefinitionId)=>executeBaseManagementCommand({type:'BuildRoom',slotId,roomDefinitionId})} onInstallUpgrade={(roomInstanceId,upgradeId)=>executeBaseManagementCommand({type:'InstallUpgrade',roomInstanceId,upgradeId})} onAssign={(npcId,jobId,roomId)=>{if(jobId)executeCharacterManagementCommand({type:'AssignJob',npcId,jobId});if(roomId)executeCharacterManagementCommand({type:'AssignRoom',npcId,roomId});}}/> : isPoiMode ? (
                   <PoiScreen
                     environment={currentWeather}
                     poi={selectedPoi}
@@ -186,13 +158,10 @@ export const GameApp: React.FC = () => {
                     }}
                   />
                 )}
-              </div>
-            </Panel>
-          )}
         </div>
 
         {/* Narrative & Event Log Terminal */}
-        <div className="lg:col-span-4 xl:col-span-3 flex flex-col">
+        {!isExplorationMode && <div className="lg:col-span-4 xl:col-span-3 flex flex-col">
           <Panel
             title="NEURAL JOURNAL // EVENT LOG"
             subtitle="DATA STREAM"
@@ -200,8 +169,18 @@ export const GameApp: React.FC = () => {
           >
             <TerminalLog entries={gameState.journal} className="h-full min-h-[440px]" />
           </Panel>
-        </div>
+        </div>}
       </div>
+
+      {isExplorationMode && <ExplorationHud
+        weather={currentWeather?.definition.name}
+        sector={activeMap.subregion ?? activeMap.district}
+        hp={{ current: gameState.player.vitals.currentHp, max: gameState.player.vitals.maxHp }}
+        ether={{ current: gameState.player.vitals.currentEther, max: gameState.player.vitals.maxEther }}
+        actionPoints={{ current: gameState.player.vitals.actionPointsCurrent, max: gameState.player.vitals.actionPointsMax }}
+        credits={gameState.player.inventory.credits}
+        onOpenMenu={() => setShowSaveModal(true)}
+      />}
 
       {/* Action Result Modal Overlay */}
       {gameState.world.mode === 'ActionResult' && activeActionResolution && (

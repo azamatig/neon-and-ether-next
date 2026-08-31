@@ -72,6 +72,16 @@ This foundation intentionally does not rewrite every game screen yet. During the
 
 Existing `Button`, `Panel`, `Badge`, and `StatBar` exports remain compatible so screens can migrate incrementally without gameplay changes.
 
+### Completed exploration migration
+
+The production Map and POI screens now use the focused exploration composition:
+
+- Map artwork owns the main viewport; POI state is presented by compact markers and contextual tooltips rather than a permanent inspector or directory.
+- POI presentation uses the authored `GameMap.backgroundImage`, `POI.image`, and normalized `POI.mapPosition` fields directly. Missing artwork falls back to a stable visual placeholder.
+- POI details use a single artwork/description/actions split without contacts, logs, inventory, quest, or faction sidebars.
+- Map and POI share one `ExplorationHud`; other gameplay contexts retain their existing contextual UI.
+- Condition evaluation and action availability remain runtime-owned. The UI only displays resolved availability and the authored/runtime-provided reason.
+
 ## Architecture boundary
 
 These components render immutable values and emit callbacks only. They must never roll dice, evaluate conditions, spend AP, resolve outcomes, mutate content, or import concrete content. The runtime remains the sole source of gameplay truth.

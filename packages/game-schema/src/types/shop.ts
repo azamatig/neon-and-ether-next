@@ -1,0 +1,10 @@
+import { z } from 'zod';
+import { BaseEntitySchema } from './base.ts';
+import { ConditionSchema } from './conditions.ts';
+import { ItemCategorySchema } from './items.ts';
+export const ShopStockEntrySchema=z.object({itemId:z.string().min(1),quantity:z.number().int().min(0),maxQuantity:z.number().int().min(0).optional()});
+export const TradeRuleSchema=z.object({enabled:z.boolean().default(true),conditions:z.array(ConditionSchema).default([]),categories:z.array(ItemCategorySchema).default([]),requiredTags:z.array(z.string()).default([]),priceMultiplier:z.number().positive().default(1)});
+export const ShopPriceModifierSchema=z.object({id:z.string().min(1),conditions:z.array(ConditionSchema).default([]),requiredPlayerTraits:z.array(z.string()).default([]),mapIds:z.array(z.string()).default([]),poiIds:z.array(z.string()).default([]),buyMultiplier:z.number().positive().default(1),sellMultiplier:z.number().positive().default(1),flatAdjustment:z.number().int().default(0)});
+export const ShopRestockRuleSchema=z.object({enabled:z.boolean().default(true),intervalTurns:z.number().int().min(1).default(24),restoreToInitial:z.boolean().default(true)});
+export const ShopDefinitionSchema=BaseEntitySchema.extend({inventorySource:z.enum(['stock','unlimited']).default('stock'),inventory:z.array(ShopStockEntrySchema).default([]),buyRules:TradeRuleSchema.default({enabled:true,conditions:[],categories:[],requiredTags:[],priceMultiplier:1}),sellRules:TradeRuleSchema.default({enabled:true,conditions:[],categories:[],requiredTags:[],priceMultiplier:1}),priceModifiers:z.array(ShopPriceModifierSchema).default([]),restock:ShopRestockRuleSchema.default({enabled:true,intervalTurns:24,restoreToInitial:true}),availabilityConditions:z.array(ConditionSchema).default([])});
+export type ShopDefinition=z.infer<typeof ShopDefinitionSchema>;

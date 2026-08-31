@@ -9,6 +9,12 @@ export const handleChangeRelationshipEffect: EffectHandler<ChangeRelationshipEff
   if (!context.state.npcs[effect.npcId]) {
     context.state.npcs[effect.npcId] = {
       npcId: effect.npcId,
+      level: 1,
+      experience: 0,
+      skills: {},
+      skillExperience: {},
+      skillPointsUnspent: 0,
+      perkPointsUnspent: 0,
       mapId: context.state.world.currentMapId,
       isAlive: true,
       currentHp: 25,
@@ -17,15 +23,16 @@ export const handleChangeRelationshipEffect: EffectHandler<ChangeRelationshipEff
       isHostile: false,
       isMerchant: false,
       isCompanion: false,
-      relationship: 0,
+      relationship: { status: 'independent', affinity: 0, trust: 0, fear: 0, loyalty: 0 },
+      assignment: { jobId: null, roomId: null, partySlotId: null },
       flags: {},
     };
   }
 
   const npcState = context.state.npcs[effect.npcId];
-  const previousVal = npcState.relationship ?? 0;
+  const previousVal = npcState.relationship.affinity;
   const newVal = Math.max(-100, Math.min(100, previousVal + effect.delta));
-  npcState.relationship = newVal;
+  npcState.relationship.affinity = newVal;
 
   const npcName = context.contentRegistry?.getCharacter(effect.npcId)?.name ?? effect.npcId;
 

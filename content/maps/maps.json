@@ -1,20 +1,25 @@
 [
   {
     "id": "map_slums_sec09",
-    "name": "Sector-09 Neon Slums",
-    "description": "A sprawling labyrinth of decaying tenements, neon-lit alleys, and leaking ether conduits in the shadow of OmniCorp mega-structures.",
-    "tags": ["Slums", "Undercity", "Sector09", "Neon"],
-    "district": "Sector-09 Undercity",
-    "subregion": "Lower Conduits",
+    "name": "Glassline Ward",
+    "description": "A rain-blackened district where a community safehouse, night market and failing clinic sit beneath the sealed Glassline security annex.",
+    "tags": [
+      "Slums",
+      "Undercity",
+      "Sector09",
+      "Neon"
+    ],
+    "district": "Glassline Ward",
+    "subregion": "Lower Transit Ring",
     "backgroundImage": "bg_sector09_slums",
     "poiIds": [
-      "poi_sec09_hideout",
-      "poi_sec09_market",
-      "poi_sec09_terminal",
-      "poi_ether_fissure",
-      "poi_omnicorp_checkpoint"
+      "poi_glassline_safehouse",
+      "poi_glassline_market",
+      "poi_glassline_clinic",
+      "poi_glassline_transit",
+      "poi_glassline_facility"
     ],
-    "defaultPoiId": "poi_sec09_hideout",
+    "defaultPoiId": "poi_glassline_safehouse",
     "connectedMapIds": [],
     "ambientEtherLevel": 40,
     "securityLevel": 2,
@@ -22,23 +27,78 @@
     "recommendedLevel": 1,
     "regions": [
       {
-        "id": "reg_residential",
-        "name": "Tenement Sprawl",
-        "description": "Dense residential stacks connected by precarious sky-bridges.",
-        "securityLevel": 1
+        "id": "reg_glassline_streets",
+        "name": "Glassline Streets",
+        "description": "Covered markets and residential alleys.",
+        "securityLevel": 1,
+        "controllingFactionId": "fac_ether_syndicate",
+        "weatherProfileId": "weather_profile_urban",
+        "bounds": {
+          "x": 4,
+          "y": 8,
+          "width": 58,
+          "height": 80
+        },
+        "metadata": {}
       },
       {
-        "id": "reg_commercial",
-        "name": "Red Circuit District",
-        "description": "Black markets and syndicate-controlled speakeasies.",
-        "securityLevel": 2
-      },
-      {
-        "id": "reg_industrial",
-        "name": "Sub-Grid Conduits",
-        "description": "Heavily guarded high-voltage ether distribution grid.",
-        "securityLevel": 4
+        "id": "reg_corporate_cordon",
+        "name": "Corporate Cordon",
+        "description": "Sealed transit and security infrastructure.",
+        "securityLevel": 4,
+        "controllingFactionId": "fac_omnicorp",
+        "weatherProfileId": "weather_profile_urban",
+        "bounds": {
+          "x": 64,
+          "y": 8,
+          "width": 32,
+          "height": 80
+        },
+        "metadata": {}
       }
-    ]
+    ],
+    "metadata": {
+      "visualTheme": "neon-slums"
+    },
+    "routes": [
+      {
+        "id": "route_safehouse_market",
+        "fromPoiId": "poi_glassline_safehouse",
+        "toPoiId": "poi_glassline_market",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 10,
+        "metadata": {}
+      },
+      {
+        "id": "route_market_clinic",
+        "fromPoiId": "poi_glassline_market",
+        "toPoiId": "poi_glassline_clinic",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 10,
+        "metadata": {}
+      },
+      {
+        "id": "route_clinic_transit",
+        "fromPoiId": "poi_glassline_clinic",
+        "toPoiId": "poi_glassline_transit",
+        "bidirectional": true,
+        "travelCost": 2,
+        "travelTimeMinutes": 20,
+        "metadata": {}
+      },
+      {
+        "id": "route_transit_facility",
+        "fromPoiId": "poi_glassline_transit",
+        "toPoiId": "poi_glassline_facility",
+        "bidirectional": true,
+        "travelCost": 2,
+        "travelTimeMinutes": 15,
+        "metadata": {}
+      }
+    ],
+    "defaultTravelTimeMinutes": 30,
+    "weatherProfileId": "weather_profile_urban"
   }
 ]

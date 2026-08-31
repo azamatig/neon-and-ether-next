@@ -7,8 +7,14 @@
 
 import {
   BaseRoomDefinition,
+  Ability,
+  BaseJobDefinition,
+  BaseUpgradeDefinition,
+  CharacterManagementRule,
+  CombatAI,
   CombatEncounter,
   ContentValidationReport,
+  ContentValidationOptions,
   DialogueTree,
   Enemy,
   Faction,
@@ -19,9 +25,16 @@ import {
   Item,
   NPC,
   POI,
+  PartySlotDefinition,
+  PlayerBaseDefinition,
+  ProgressionDefinition,
   Quest,
   Recipe,
+  StatusEffectDefinition,
+  ShopDefinition,
   ValidationIssue,
+  WeatherDefinition,
+  WeatherProfile,
   validateGameContent,
 } from '@neon-ether/game-schema';
 
@@ -103,13 +116,24 @@ export class RegistryCollection<T extends { id: string; name?: string; tags?: st
 export interface ContentLoadingOptions {
   strict?: boolean;
   clearExisting?: boolean;
+  validation?: ContentValidationOptions;
 }
 
 export class ContentRegistry {
   public readonly items = new RegistryCollection<Item>('Item');
+  public readonly shops = new RegistryCollection<ShopDefinition>('Shop');
+  public readonly progressionDefinitions = new RegistryCollection<ProgressionDefinition>('ProgressionDefinition');
   public readonly npcs = new RegistryCollection<NPC>('NPC');
   public readonly enemies = new RegistryCollection<Enemy>('Enemy');
   public readonly encounters = new RegistryCollection<CombatEncounter>('CombatEncounter');
+  public readonly abilities = new RegistryCollection<Ability>('Ability');
+  public readonly statusEffects = new RegistryCollection<StatusEffectDefinition>('StatusEffect');
+  public readonly combatAIProfiles = new RegistryCollection<CombatAI>('CombatAI');
+  public readonly characterManagementRules = new RegistryCollection<CharacterManagementRule>('CharacterManagementRule');
+  public readonly baseJobs = new RegistryCollection<BaseJobDefinition>('BaseJob');
+  public readonly partySlots = new RegistryCollection<PartySlotDefinition>('PartySlot');
+  public readonly bases = new RegistryCollection<PlayerBaseDefinition>('PlayerBase');
+  public readonly baseUpgrades = new RegistryCollection<BaseUpgradeDefinition>('BaseUpgrade');
   public readonly pois = new RegistryCollection<POI>('POI');
   public readonly quests = new RegistryCollection<Quest>('Quest');
   public readonly events = new RegistryCollection<GameEvent>('GameEvent');
@@ -118,6 +142,8 @@ export class ContentRegistry {
   public readonly rooms = new RegistryCollection<BaseRoomDefinition>('Room');
   public readonly factions = new RegistryCollection<Faction>('Faction');
   public readonly dialogues = new RegistryCollection<DialogueTree>('Dialogue');
+  public readonly weatherDefinitions = new RegistryCollection<WeatherDefinition>('WeatherDefinition');
+  public readonly weatherProfiles = new RegistryCollection<WeatherProfile>('WeatherProfile');
 
   private lastValidationReport: ContentValidationReport | null = null;
   private version: string = '1.0.0';
@@ -127,14 +153,14 @@ export class ContentRegistry {
    * and populates fast lookup maps.
    */
   public loadContent(rawContent: unknown, options: ContentLoadingOptions = {}): ContentValidationReport {
-    const { strict = false, clearExisting = true } = options;
+    const { strict = false, clearExisting = true, validation } = options;
 
     if (clearExisting) {
       this.clear();
     }
 
     // Run full schema & referential integrity validation
-    const report = validateGameContent(rawContent);
+    const report = validateGameContent(rawContent, validation);
     this.lastValidationReport = report;
 
     if (strict && !report.isValid) {
@@ -144,9 +170,8 @@ export class ContentRegistry {
 
     // Safe parse data with defaults
     const parsed = GameContentSchema.safeParse(rawContent);
-    const content: GameContent = parsed.success
-      ? parsed.data
-      : (rawContent as GameContent);
+    if (!parsed.success) return report;
+    const content: GameContent = parsed.data;
 
     this.version = content.version || '1.0.0';
 
@@ -154,6 +179,8 @@ export class ContentRegistry {
     for (const item of content.items ?? []) {
       this.items.set(item.id, item);
     }
+    for (const shop of content.shops ?? []) this.shops.set(shop.id, shop);
+    for (const definition of content.progressionDefinitions ?? []) this.progressionDefinitions.set(definition.id, definition);
 
     // Index NPCs / Characters
     const npcList = content.npcs ?? content.characters ?? [];
@@ -170,6 +197,14 @@ export class ContentRegistry {
     for (const encounter of content.encounters ?? []) {
       this.encounters.set(encounter.id, encounter);
     }
+    for (const ability of content.abilities ?? []) this.abilities.set(ability.id, ability);
+    for (const effect of content.statusEffects ?? []) this.statusEffects.set(effect.id, effect);
+    for (const profile of content.combatAIProfiles ?? []) this.combatAIProfiles.set(profile.id, profile);
+    for (const rule of content.characterManagementRules ?? []) this.characterManagementRules.set(rule.id, rule);
+    for (const job of content.baseJobs ?? []) this.baseJobs.set(job.id, job);
+    for (const slot of content.partySlots ?? []) this.partySlots.set(slot.id, slot);
+    for (const base of content.bases ?? []) this.bases.set(base.id, base);
+    for (const upgrade of content.baseUpgrades ?? []) this.baseUpgrades.set(upgrade.id, upgrade);
 
     // Index POIs
     for (const poi of content.pois ?? []) {
@@ -210,6 +245,8 @@ export class ContentRegistry {
     for (const dialogue of content.dialogues ?? []) {
       this.dialogues.set(dialogue.id, dialogue);
     }
+    for (const weather of content.weatherDefinitions ?? []) this.weatherDefinitions.set(weather.id, weather);
+    for (const profile of content.weatherProfiles ?? []) this.weatherProfiles.set(profile.id, profile);
 
     return report;
   }
@@ -239,9 +276,19 @@ export class ContentRegistry {
     return {
       version: this.version,
       items: this.items.getAll(),
+      shops: this.shops.getAll(),
+      progressionDefinitions: this.progressionDefinitions.getAll(),
       npcs: this.npcs.getAll(),
       enemies: this.enemies.getAll(),
       encounters: this.encounters.getAll(),
+      abilities: this.abilities.getAll(),
+      statusEffects: this.statusEffects.getAll(),
+      combatAIProfiles: this.combatAIProfiles.getAll(),
+      characterManagementRules: this.characterManagementRules.getAll(),
+      baseJobs: this.baseJobs.getAll(),
+      partySlots: this.partySlots.getAll(),
+      bases: this.bases.getAll(),
+      baseUpgrades: this.baseUpgrades.getAll(),
       pois: this.pois.getAll(),
       quests: this.quests.getAll(),
       events: this.events.getAll(),
@@ -250,6 +297,8 @@ export class ContentRegistry {
       rooms: this.rooms.getAll(),
       factions: this.factions.getAll(),
       dialogues: this.dialogues.getAll(),
+      weatherDefinitions: this.weatherDefinitions.getAll(),
+      weatherProfiles: this.weatherProfiles.getAll(),
     };
   }
 
@@ -259,9 +308,19 @@ export class ContentRegistry {
 
   public clear(): void {
     this.items.clear();
+    this.shops.clear();
+    this.progressionDefinitions.clear();
     this.npcs.clear();
     this.enemies.clear();
     this.encounters.clear();
+    this.abilities.clear();
+    this.statusEffects.clear();
+    this.combatAIProfiles.clear();
+    this.characterManagementRules.clear();
+    this.baseJobs.clear();
+    this.partySlots.clear();
+    this.bases.clear();
+    this.baseUpgrades.clear();
     this.pois.clear();
     this.quests.clear();
     this.events.clear();
@@ -270,6 +329,8 @@ export class ContentRegistry {
     this.rooms.clear();
     this.factions.clear();
     this.dialogues.clear();
+    this.weatherDefinitions.clear();
+    this.weatherProfiles.clear();
     this.lastValidationReport = null;
   }
 
@@ -280,6 +341,14 @@ export class ContentRegistry {
       npcsCount: this.npcs.size,
       enemiesCount: this.enemies.size,
       encountersCount: this.encounters.size,
+      abilitiesCount: this.abilities.size,
+      statusEffectsCount: this.statusEffects.size,
+      combatAIProfilesCount: this.combatAIProfiles.size,
+      characterManagementRulesCount: this.characterManagementRules.size,
+      baseJobsCount: this.baseJobs.size,
+      partySlotsCount: this.partySlots.size,
+      basesCount: this.bases.size,
+      baseUpgradesCount: this.baseUpgrades.size,
       poisCount: this.pois.size,
       questsCount: this.quests.size,
       eventsCount: this.events.size,
@@ -293,6 +362,9 @@ export class ContentRegistry {
         this.npcs.size +
         this.enemies.size +
         this.encounters.size +
+        this.abilities.size + this.statusEffects.size + this.combatAIProfiles.size +
+        this.characterManagementRules.size + this.baseJobs.size + this.partySlots.size +
+        this.bases.size + this.baseUpgrades.size +
         this.pois.size +
         this.quests.size +
         this.events.size +
@@ -408,4 +480,13 @@ export class ContentRegistry {
   public getAllEncounters(): CombatEncounter[] {
     return this.encounters.getAll();
   }
+
+  public getAbility(id: string): Ability | undefined { return this.abilities.get(id); }
+  public getStatusEffect(id: string): StatusEffectDefinition | undefined { return this.statusEffects.get(id); }
+  public getCombatAIProfile(id: string): CombatAI | undefined { return this.combatAIProfiles.get(id); }
+  public getCharacterManagementRule(id: string): CharacterManagementRule | undefined { return this.characterManagementRules.get(id); }
+  public getBaseJob(id: string): BaseJobDefinition | undefined { return this.baseJobs.get(id); }
+  public getPartySlot(id: string): PartySlotDefinition | undefined { return this.partySlots.get(id); }
+  public getBase(id: string): PlayerBaseDefinition | undefined { return this.bases.get(id); }
+  public getBaseUpgrade(id: string): BaseUpgradeDefinition | undefined { return this.baseUpgrades.get(id); }
 }

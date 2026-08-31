@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
+import { ConditionSchema } from './conditions.ts';
+import { EffectSchema } from './effects.ts';
 
 export const QuestStatusSchema = z.enum([
   'Unassigned',
@@ -37,12 +39,38 @@ export const QuestObjectiveSchema = z.object({
 
 export type QuestObjective = z.infer<typeof QuestObjectiveSchema>;
 
+export const QuestStageActionSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  description: z.string().optional(),
+  conditions: z.array(ConditionSchema).default([]),
+  effects: z.array(z.lazy(() => EffectSchema)).default([]),
+  targetStageId: z.string().optional(),
+  hideIfUnavailable: z.boolean().default(false),
+});
+export type QuestStageAction = z.infer<typeof QuestStageActionSchema>;
+
+export const QuestStageBranchSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().optional(),
+  conditions: z.array(ConditionSchema).default([]),
+  effects: z.array(z.lazy(() => EffectSchema)).default([]),
+  targetStageId: z.string().min(1),
+});
+export type QuestStageBranch = z.infer<typeof QuestStageBranchSchema>;
+
 export const QuestStageSchema = z.object({
   id: z.string().min(1),
   stageNumber: z.number().int().default(1),
   title: z.string().min(1),
   journalEntry: z.string().default(''),
   objectives: z.array(QuestObjectiveSchema).default([]),
+  entryConditions: z.array(ConditionSchema).default([]),
+  completionConditions: z.array(ConditionSchema).default([]),
+  actions: z.array(QuestStageActionSchema).default([]),
+  entryEffects: z.array(z.lazy(() => EffectSchema)).default([]),
+  completionEffects: z.array(z.lazy(() => EffectSchema)).default([]),
+  branches: z.array(QuestStageBranchSchema).default([]),
   nextStageId: z.string().optional(),
 });
 

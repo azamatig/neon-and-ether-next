@@ -6,8 +6,11 @@
 
 import { z } from 'zod';
 import { Vector2DSchema } from './grid.ts';
-import { CharacterAttributesSchema, DerivedVitalsSchema } from './stats.ts';
+import { CharacterAttributesSchema, CharacterStatModifierSchema, CharacterStatusEffectSchema, DerivedVitalsSchema, SkillsSchema } from './stats.ts';
 import { QuestStatusSchema } from './quest.ts';
+import { CombatStateSchema } from './combat.ts';
+import { CharacterAssignmentSchema, CharacterRelationshipSchema } from './character-management.ts';
+import { PoiStatusSchema } from './world.ts';
 
 export const DirectionSchema = z.enum(['North', 'South', 'East', 'West']);
 export type Direction = z.infer<typeof DirectionSchema>;
@@ -16,7 +19,8 @@ export type Direction = z.infer<typeof DirectionSchema>;
 // 1. Inventory Runtime State
 // -----------------------------------------------------------------------------
 
-export const InventoryItemSlotSchema = z.object({
+export const InventoryEntrySchema = z.object({
+  entryId: z.string().min(1).optional(),
   itemId: z.string().min(1, 'Item ID cannot be empty'),
   quantity: z.number().int().min(1).default(1),
   isEquipped: z.boolean().default(false),
@@ -26,16 +30,26 @@ export const InventoryItemSlotSchema = z.object({
   metadata: z.record(z.string(), z.any()).optional(),
 });
 
-export type InventoryItemSlot = z.infer<typeof InventoryItemSlotSchema>;
+export type InventoryEntry = z.infer<typeof InventoryEntrySchema>;
+export const InventoryItemSlotSchema = InventoryEntrySchema;
+export type InventoryItemSlot = InventoryEntry;
+
+export const EquipmentStateSchema = z.object({
+  slots: z.record(z.string(), z.string().nullable()).default({}),
+  appliedModifiers: z.record(z.string(), z.number()).default({}),
+});
+export type EquipmentState = z.infer<typeof EquipmentStateSchema>;
 
 export const InventoryStateSchema = z.object({
   items: z.array(InventoryItemSlotSchema).default([]),
   credits: z.number().int().min(0).default(0),
-  maxSlots: z.number().int().min(1).default(30),
-  maxWeight: z.number().min(0).default(100),
+  maxSlots: z.number().int().min(1).optional(),
+  maxWeight: z.number().min(0).optional(),
 });
 
 export type InventoryState = z.infer<typeof InventoryStateSchema>;
+export const ShopRuntimeStateSchema=z.object({shopId:z.string().min(1),stock:z.record(z.string(),z.number().int().min(0)).default({}),lastRestockTurn:z.number().int().min(0).default(0)});
+export type ShopRuntimeState=z.infer<typeof ShopRuntimeStateSchema>;
 
 // -----------------------------------------------------------------------------
 // 2. Player Runtime State
@@ -52,14 +66,17 @@ export const ActiveStatusEffectSchema = z.object({
 export type ActiveStatusEffect = z.infer<typeof ActiveStatusEffectSchema>;
 
 export const PlayerStateSchema = z.object({
-  characterId: z.string().default('char_protagonist'),
-  name: z.string().default('Vane'),
-  title: z.string().default('Technomancer Drifter'),
+  characterId: z.string().default('player'),
+  name: z.string().default('Player'),
+  title: z.string().default('Drifter'),
   level: z.number().int().min(1).default(1),
   experience: z.number().int().min(0).default(0),
   attributePointsUnspent: z.number().int().min(0).default(0),
   skillPointsUnspent: z.number().int().min(0).default(0),
-  factionId: z.string().default('fac_undercity_drifters'),
+  perkPointsUnspent: z.number().int().min(0).default(0),
+  skillExperience: z.record(z.string(), z.number().int().min(0)).default({}),
+  progressionDefinitionId: z.string().optional(),
+  factionId: z.string().default('Neutral'),
   attributes: CharacterAttributesSchema.default({
     body: 12,
     reflexes: 14,
@@ -67,6 +84,7 @@ export const PlayerStateSchema = z.object({
     etherTech: 15,
     presence: 11,
   }),
+  skills: SkillsSchema,
   vitals: DerivedVitalsSchema.default({
     maxHp: 38,
     currentHp: 38,
@@ -81,15 +99,16 @@ export const PlayerStateSchema = z.object({
   position: Vector2DSchema.default({ x: 0, y: 0 }),
   facing: DirectionSchema.default('South'),
   inventory: InventoryStateSchema.default({
-    items: [
-      { itemId: 'wpn_thermal_pistol', quantity: 1, isEquipped: true },
-      { itemId: 'cyb_neural_jack_v1', quantity: 1, isEquipped: true },
-      { itemId: 'con_ether_vial', quantity: 3, isEquipped: false },
-    ],
+    items: [],
     credits: 500,
     maxSlots: 30,
     maxWeight: 100,
   }),
+  equipment: EquipmentStateSchema.default({ slots: {}, appliedModifiers: {} }),
+  traits: z.array(z.string()).default([]),
+  perks: z.array(z.string()).default([]),
+  temporaryModifiers: z.array(CharacterStatModifierSchema).default([]),
+  statusEffects: z.array(CharacterStatusEffectSchema).default([]),
   activeStatusEffects: z.array(ActiveStatusEffectSchema).default([]),
 });
 
@@ -101,6 +120,13 @@ export type PlayerState = z.infer<typeof PlayerStateSchema>;
 
 export const NpcRuntimeStateSchema = z.object({
   npcId: z.string().min(1),
+  level: z.number().int().min(1).default(1),
+  experience: z.number().int().min(0).default(0),
+  skills: SkillsSchema,
+  skillExperience: z.record(z.string(), z.number().int().min(0)).default({}),
+  skillPointsUnspent: z.number().int().min(0).default(0),
+  perkPointsUnspent: z.number().int().min(0).default(0),
+  progressionDefinitionId: z.string().optional(),
   mapId: z.string().min(1),
   poiId: z.string().optional(),
   isAlive: z.boolean().default(true),
@@ -112,9 +138,11 @@ export const NpcRuntimeStateSchema = z.object({
   behaviorOverride: z.enum(['Idle', 'Patrol', 'Guard', 'Wander']).optional(),
   dialogueTreeIdOverride: z.string().optional(),
   isHostile: z.boolean().default(false),
+  hostilityOverride: z.boolean().optional(),
   isMerchant: z.boolean().default(false),
   isCompanion: z.boolean().default(false),
-  relationship: z.number().int().min(-100).max(100).default(0),
+  relationship: CharacterRelationshipSchema.default({ status: 'independent', affinity: 0, trust: 0, fear: 0, loyalty: 0 }),
+  assignment: CharacterAssignmentSchema.default({ jobId: null, roomId: null, partySlotId: null }),
   inventory: InventoryStateSchema.optional(),
   flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
 });
@@ -145,27 +173,30 @@ export type QuestRuntimeState = z.infer<typeof QuestRuntimeStateSchema>;
 
 export const BaseRoomRuntimeStateSchema = z.object({
   roomId: z.string().min(1),
+  definitionId: z.string().min(1),
+  slotId: z.string().min(1),
   isBuilt: z.boolean().default(false),
   level: z.number().int().min(0).default(1),
   assignedNpcIds: z.array(z.string()).default([]),
   productionProgress: z.number().min(0).max(100).default(0),
   upgradeFinishedTurn: z.number().int().optional(),
+  installedUpgradeIds: z.array(z.string()).default([]),
+  modifiers: z.record(z.string(), z.number()).default({}),
+  capacity: z.object({ residents: z.number().int().min(0), workers: z.number().int().min(0), storage: z.number().int().min(0) }),
 });
 
 export type BaseRoomRuntimeState = z.infer<typeof BaseRoomRuntimeStateSchema>;
 
 export const BaseStateSchema = z.object({
-  baseId: z.string().default('base_hideout_sec09'),
-  name: z.string().default('Sector 09 Safehouse'),
-  rooms: z.record(z.string(), BaseRoomRuntimeStateSchema).default({
-    'room_workbench': { roomId: 'room_workbench', isBuilt: true, level: 1, assignedNpcIds: [], productionProgress: 0 },
-  }),
-  resources: z.record(z.string(), z.number().int().min(0)).default({
-    etherCells: 15,
-    techScrap: 40,
-    biogel: 5,
-  }),
+  baseId: z.string().default('base_player'),
+  name: z.string().default('Player Base'),
+  rooms: z.record(z.string(), BaseRoomRuntimeStateSchema).default({}),
+  roomSlots: z.record(z.string(), z.object({ slotId: z.string(), slotType: z.string(), roomInstanceId: z.string().nullable(), isLocked: z.boolean().default(false) })).default({}),
+  residentNpcIds: z.array(z.string()).default([]),
+  storage: z.object({ items: z.array(InventoryItemSlotSchema).default([]), capacity: z.number().int().min(0).default(20) }).default({ items: [], capacity: 20 }),
+  resources: z.record(z.string(), z.number().int().min(0)).default({}),
   unlockedUpgrades: z.array(z.string()).default([]),
+  modifiers: z.record(z.string(), z.number()).default({}),
   stationedCompanionIds: z.array(z.string()).default([]),
 });
 
@@ -175,13 +206,18 @@ export type BaseState = z.infer<typeof BaseStateSchema>;
 // 6. Faction Runtime State
 // -----------------------------------------------------------------------------
 
-export const FactionStandingSchema = z.enum(['Hostile', 'Unfriendly', 'Neutral', 'Friendly', 'Honored']);
+export const FactionStandingSchema = z.string();
 export type FactionStanding = z.infer<typeof FactionStandingSchema>;
 
 export const FactionRuntimeStateSchema = z.object({
   factionId: z.string().min(1),
   reputation: z.number().int().min(-100).max(100).default(0),
-  standing: FactionStandingSchema.default('Neutral'),
+  standing: FactionStandingSchema.default(''),
+  reputationTierId: z.string().default(''),
+  membershipStatus: z.string().default('none'),
+  isHostile: z.boolean().default(false),
+  hostilityOverride: z.boolean().optional(),
+  relations: z.record(z.string(), z.string()).default({}),
   tier: z.number().int().min(1).default(1),
   isDiscovered: z.boolean().default(true),
   flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
@@ -207,12 +243,15 @@ export const TimeStateSchema = z.object({
 
 export type TimeState = z.infer<typeof TimeStateSchema>;
 
+export const WeatherStateSchema = z.object({
+  mapId: z.string().min(1), regionId: z.string().optional(), currentWeatherId: z.string().min(1), weatherProfileId: z.string().optional(),
+  startedAtWorldMinute: z.number().int().min(0), nextChangeAtWorldMinute: z.number().int().min(0).optional(), forced: z.boolean().default(false),
+});
+export type WeatherState = z.infer<typeof WeatherStateSchema>;
+
 // -----------------------------------------------------------------------------
 // 8. World Runtime State (Map, POIs, World Flags)
 // -----------------------------------------------------------------------------
-
-export const PoiStatusSchema = z.enum(['Hidden', 'Locked', 'Discovered', 'Visited', 'Completed']);
-export type PoiStatus = z.infer<typeof PoiStatusSchema>;
 
 export const PoiRuntimeStateSchema = z.object({
   poiId: z.string().min(1),
@@ -267,14 +306,11 @@ export const GameModeSchema = z.enum([
 export type GameMode = z.infer<typeof GameModeSchema>;
 
 export const WorldStateSchema = z.object({
-  currentMapId: z.string().default('map_slums_sec09'),
-  currentPoiId: z.string().nullable().default('poi_sec09_hideout'),
+  currentMapId: z.string().default(''),
+  currentPoiId: z.string().nullable().default(null),
   selectedPoiId: z.string().nullable().default(null),
-  discoveredMapIds: z.array(z.string()).default(['map_slums_sec09']),
-  flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({
-    intro_seen: true,
-    fixer_contract_offered: false,
-  }),
+  discoveredMapIds: z.array(z.string()).default([]),
+  flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
   activeDialogueTreeId: z.string().nullable().default(null),
   activeDialogueNodeId: z.string().nullable().default(null),
   activeEventId: z.string().nullable().default(null),
@@ -290,10 +326,12 @@ export const WorldStateSchema = z.object({
     .nullable()
     .default(null),
   mode: GameModeSchema.default('Map'),
+  activeScreen: z.enum(['Market', 'Workbench', 'Inventory', 'Base', 'Journal', 'Dialogue']).nullable().default(null),
   pois: z.record(z.string(), PoiRuntimeStateSchema).default({}),
   containers: z.record(z.string(), ContainerRuntimeStateSchema).default({}),
   doors: z.record(z.string(), DoorRuntimeStateSchema).default({}),
   ambientEtherModifier: z.number().min(0).max(2).default(1.0),
+  weatherByScope: z.record(z.string(), WeatherStateSchema).default({}),
 });
 
 export type WorldState = z.infer<typeof WorldStateSchema>;
@@ -313,13 +351,7 @@ export const CombatUnitStateSchema = z.object({
 
 export type CombatUnitState = z.infer<typeof CombatUnitStateSchema>;
 
-export const TacticalCombatStateSchema = z.object({
-  isActive: z.boolean().default(false),
-  roundNumber: z.number().int().min(0).default(0),
-  turnOrder: z.array(z.string()).default([]),
-  activeTurnIndex: z.number().int().min(0).default(0),
-  units: z.record(z.string(), CombatUnitStateSchema).default({}),
-});
+export const TacticalCombatStateSchema = CombatStateSchema;
 
 export type TacticalCombatState = z.infer<typeof TacticalCombatStateSchema>;
 
@@ -351,14 +383,17 @@ export const GameStateSchema = z.object({
   npcs: z.record(z.string(), NpcRuntimeStateSchema).default({}),
   quests: z.record(z.string(), QuestRuntimeStateSchema).default({}),
   factions: z.record(z.string(), FactionRuntimeStateSchema).default({}),
+  shops: z.record(z.string(), ShopRuntimeStateSchema).default({}),
   base: BaseStateSchema.default({
-    baseId: 'base_hideout_sec09',
-    name: 'Sector 09 Safehouse',
-    rooms: {
-      'room_workbench': { roomId: 'room_workbench', isBuilt: true, level: 1, assignedNpcIds: [], productionProgress: 0 },
-    },
-    resources: { etherCells: 15, techScrap: 40, biogel: 5 },
+    baseId: 'base_player',
+    name: 'Player Base',
+    rooms: {},
+    roomSlots: {},
+    residentNpcIds: [],
+    storage: { items: [], capacity: 20 },
+    resources: {},
     unlockedUpgrades: [],
+    modifiers: {},
     stationedCompanionIds: [],
   }),
   time: TimeStateSchema.default({
@@ -373,11 +408,14 @@ export const GameStateSchema = z.object({
   // Party & Active Tactical Systems
   companions: z.array(z.string()).default([]),
   combat: TacticalCombatStateSchema.default({
+    encounterId: null,
     isActive: false,
     roundNumber: 0,
     turnOrder: [],
     activeTurnIndex: 0,
-    units: {},
+    combatants: {},
+    log: [],
+    outcome: null,
   }),
   journal: z.array(GameJournalEntrySchema).default([]),
 });
@@ -395,8 +433,8 @@ export const SaveGameMetadataSchema = z.object({
   timestamp: z.string().default(() => new Date().toISOString()),
   playtimeSeconds: z.number().min(0).default(0),
   playerLevel: z.number().int().min(1).default(1),
-  playerName: z.string().default('Vane'),
-  currentMapId: z.string().default('map_slums_sec09'),
+  playerName: z.string().default('Player'),
+  currentMapId: z.string().default(''),
   activeQuestCount: z.number().int().min(0).default(0),
   screenshotDataUrl: z.string().optional(),
 });

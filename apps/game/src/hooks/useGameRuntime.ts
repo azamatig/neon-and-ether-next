@@ -20,7 +20,12 @@ export function useGameRuntime() {
   const session = useMemo(() => {
     const registry = new ContentRegistry();
     registry.loadManifest(GAME_CONTENT_MANIFEST);
-    return new GameSession(registry);
+    const nextSession = new GameSession(registry);
+    if ((import.meta as ImportMeta & { env: { DEV: boolean } }).env.DEV && new URLSearchParams(window.location.search).has('editorPlaytest')) {
+      const playtestSave = localStorage.getItem('__neon_editor_playtest');
+      if (playtestSave) nextSession.loadSave(playtestSave);
+    }
+    return nextSession;
   }, []);
 
   const [gameState, setGameState] = useState<GameState>(() => session.getState());
@@ -30,7 +35,7 @@ export function useGameRuntime() {
   useEffect(() => {
     const unsubs = [
       session.events.on('STATE_CHANGED', (newState) => {
-        setGameState({ ...newState });
+        setGameState(structuredClone(newState));
       }),
       session.events.on('STAT_CHECK_TRIGGERED', (resolution) => {
         setLastCheck(resolution);
@@ -45,6 +50,7 @@ export function useGameRuntime() {
   const activeMap = useMemo(() => {
     return session.getContentRegistry().getMap(gameState.world.currentMapId);
   }, [session, gameState.world.currentMapId]);
+  const currentWeather = useMemo(() => activeMap ? session.getCurrentWeather(activeMap.id) : undefined, [session, activeMap, gameState.time, gameState.world.weatherByScope]);
 
   const activeDialogueTree = useMemo(() => {
     if (!gameState.world.activeDialogueTreeId) return null;
@@ -94,6 +100,7 @@ export function useGameRuntime() {
   const activeCombatResolution = useMemo(() => {
     return session.getActiveCombatResolution();
   }, [session, gameState.world.mode]);
+  const combatAbilities = useMemo(() => session.getContentRegistry().abilities.getAll(), [session]);
 
   // --- Persistence & Savegame Handlers ---
 
@@ -135,11 +142,17 @@ export function useGameRuntime() {
     return result;
   };
 
+  const baseResidents = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[]).filter((npc) => ['companion','employee'].includes(npc.relationship.status)).map((runtime) => ({ runtime, name: session.getContentRegistry().getNPC(runtime.npcId)?.name ?? runtime.npcId }));
+  const baseJobs = session.getContentRegistry().baseJobs.getAll();
+
   return {
     session,
     gameState,
     resolvedPlayer,
     activeMap,
+    currentWeather,
+    baseResidents,
+    baseJobs,
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,
@@ -148,6 +161,7 @@ export function useGameRuntime() {
     activeEventState,
     activeCombatPreview,
     activeCombatResolution,
+    combatAbilities,
     lastCheck,
     saveStatus,
     openPoi: (poiId: string) => session.openPoi(poiId),
@@ -169,36 +183,26 @@ export function useGameRuntime() {
       session.startCombatEncounter(encounterId, previewFirst),
     attemptCombatEscape: () => session.attemptCombatEscape(),
     startTacticalCombat: () => session.startTacticalCombat(),
-    resolveCombatVictory: (rounds?: number) => session.resolveCombatVictory(undefined, rounds),
-    resolveCombatDefeat: () => session.resolveCombatDefeat(),
     takeLoot: (itemIds: string[], takeCredits?: boolean) => session.takeLoot(itemIds, takeCredits),
     executePostCombatAction: (
       enemyId: string,
       actionId: 'Search' | 'Restrain' | 'Capture' | 'Interrogate' | 'Release' | 'FinishOff'
     ) => session.executePostCombatAction(enemyId, actionId),
+    executeCombatAction: (action: import('@neon-ether/game-schema').CombatAction) => session.executeCombatAction(action),
+    getCharacterManagementActions: (npcId: string) => session.getCharacterManagementActions(npcId),
+    executeCharacterManagementCommand: (command: import('@neon-ether/game-schema').CharacterManagementCommand) =>
+      session.executeCharacterManagementCommand(command),
+    getBaseRoomOptions: (slotId: string) => session.getBaseRoomOptions(slotId),
+    getBaseUpgradeOptions: (roomInstanceId: string) => session.getBaseUpgradeOptions(roomInstanceId),
+    executeBaseManagementCommand: (command: import('@neon-ether/game-schema').BaseManagementCommand) =>
+      session.executeBaseManagementCommand(command),
     dismissCombatResult: () => session.dismissCombatResult(),
     saveToLocalSlot,
     loadFromLocalSlot,
     exportSaveJson,
     importSaveJson,
-    spendAp: (amount: number) => {
-      if (gameState.player.vitals.actionPointsCurrent >= amount) {
-        gameState.player.vitals.actionPointsCurrent -= amount;
-        session.logJournal('Combat', `Spent ${amount} AP. Remaining: ${gameState.player.vitals.actionPointsCurrent}`);
-        setGameState({ ...gameState });
-      }
-    },
-    spendEther: (amount: number) => {
-      if (gameState.player.vitals.currentEther >= amount) {
-        gameState.player.vitals.currentEther -= amount;
-        session.logJournal('EtherTech', `Channelled ${amount} Ether resonance.`);
-        setGameState({ ...gameState });
-      }
-    },
-    resetTurnAp: () => {
-      gameState.player.vitals.actionPointsCurrent = gameState.player.vitals.actionPointsMax;
-      session.logJournal('Combat', `Turn refreshed. AP restored to ${gameState.player.vitals.actionPointsMax}.`);
-      setGameState({ ...gameState });
-    },
+    spendAp: (amount: number) => session.spendPlayerResource('actionPoints', amount),
+    spendEther: (amount: number) => session.spendPlayerResource('ether', amount),
+    resetTurnAp: () => session.resetPlayerActionPoints(),
   };
 }

@@ -1,23 +1,107 @@
 [
   {
-    "id": "room_subgrid_vault_terminal",
-    "name": "Sub-Grid Terminal Hub",
-    "description": "Reinforced vault chamber housing quantum mainframe nodes and ether shielding relays.",
-    "tags": ["Vault", "ServerRoom", "HighSecurity"],
-    "roomType": "ServerRoom",
+    "id": "room_safehouse_workshop",
+    "name": "Safehouse Workshop",
+    "description": "A compact workbench bay for weapon maintenance and field synthesis.",
+    "tags": [
+      "Vault",
+      "ServerRoom",
+      "HighSecurity"
+    ],
+    "roomType": "Armory",
     "width": 6,
     "height": 6,
     "doorways": [
       {
-        "position": { "x": 0, "y": 3 },
+        "position": {
+          "x": 0,
+          "y": 3
+        },
         "facing": "West",
         "doorType": "Reinforced"
       }
     ],
-    "recommendedEnemies": ["enm_omnicorp_patrol", "enm_combat_drone_mk2"],
-    "recommendedPois": ["poi_sec09_terminal"],
-    "minSecurityLevel": 3,
+    "recommendedEnemies": [],
+    "recommendedPois": [
+      "poi_glassline_safehouse"
+    ],
+    "minSecurityLevel": 1,
     "isHazardous": false,
-    "ambientEtherBonus": 10
+    "ambientEtherBonus": 10,
+    "buildCost": {
+      "techScrap": 20,
+      "etherCells": 4
+    },
+    "requirements": [],
+    "capacity": {
+      "residents": 1,
+      "workers": 2,
+      "storage": 8
+    },
+    "effects": [
+      {
+        "type": "setFlag",
+        "flag": "base_workshop_built",
+        "value": true
+      }
+    ],
+    "allowedSlotTypes": [
+      "Utility",
+      "Standard"
+    ],
+    "maxInstances": 2
+  },
+  {
+    "id": "room_safehouse_medbay",
+    "name": "Safehouse Recovery Bay",
+    "description": "A shielded clinic with a biometric recovery cradle and clean ether feeds.",
+    "tags": [
+      "Safehouse",
+      "MedBay",
+      "Recovery"
+    ],
+    "roomType": "MedBay",
+    "width": 5,
+    "height": 5,
+    "doorways": [
+      {
+        "position": {
+          "x": 0,
+          "y": 2
+        },
+        "facing": "West",
+        "doorType": "Standard",
+        "connectsToRoomType": "Armory"
+      }
+    ],
+    "recommendedEnemies": [],
+    "recommendedPois": [
+      "poi_glassline_safehouse"
+    ],
+    "minSecurityLevel": 1,
+    "isHazardous": false,
+    "ambientEtherBonus": -5,
+    "buildCost": {
+      "techScrap": 15,
+      "biogel": 3
+    },
+    "requirements": [],
+    "capacity": {
+      "residents": 2,
+      "workers": 1,
+      "storage": 4
+    },
+    "effects": [
+      {
+        "type": "setFlag",
+        "flag": "base_medbay_built",
+        "value": true
+      }
+    ],
+    "allowedSlotTypes": [
+      "Support",
+      "Standard"
+    ],
+    "maxInstances": 1
   }
 ]

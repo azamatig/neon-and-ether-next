@@ -6,9 +6,13 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "build:editor": "vite build --mode editor",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "check:architecture": "bun scripts/check-architecture.ts",
+    "validate:content": "bun scripts/validate-content.ts",
+    "playtest:slice": "bun scripts/playtest-vertical-slice.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

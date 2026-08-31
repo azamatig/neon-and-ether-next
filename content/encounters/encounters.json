@@ -1,98 +1,272 @@
 [
   {
-    "id": "enc_omnicorp_patrol_sector09",
-    "name": "OmniCorp Sector Enforcers",
-    "description": "A rapid-response security squad equipped with shock carbines, kinetic ballistic shielding, and suppression protocols.",
-    "tags": ["OmniCorp", "Enforcers", "Sector09", "Patrol"],
+    "id": "enc_glassline_transit_standoff",
+    "name": "Transit Platform Standoff",
+    "description": "Scavengers challenge anyone crossing their platform. The confrontation can be escaped.",
+    "tags": [
+      "Avoidable",
+      "Transit",
+      "Humanoid"
+    ],
     "mapId": "map_slums_sec09",
     "enemyGroups": [
       {
-        "enemyId": "enm_omnicorp_patrol",
+        "enemyId": "enm_transit_scavenger",
         "count": 2,
-        "spawnPosition": { "x": 6, "y": 4 }
+        "threatTier": "Standard",
+        "isBoss": false,
+        "isUnknown": false
       }
     ],
     "environment": {
-      "ambientEtherLevel": 35,
-      "lighting": "LowLight",
-      "hazardDescription": "Ruptured high-voltage neon cables sparking on wet asphalt."
+      "ambientEtherLevel": 20,
+      "lighting": "Dim",
+      "hazardDescription": "Live rails flicker beneath ankle-deep water.",
+      "inheritWorldEnvironment": false,
+      "environmentTags": [
+        "indoor",
+        "electrical_hazard"
+      ],
+      "gameplayModifiers": {}
     },
-    "threatLevel": 2,
+    "threatLevel": 1,
     "escapeRules": {
       "allowed": true,
       "conditions": [],
       "check": {
         "stat": "reflexes",
-        "difficulty": 12,
-        "apCost": 2
+        "difficulty": 11,
+        "apCost": 1
+      },
+      "outcomeOnEscape": {
+        "type": "poi",
+        "poiId": "poi_glassline_clinic",
+        "mapId": "map_slums_sec09"
       }
     },
     "lootTable": [
       {
-        "itemId": "con_ether_vial",
-        "chance": 0.9,
-        "minQuantity": 1,
-        "maxQuantity": 3
-      },
-      {
-        "itemId": "itm_cyberware_fiber",
-        "chance": 0.6,
+        "itemId": "itm_signal_scrap",
+        "dropRate": 1,
         "minQuantity": 1,
         "maxQuantity": 2
-      },
-      {
-        "itemId": "wpn_plasma_pistol",
-        "chance": 0.35,
-        "minQuantity": 1,
-        "maxQuantity": 1
       }
     ],
-    "xpReward": 150,
-    "creditsReward": 220
+    "xpReward": 80,
+    "creditsReward": {
+      "min": 20,
+      "max": 45
+    },
+    "initialConditions": [],
+    "modifiers": [],
+    "victoryOutcome": {
+      "type": "showResult",
+      "title": "Platform Secured",
+      "resultText": "The surviving scavengers lower their weapons. The service tunnel is open.",
+      "nextOutcome": {
+        "type": "poi",
+        "poiId": "poi_glassline_transit",
+        "mapId": "map_slums_sec09"
+      }
+    },
+    "survivingEnemyActions": [
+      {
+        "id": "Search",
+        "label": "Search packs",
+        "icon": "Search",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "addItem",
+            "itemId": "itm_signal_scrap",
+            "quantity": 1
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "Salvage",
+          "resultText": "You recover a clean strip of resonant conductor."
+        }
+      },
+      {
+        "id": "Release",
+        "label": "Release survivors",
+        "icon": "User",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "changeFactionReputation",
+            "factionId": "fac_undercity_drifters",
+            "delta": 5
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "Mercy",
+          "resultText": "Word of your restraint will travel through the tunnels."
+        }
+      },
+      {
+        "id": "Capture",
+        "label": "Restrain Ash Crow",
+        "icon": "Lock",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "clinic_needs_resident",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "ash_crow_captured",
+            "value": true
+          }
+        ]
+      }
+    ]
   },
   {
-    "id": "enc_subgrid_defense_automata",
-    "name": "Sub-Grid Defense Automata",
-    "description": "Autonomous security droids guarding the optical terminal vault with heavy ether-pulse blasters.",
-    "tags": ["Automata", "SubGrid", "Vault", "Boss"],
+    "id": "enc_glassline_annex_core",
+    "name": "Glassline Annex Lockdown",
+    "description": "The core security team seals the chamber. There is no retreat.",
+    "tags": [
+      "Mandatory",
+      "OmniCorp",
+      "Finale"
+    ],
     "mapId": "map_slums_sec09",
     "enemyGroups": [
       {
         "enemyId": "enm_omnicorp_patrol",
+        "count": 2,
+        "threatTier": "Standard",
+        "isBoss": false,
+        "isUnknown": false
+      },
+      {
+        "enemyId": "enm_omnicorp_ether_adept",
         "count": 1,
-        "spawnPosition": { "x": 5, "y": 3 }
+        "threatTier": "Elite",
+        "isBoss": true,
+        "isUnknown": false
       }
     ],
     "environment": {
-      "ambientEtherLevel": 60,
-      "lighting": "Dark",
-      "hazardDescription": "Pulsing ether nodes emit sporadic EMP shocks."
+      "ambientEtherLevel": 55,
+      "lighting": "Strobe",
+      "hazardDescription": "Ether capacitors discharge across the chamber.",
+      "inheritWorldEnvironment": false,
+      "environmentTags": [
+        "indoor",
+        "ether_hazard"
+      ],
+      "gameplayModifiers": {
+        "etherResistance": -0.1
+      }
     },
     "threatLevel": 3,
     "escapeRules": {
-      "allowed": true,
+      "allowed": false,
       "conditions": [],
-      "check": {
-        "stat": "mind",
-        "difficulty": 13,
-        "apCost": 3
-      }
+      "disabledReason": "The annex blast doors have sealed."
     },
     "lootTable": [
       {
-        "itemId": "cyb_neural_jack_v1",
-        "chance": 0.8,
+        "itemId": "con_trauma_patch",
+        "dropRate": 1,
         "minQuantity": 1,
-        "maxQuantity": 1
+        "maxQuantity": 2
       },
       {
-        "itemId": "con_ether_vial",
-        "chance": 1.0,
-        "minQuantity": 2,
-        "maxQuantity": 4
+        "itemId": "itm_glassline_access_shard",
+        "dropRate": 1,
+        "minQuantity": 1,
+        "maxQuantity": 1
       }
     ],
-    "xpReward": 250,
-    "creditsReward": 400
+    "xpReward": 240,
+    "creditsReward": {
+      "min": 180,
+      "max": 240
+    },
+    "initialConditions": [],
+    "modifiers": [
+      {
+        "id": "annex_shrapnel_risk",
+        "label": "Capacitor Shrapnel",
+        "description": "The damaged archive core may inflict a persistent wound.",
+        "conditions": [
+          {
+            "type": "randomChance",
+            "probability": 0.35
+          }
+        ],
+        "effects": [
+          {
+            "type": "applyStatusEffect",
+            "statusEffectId": "status_shrapnel_wound",
+            "durationTurns": 3
+          }
+        ]
+      }
+    ],
+    "victoryOutcome": {
+      "type": "event",
+      "eventId": "evt_glassline_final_choice"
+    },
+    "survivingEnemyActions": [
+      {
+        "id": "Search",
+        "label": "Search the warden",
+        "icon": "Search",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "addItem",
+            "itemId": "itm_glassline_access_shard",
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "id": "Restrain",
+        "label": "Restrain the warden",
+        "icon": "Lock",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "warden_restrained",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "Release",
+        "label": "Release the warden",
+        "icon": "User",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "changeFactionReputation",
+            "factionId": "fac_omnicorp",
+            "delta": 8
+          },
+          {
+            "type": "setFlag",
+            "flag": "warden_released",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "defeatOutcome": {
+      "type": "poi",
+      "poiId": "poi_glassline_clinic",
+      "mapId": "map_slums_sec09"
+    }
   }
 ]

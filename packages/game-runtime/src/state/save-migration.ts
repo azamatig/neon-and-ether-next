@@ -161,14 +161,14 @@ export class SaveMigrationRegistry {
           createdAt: oldState.createdAt ?? new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           player: {
-            characterId: oldState.player?.id ?? 'char_protagonist',
+            characterId: oldState.player?.id ?? 'player',
             name: oldState.player?.name ?? 'Vane',
             title: oldState.player?.title ?? 'Technomancer Drifter',
             level: oldState.player?.level ?? 1,
             experience: oldState.player?.experience ?? 0,
             attributePointsUnspent: oldState.player?.attributePointsUnspent ?? 0,
             skillPointsUnspent: oldState.player?.skillPointsUnspent ?? 0,
-            factionId: oldState.player?.factionId ?? 'fac_undercity_drifters',
+            factionId: oldState.player?.factionId ?? 'Neutral',
             attributes: oldState.player?.attributes ?? {
               body: 12,
               reflexes: 14,
@@ -204,8 +204,8 @@ export class SaveMigrationRegistry {
             activeStatusEffects: [],
           },
           world: {
-            currentMapId: oldState.currentMapId ?? 'map_slums_sec09',
-            discoveredMapIds: [oldState.currentMapId ?? 'map_slums_sec09'],
+            currentMapId: oldState.currentMapId ?? '',
+            discoveredMapIds: [oldState.currentMapId ?? ''],
             flags: oldState.flags ?? {},
             activeDialogueTreeId: oldState.activeDialogueTreeId ?? null,
             activeDialogueNodeId: oldState.activeDialogueNodeId ?? null,
@@ -219,10 +219,13 @@ export class SaveMigrationRegistry {
           quests: {},
           factions: {},
           base: {
-            baseId: 'base_hideout_sec09',
-            name: 'Sector 09 Safehouse',
+            baseId: 'base_player',
+            name: 'Player Base',
             rooms: {},
-            resources: { etherCells: 15, techScrap: 40, biogel: 5 },
+            roomSlots: {},
+            residentNpcIds: [],
+            storage: { items: [], capacity: 20 },
+            resources: {},
             unlockedUpgrades: [],
             stationedCompanionIds: [],
           },
@@ -236,11 +239,14 @@ export class SaveMigrationRegistry {
           },
           companions: Array.isArray(oldState.companions) ? oldState.companions : [],
           combat: oldState.combat ?? {
+            encounterId: null,
             isActive: false,
             roundNumber: 0,
             turnOrder: [],
             activeTurnIndex: 0,
-            units: {},
+            combatants: {},
+            log: [],
+            outcome: null,
           },
           journal: Array.isArray(oldState.journal) ? oldState.journal : [],
         };
@@ -250,7 +256,7 @@ export class SaveMigrationRegistry {
           for (const [npcId, npcData] of Object.entries(oldState.worldNpcs as Record<string, any>)) {
             migrated.npcs[npcId] = {
               npcId,
-              mapId: oldState.currentMapId ?? 'map_slums_sec09',
+              mapId: oldState.currentMapId ?? '',
               isAlive: (npcData.vitals?.currentHp ?? 1) > 0,
               currentHp: npcData.vitals?.currentHp ?? 25,
               maxHp: npcData.vitals?.maxHp ?? 25,
@@ -262,7 +268,14 @@ export class SaveMigrationRegistry {
               isHostile: false,
               isMerchant: Boolean(npcData.isMerchant),
               isCompanion: Boolean(npcData.isCompanion),
-              relationship: oldState.relationships?.[npcId] ?? 0,
+              relationship: {
+                status: npcData.isCompanion ? 'companion' : 'independent',
+                affinity: oldState.relationships?.[npcId] ?? 0,
+                trust: 0,
+                fear: 0,
+                loyalty: 0,
+              },
+              assignment: { jobId: null, roomId: null, partySlotId: null },
               flags: {},
             };
           }
@@ -308,10 +321,19 @@ export class SaveMigrationRegistry {
           for (const [roomId, rData] of Object.entries(oldState.baseRooms as Record<string, any>)) {
             migrated.base.rooms[roomId] = {
               roomId,
+              definitionId: rData.definitionId ?? roomId,
+              slotId: rData.slotId ?? `legacy_slot_${roomId}`,
               isBuilt: Boolean(rData.built),
               level: rData.level ?? 1,
               assignedNpcIds: [],
               productionProgress: 0,
+              installedUpgradeIds: [],
+              capacity: { residents: 0, workers: 0, storage: 0 },
+            };
+            migrated.base.roomSlots[`legacy_slot_${roomId}`] = {
+              slotId: `legacy_slot_${roomId}`,
+              slotType: 'Legacy',
+              roomInstanceId: roomId,
             };
           }
         }

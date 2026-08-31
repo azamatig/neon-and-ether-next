@@ -19,7 +19,7 @@ import { BatchConditionResult, evaluateConditions } from '../conditions/conditio
 import { ConditionRegistry, defaultConditionRegistry } from '../conditions/condition-registry.ts';
 import { BatchEffectExecutionResult, EffectExecutor, defaultEffectExecutor } from '../effects/effect-executor.ts';
 import { GameplayOutcomeEngine, defaultGameplayOutcomeEngine } from '../resolution/gameplay-outcome-engine.ts';
-import { resolveStatCheck, StatCheckResolution } from '../resolution/stat-check.ts';
+import { SkillCheckSystem } from '../resolution/skill-check.ts';
 
 export interface ResolvedEventChoice extends EventChoice {
   isAvailable: boolean;
@@ -27,7 +27,7 @@ export interface ResolvedEventChoice extends EventChoice {
   unmetReason?: string;
   statCheckInfo?: {
     stat: string;
-    difficulty: number;
+    difficulty: string;
   };
 }
 
@@ -69,6 +69,15 @@ export class EventRuntime {
     this.diceRoller = diceRoller;
   }
 
+  /** Resolves authored trigger and availability rules without starting an event. */
+  public canTriggerEvent(event: GameEvent, state: GameState, contentRegistry: ContentRegistry): BatchConditionResult {
+    return evaluateConditions(
+      [...(event.conditions ?? []), ...(event.triggerConditions ?? []), ...(event.availabilityConditions ?? [])],
+      { state, contentRegistry },
+      this.conditionRegistry
+    );
+  }
+
   /**
    * Initializes and starts a GameEvent.
    */
@@ -82,6 +91,11 @@ export class EventRuntime {
     const event = contentRegistry.getEvent(eventId);
     if (!event) {
       if (logJournal) logJournal('System', `Failed to start event [${eventId}]: Event not found.`);
+      return false;
+    }
+    const availability = this.canTriggerEvent(event, state, contentRegistry);
+    if (!availability.allMet) {
+      if (logJournal) logJournal('System', `Event [${eventId}] is unavailable: ${availability.failedConditions[0]?.reason ?? 'conditions unmet'}.`);
       return false;
     }
 
@@ -173,7 +187,7 @@ export class EventRuntime {
         unmetReason,
         statCheckInfo: choice.check
           ? {
-              stat: choice.check.stat.toUpperCase(),
+              stat: `${choice.check.attribute}${choice.check.skill ? ` / ${choice.check.skill}` : ''}`,
               difficulty: choice.check.difficulty,
             }
           : undefined,
@@ -266,15 +280,8 @@ export class EventRuntime {
     // 1. If choice includes a stat check
     if (choice.check) {
       const checkDef = choice.check;
-      if (['body', 'reflexes', 'mind', 'etherTech', 'presence'].includes(checkDef.stat)) {
-        const rollRes = resolveStatCheck(
-          checkDef.stat.toUpperCase() as any,
-          state.player.attributes,
-          'Moderate',
-          this.diceRoller,
-          checkDef.difficulty,
-          choice.text
-        );
+      {
+        const rollRes = new SkillCheckSystem(this.diceRoller).resolve(checkDef, state.player);
 
         if (logJournal) {
           logJournal('SkillCheck', rollRes.logSummary);
@@ -283,6 +290,9 @@ export class EventRuntime {
         if (rollRes.isPassed) {
           effectsToRun = [...effectsToRun, ...(checkDef.passEffects ?? [])];
           if (checkDef.passOutcome) nextOutcome = checkDef.passOutcome;
+        } else if (rollRes.result === 'partialSuccess') {
+          effectsToRun = [...effectsToRun, ...(checkDef.partialEffects ?? [])];
+          if (checkDef.partialOutcome) nextOutcome = checkDef.partialOutcome;
         } else {
           effectsToRun = [...(checkDef.failEffects ?? [])];
           if (checkDef.failOutcome) nextOutcome = checkDef.failOutcome;

@@ -1,25 +1,93 @@
 [
   {
-    "id": "rcp_ether_vial_refinement",
-    "name": "Stabilized Ether Vial Synthesis",
-    "description": "Refines raw ether residue into injectable stim vials using standard field laboratory catalysts.",
-    "tags": ["Synthesis", "Medical", "Consumable"],
-    "category": "ChemSynthesis",
-    "requiredStationType": "FieldCrafting",
-    "ingredients": [
+    "id": "rec_bypass_spike",
+    "name": "Assemble Bypass Spike",
+    "description": "Splice resonant conductor into a disposable access probe.",
+    "tags": [
+      "Glassline",
+      "Infiltration"
+    ],
+    "category": "consumable",
+    "inputs": [
+      {
+        "itemId": "itm_signal_scrap",
+        "quantity": 2
+      }
+    ],
+    "requirements": [
+      {
+        "type": "skill",
+        "skillId": "intrusion",
+        "minimum": 1
+      }
+    ],
+    "toolItemIds": [],
+    "roomIds": [
+      "room_safehouse_workshop"
+    ],
+    "availableAt": [
+      "base",
+      "room"
+    ],
+    "output": {
+      "itemId": "itm_bypass_spike",
+      "quantity": 1
+    },
+    "timeCost": {
+      "turns": 1
+    },
+    "conditions": [],
+    "effects": [
+      {
+        "type": "advanceTime",
+        "turns": 1,
+        "minutes": 30
+      }
+    ],
+    "discoveredByDefault": true
+  },
+  {
+    "id": "rec_trauma_patch",
+    "name": "Sterilize Trauma Patch",
+    "description": "Combine clinic coolant and an ether vial into an emergency dressing.",
+    "tags": [
+      "Medical"
+    ],
+    "category": "consumable",
+    "inputs": [
+      {
+        "itemId": "itm_clinic_coolant",
+        "quantity": 1
+      },
       {
         "itemId": "con_ether_vial",
         "quantity": 1
       }
     ],
-    "resultItemId": "con_ether_vial",
-    "resultQuantity": 2,
-    "craftingTimeTurns": 2,
-    "etherCost": 5,
-    "requiredSkill": {
-      "stat": "EtherTech",
-      "minLevel": 12
+    "requirements": [
+      {
+        "type": "skill",
+        "skillId": "medicine",
+        "minimum": 1
+      }
+    ],
+    "toolItemIds": [],
+    "roomIds": [
+      "room_safehouse_medbay"
+    ],
+    "availableAt": [
+      "base",
+      "room"
+    ],
+    "output": {
+      "itemId": "con_trauma_patch",
+      "quantity": 2
     },
+    "timeCost": {
+      "turns": 1
+    },
+    "conditions": [],
+    "effects": [],
     "discoveredByDefault": true
   }
 ]

@@ -17,6 +17,7 @@ import {
   PostCombatResolution,
 } from '@neon-ether/game-schema';
 import { DiceRoller } from '@neon-ether/engine';
+import { InventorySystem } from '../inventory/inventory-system.ts';
 import { GameState } from '../state/game-state.ts';
 import { ContentRegistry } from '../content/content-registry.ts';
 import { evaluateConditions } from '../conditions/condition-evaluator.ts';
@@ -285,8 +286,8 @@ export class CombatEncounterEngine {
     const encounterName = encounter?.name ?? 'Hostile Encounter';
 
     // 1. Calculate XP
-    const xpReward = encounter?.xpReward ?? 120;
-    state.player.experience += xpReward;
+    const xpReward = encounter?.xpReward ?? 0;
+    this.effectExecutor.execute({ type:'grantRewards', xp:xpReward, credits:0, items:[], skillXp:{}, perkPoints:0 }, { state, contentRegistry, logJournal });
 
     // 2. Generate Loot from drops
     const availableLoot: InventoryItemSlot[] = [];
@@ -301,11 +302,6 @@ export class CombatEncounterEngine {
           });
         }
       }
-    }
-
-    // Always ensure at least some tactical loot if table empty
-    if (availableLoot.length === 0) {
-      availableLoot.push({ itemId: 'con_ether_vial', quantity: 2, isEquipped: false });
     }
 
     // Random Credits reward
@@ -447,8 +443,9 @@ export class CombatEncounterEngine {
 
     // Transfer Credits
     if (takeAllCredits && activeRes.creditsFound > 0) {
-      state.player.inventory.credits = (state.player.inventory.credits ?? 0) + activeRes.creditsFound;
-      if (logJournal) logJournal('World', `Looted ${activeRes.creditsFound} credits.`);
+      const credits = activeRes.creditsFound;
+      this.effectExecutor.execute({ type:'grantRewards', xp:0, credits, items:[], skillXp:{}, perkPoints:0 }, { state, contentRegistry, logJournal });
+      if (logJournal) logJournal('World', `Looted ${credits} credits.`);
       activeRes.creditsFound = 0;
     }
 
@@ -456,13 +453,8 @@ export class CombatEncounterEngine {
     const remainingLoot: InventoryItemSlot[] = [];
     for (const slot of activeRes.availableLoot) {
       if (selectedItemIds.includes(slot.itemId)) {
-        // Add to player inventory
-        const existing = state.player.inventory.items.find((i) => i.itemId === slot.itemId && !i.isEquipped);
-        if (existing) {
-          existing.quantity += slot.quantity;
-        } else {
-          state.player.inventory.items.push({ ...slot });
-        }
+        const transfer = new InventorySystem(contentRegistry).add(state.player.inventory, slot.itemId, slot.quantity);
+        if (!transfer.success) { remainingLoot.push(slot); continue; }
         const itemDef = contentRegistry.getItem(slot.itemId);
         if (logJournal) logJournal('World', `Looted: ${itemDef?.name ?? slot.itemId} ×${slot.quantity}.`);
       } else {
@@ -491,8 +483,17 @@ export class CombatEncounterEngine {
     let summaryText = '';
     switch (actionId) {
       case 'Search':
-        summaryText = `Searched ${enemyName}. Recovered encrypted Syndicate comm-pad.`;
-        state.player.inventory.items.push({ itemId: 'cyb_neural_jack_v1', quantity: 1, isEquipped: false });
+        summaryText = `Searched ${enemyName} for recoverable equipment.`;
+        const searchableDrop = targetEnemy
+          ? contentRegistry.getEnemy(targetEnemy.enemyId)?.lootTable[0]
+          : undefined;
+        if (searchableDrop) {
+          state.player.inventory.items.push({
+            itemId: searchableDrop.itemId,
+            quantity: searchableDrop.minQuantity,
+            isEquipped: false,
+          });
+        }
         if (targetEnemy) targetEnemy.canBeSearched = false;
         break;
 

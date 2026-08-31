@@ -7,6 +7,7 @@ import { Effect } from '@neon-ether/game-schema';
 import { EffectExecutionContext } from './effect-context.ts';
 import { EffectExecutionResult } from './effect-handler.ts';
 import { defaultEffectRegistry, EffectRegistry } from './effect-registry.ts';
+import type { RuntimeTraceSink } from '../observability/runtime-trace.ts';
 
 export interface BatchEffectExecutionResult {
   success: boolean;
@@ -19,7 +20,7 @@ export interface BatchEffectExecutionResult {
 export class EffectExecutor {
   private registry: EffectRegistry;
 
-  constructor(registry: EffectRegistry = defaultEffectRegistry) {
+  constructor(registry: EffectRegistry = defaultEffectRegistry, private trace?: RuntimeTraceSink) {
     this.registry = registry;
   }
 
@@ -34,34 +35,38 @@ export class EffectExecutor {
     effect: Effect,
     context: EffectExecutionContext
   ): EffectExecutionResult {
+    const finish = (result: EffectExecutionResult): EffectExecutionResult => {
+      this.trace?.({ kind: 'EffectExecuted', message: `${result.type}: ${result.success ? 'executed' : 'failed'}`, details: { ...result } });
+      return result;
+    };
     if (!effect || !effect.type) {
-      return {
+      return finish({
         success: false,
         type: 'unknown',
         message: 'Invalid effect definition: missing effect.type',
         error: 'INVALID_EFFECT',
-      };
+      });
     }
 
     const handler = this.registry.getHandler(effect.type);
     if (!handler) {
-      return {
+      return finish({
         success: false,
         type: effect.type,
         message: `No registered effect handler for type '${effect.type}'`,
         error: 'HANDLER_NOT_FOUND',
-      };
+      });
     }
 
     try {
-      return handler(effect, context);
+      return finish(handler(effect, context));
     } catch (err: any) {
-      return {
+      return finish({
         success: false,
         type: effect.type,
         message: `Unhandled exception executing effect '${effect.type}': ${err?.message ?? String(err)}`,
         error: 'EXECUTION_EXCEPTION',
-      };
+      });
     }
   }
 

@@ -85,3 +85,12 @@ The production Map and POI screens now use the focused exploration composition:
 ## Architecture boundary
 
 These components render immutable values and emit callbacks only. They must never roll dice, evaluate conditions, spend AP, resolve outcomes, mutate content, or import concrete content. The runtime remains the sole source of gameplay truth.
+
+
+## Production shell migration status
+
+All runtime modes now mount through one `GameShell`. `standard`, `immersive`, and `combat` are presentation modes of that shell rather than separate applications. Market, Workbench, and Base screens return through the runtime `returnToOrigin` outcome; no screen hardcodes a map transition. Dialogue and Event presentations no longer render the map or journal beneath them.
+
+Removed after reference verification: the production `TacticalHUD` and `TerminalLog` components. They were the obsolete top-HUD/sidebar pair responsible for the legacy gameplay frame.
+
+Remaining production components that still contain incremental legacy utility styling internally: `CombatPreviewContainer`, `CombatResultContainer`, `TurnBasedCombatScreen`, `BaseScreen`, `ActionResultModal`, and `SaveStateModal`. They are no longer wrappers or navigation shells, and all render inside `GameShell`; deeper visual refinement can be performed without changing composition or runtime flow.

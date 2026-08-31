@@ -15,6 +15,7 @@ import {
   FactionRuntimeState,
   FactionStanding,
   GameJournalEntry,
+  GameContent,
   GameMode,
   GameState,
   InventoryItemSlot,
@@ -65,11 +66,7 @@ export { CURRENT_SAVE_SCHEMA_VERSION };
 
 export function createInitialInventoryState(overrides: Partial<InventoryState> = {}): InventoryState {
   return {
-    items: overrides.items ?? [
-      { itemId: 'wpn_thermal_pistol', quantity: 1, isEquipped: true },
-      { itemId: 'cyb_neural_jack_v1', quantity: 1, isEquipped: true },
-      { itemId: 'con_ether_vial', quantity: 3, isEquipped: false },
-    ],
+    items: overrides.items ?? [],
     credits: overrides.credits ?? 500,
     maxSlots: overrides.maxSlots ?? 30,
     maxWeight: overrides.maxWeight ?? 100,
@@ -78,14 +75,14 @@ export function createInitialInventoryState(overrides: Partial<InventoryState> =
 
 export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
-    characterId: overrides.characterId ?? 'char_protagonist',
-    name: overrides.name ?? 'Vane',
-    title: overrides.title ?? 'Technomancer Drifter',
+    characterId: overrides.characterId ?? 'player',
+    name: overrides.name ?? 'Player',
+    title: overrides.title ?? 'Drifter',
     level: overrides.level ?? 1,
     experience: overrides.experience ?? 0,
     attributePointsUnspent: overrides.attributePointsUnspent ?? 0,
     skillPointsUnspent: overrides.skillPointsUnspent ?? 0,
-    factionId: overrides.factionId ?? 'fac_undercity_drifters',
+    factionId: overrides.factionId ?? 'Neutral',
     attributes: overrides.attributes ?? {
       body: 12,
       reflexes: 14,
@@ -112,68 +109,12 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
 }
 
 export function createInitialWorldState(overrides: Partial<WorldState> = {}): WorldState {
-  const initialPois: Record<string, PoiRuntimeState> = {
-    poi_sec09_hideout: {
-      poiId: 'poi_sec09_hideout',
-      status: 'Visited',
-      isDiscovered: true,
-      isVisited: true,
-      isLocked: false,
-      completedActionIds: [],
-      disabledActionIds: [],
-      flags: {},
-    },
-    poi_sec09_market: {
-      poiId: 'poi_sec09_market',
-      status: 'Discovered',
-      isDiscovered: true,
-      isVisited: false,
-      isLocked: false,
-      completedActionIds: [],
-      disabledActionIds: [],
-      flags: {},
-    },
-    poi_sec09_terminal: {
-      poiId: 'poi_sec09_terminal',
-      status: 'Discovered',
-      isDiscovered: true,
-      isVisited: false,
-      isLocked: false,
-      completedActionIds: [],
-      disabledActionIds: [],
-      flags: {},
-    },
-    poi_ether_fissure: {
-      poiId: 'poi_ether_fissure',
-      status: 'Discovered',
-      isDiscovered: true,
-      isVisited: false,
-      isLocked: false,
-      completedActionIds: [],
-      disabledActionIds: [],
-      flags: {},
-    },
-    poi_omnicorp_checkpoint: {
-      poiId: 'poi_omnicorp_checkpoint',
-      status: 'Discovered',
-      isDiscovered: true,
-      isVisited: false,
-      isLocked: false,
-      completedActionIds: [],
-      disabledActionIds: [],
-      flags: {},
-    },
-  };
-
   return {
-    currentMapId: overrides.currentMapId ?? 'map_slums_sec09',
-    currentPoiId: overrides.currentPoiId ?? 'poi_sec09_hideout',
+    currentMapId: overrides.currentMapId ?? '',
+    currentPoiId: overrides.currentPoiId ?? null,
     selectedPoiId: overrides.selectedPoiId ?? null,
-    discoveredMapIds: overrides.discoveredMapIds ?? ['map_slums_sec09'],
-    flags: overrides.flags ?? {
-      intro_seen: true,
-      fixer_contract_offered: false,
-    },
+    discoveredMapIds: overrides.discoveredMapIds ?? [],
+    flags: overrides.flags ?? {},
     activeDialogueTreeId: overrides.activeDialogueTreeId ?? null,
     activeDialogueNodeId: overrides.activeDialogueNodeId ?? null,
     activeEventId: overrides.activeEventId ?? undefined,
@@ -181,7 +122,7 @@ export function createInitialWorldState(overrides: Partial<WorldState> = {}): Wo
     activeEncounterId: overrides.activeEncounterId ?? undefined,
     activeOriginContext: overrides.activeOriginContext ?? undefined,
     mode: overrides.mode ?? 'Map',
-    pois: overrides.pois ?? initialPois,
+    pois: overrides.pois ?? {},
     containers: overrides.containers ?? {},
     doors: overrides.doors ?? {},
     ambientEtherModifier: overrides.ambientEtherModifier ?? 1.0,
@@ -207,7 +148,14 @@ export function createInitialNpcRuntimeState(
     isHostile: overrides.isHostile ?? false,
     isMerchant: overrides.isMerchant ?? false,
     isCompanion: overrides.isCompanion ?? false,
-    relationship: overrides.relationship ?? 0,
+    relationship: overrides.relationship ?? {
+      status: overrides.isCompanion ? 'companion' : 'independent',
+      affinity: 0,
+      trust: 0,
+      fear: 0,
+      loyalty: 0,
+    },
+    assignment: overrides.assignment ?? { jobId: null, roomId: null, partySlotId: null },
     flags: overrides.flags ?? {},
   };
 }
@@ -252,22 +200,13 @@ export function createInitialFactionRuntimeState(
 
 export function createInitialBaseState(overrides: Partial<BaseState> = {}): BaseState {
   return {
-    baseId: overrides.baseId ?? 'base_hideout_sec09',
-    name: overrides.name ?? 'Sector 09 Safehouse',
-    rooms: overrides.rooms ?? {
-      room_workbench: {
-        roomId: 'room_workbench',
-        isBuilt: true,
-        level: 1,
-        assignedNpcIds: [],
-        productionProgress: 0,
-      },
-    },
-    resources: overrides.resources ?? {
-      etherCells: 15,
-      techScrap: 40,
-      biogel: 5,
-    },
+    baseId: overrides.baseId ?? 'base_player',
+    name: overrides.name ?? 'Player Base',
+    rooms: overrides.rooms ?? {},
+    roomSlots: overrides.roomSlots ?? {},
+    residentNpcIds: overrides.residentNpcIds ?? [],
+    storage: overrides.storage ?? { items: [], capacity: 20 },
+    resources: overrides.resources ?? {},
     unlockedUpgrades: overrides.unlockedUpgrades ?? [],
     stationedCompanionIds: overrides.stationedCompanionIds ?? [],
   };
@@ -294,28 +233,130 @@ export function createInitialGameState(overrides: Partial<GameState> = {}): Game
     world: overrides.world ?? createInitialWorldState(),
     npcs: overrides.npcs ?? {},
     quests: overrides.quests ?? {},
-    factions: overrides.factions ?? {
-      fac_undercity_drifters: createInitialFactionRuntimeState('fac_undercity_drifters', { reputation: 25 }),
-      fac_omnicorp_sec: createInitialFactionRuntimeState('fac_omnicorp_sec', { reputation: -10 }),
-      fac_obsidian_syndicate: createInitialFactionRuntimeState('fac_obsidian_syndicate', { reputation: 10 }),
-    },
+    factions: overrides.factions ?? {},
     base: overrides.base ?? createInitialBaseState(),
     time: overrides.time ?? createInitialTimeState(),
     companions: overrides.companions ?? [],
     combat: overrides.combat ?? {
+      encounterId: null,
       isActive: false,
       roundNumber: 0,
       turnOrder: [],
       activeTurnIndex: 0,
-      units: {},
+      combatants: {},
+      log: [],
+      outcome: null,
     },
     journal: overrides.journal ?? [
       {
-        id: 'j_001',
+        id: 'journal_session_boot',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
         category: 'System',
-        text: 'Session booted. Neural link synced to Sector 09 grid.',
+        text: 'Session booted.',
       },
     ],
   };
+}
+
+/** Builds a fresh runtime snapshot from injected content without campaign IDs. */
+export function createInitialGameStateFromContent(content: GameContent): GameState {
+  const playerBlueprint = content.npcs.find((npc) => npc.isPlayer) ?? content.npcs[0];
+  const initialMap = content.maps[0];
+  const initialPoiId = initialMap?.defaultPoiId ?? initialMap?.poiIds[0] ?? null;
+  const baseDefinition = content.bases[0];
+  const player = playerBlueprint
+    ? createInitialPlayerState({
+        characterId: playerBlueprint.id,
+        name: playerBlueprint.name,
+        title: playerBlueprint.title,
+        level: playerBlueprint.level,
+        factionId: playerBlueprint.factionId,
+        attributes: { ...playerBlueprint.attributes },
+        vitals: { ...playerBlueprint.vitals },
+        position: { ...playerBlueprint.position },
+        facing: playerBlueprint.facing,
+        inventory: createInitialInventoryState({
+          items: playerBlueprint.inventory.map((slot) => ({ ...slot })),
+        }),
+      })
+    : createInitialPlayerState({ inventory: createInitialInventoryState({ items: [] }) });
+
+  const pois = Object.fromEntries(content.pois.map((poi) => [poi.id, {
+    poiId: poi.id,
+    status: poi.id === initialPoiId ? 'Visited' as const : 'Discovered' as const,
+    isDiscovered: true,
+    isVisited: poi.id === initialPoiId,
+    isLocked: false,
+    completedActionIds: [],
+    disabledActionIds: [],
+    flags: {},
+  }]));
+  const npcs = Object.fromEntries(content.npcs.filter((npc) => !npc.isPlayer).map((npc) => [
+    npc.id,
+    createInitialNpcRuntimeState(npc.id, initialMap?.id ?? '', {
+      currentHp: npc.vitals.currentHp,
+      maxHp: npc.vitals.maxHp,
+      currentEther: npc.vitals.currentEther,
+      position: { ...npc.position },
+      facing: npc.facing,
+      isMerchant: npc.isMerchant,
+      isCompanion: npc.isCompanion,
+      dialogueTreeIdOverride: npc.dialogueTreeId,
+      relationship: npc.initialRelationship,
+    }),
+  ]));
+  const factions = Object.fromEntries(content.factions.map((faction) => [
+    faction.id,
+    createInitialFactionRuntimeState(faction.id, { reputation: faction.defaultPlayerReputation }),
+  ]));
+  const startingRooms = baseDefinition?.startingRooms ?? [];
+  const rooms = Object.fromEntries(startingRooms.flatMap((startingRoom) => {
+    const definition = content.rooms.find((room) => room.id === startingRoom.roomDefinitionId);
+    return definition ? [[startingRoom.roomInstanceId, {
+      roomId: startingRoom.roomInstanceId,
+      definitionId: definition.id,
+      slotId: startingRoom.slotId,
+      isBuilt: true,
+      level: 1,
+      assignedNpcIds: [],
+      productionProgress: 0,
+      installedUpgradeIds: [],
+      capacity: { ...definition.capacity },
+    }]] : [];
+  }));
+  const roomSlots = Object.fromEntries((baseDefinition?.roomSlots ?? []).map((slot) => [slot.id, {
+    slotId: slot.id,
+    slotType: slot.slotType,
+    roomInstanceId: startingRooms.find((room) => room.slotId === slot.id)?.roomInstanceId ?? null,
+  }]));
+
+  return createInitialGameState({
+    player,
+    world: createInitialWorldState({
+      currentMapId: initialMap?.id ?? '',
+      currentPoiId: initialPoiId,
+      discoveredMapIds: initialMap ? [initialMap.id] : [],
+      flags: {},
+      pois,
+    }),
+    npcs,
+    factions,
+    base: createInitialBaseState({
+      baseId: baseDefinition?.id ?? 'base_player',
+      name: baseDefinition?.name ?? 'Player Base',
+      rooms,
+      roomSlots,
+      resources: baseDefinition?.startingResources ?? {},
+      storage: {
+        items: [],
+        capacity: (baseDefinition?.storageCapacity ?? 20) + Object.values(rooms).reduce((sum, room) => sum + room.capacity.storage, 0),
+      },
+    }),
+    journal: [{
+      id: 'journal_session_boot',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      category: 'System',
+      text: initialMap ? `Session booted. Neural link synced to ${initialMap.name}.` : 'Session booted.',
+    }],
+  });
 }

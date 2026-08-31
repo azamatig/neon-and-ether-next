@@ -4,39 +4,70 @@
     "name": "Sub-Grid Infiltration: Vault 09",
     "title": "Sub-Grid Infiltration: Vault 09",
     "description": "Infiltrate the OmniCorp terminal room in Sector 09, bypass cyber security, and retrieve the encrypted Ether Conduit.",
-    "tags": ["Heist", "Infiltration", "Syndicate", "MainQuest"],
+    "tags": [
+      "Heist",
+      "Infiltration",
+      "Syndicate",
+      "MainQuest"
+    ],
     "factionId": "fac_ether_syndicate",
     "faction": "fac_ether_syndicate",
     "summary": "Infiltrate the OmniCorp terminal room in Sector 09, bypass cyber security, and retrieve the encrypted Ether Conduit.",
     "recommendedLevel": 1,
-    "initialStageId": "stage_infiltrate",
+    "initialStageId": "stage_contract",
     "rewardCredits": 1500,
     "rewardXp": 350,
-    "rewardItemIds": ["wpn_ether_baton"],
+    "rewardItemIds": [
+      "wpn_ether_baton"
+    ],
     "isMainQuest": true,
     "isRepeatable": false,
     "stages": {
-      "stage_infiltrate": {
-        "id": "stage_infiltrate",
+      "stage_contract": {
+        "id": "stage_contract",
         "stageNumber": 1,
-        "title": "Breach the Sub-Grid",
-        "journalEntry": "Kaelen Rourke hired me to breach Sub-Grid Vault 09. I need to reach the terminal room without getting flanked.",
+        "title": "Choose the Breach Vector",
+        "journalEntry": "Rourke needs the Vault 09 cipher. The optical terminal supports covert and direct approaches.",
         "objectives": [
           {
-            "id": "obj_navigate_slums",
-            "description": "Navigate past the hazard barrier to the Vault entrance",
-            "objectiveType": "ReachLocation",
+            "id": "obj_choose_approach",
+            "description": "Choose infiltration or combat at the optical terminal",
+            "objectiveType": "InteractPOI",
             "targetId": "poi_sec09_terminal",
-            "isCompleted": false,
+            "requiredCount": 1,
             "approachType": "Infiltration"
-          },
+          }
+        ]
+      },
+      "stage_covert": {
+        "id": "stage_covert",
+        "stageNumber": 2,
+        "title": "Silent Extraction",
+        "journalEntry": "The patrol telemetry is spoofed. Extract and transmit the cipher before the false route expires.",
+        "objectives": [
           {
-            "id": "obj_bypass_console",
-            "description": "Hack the encrypted central console [Mind 14 or EtherTech 13]",
+            "id": "obj_extract_covert",
+            "description": "Transmit the cipher without triggering security",
             "objectiveType": "HackNode",
             "targetId": "poi_sec09_terminal",
-            "isCompleted": false,
+            "requiredCount": 1,
             "approachType": "EtherTech"
+          }
+        ]
+      },
+      "stage_assault": {
+        "id": "stage_assault",
+        "stageNumber": 2,
+        "title": "Hot Extraction",
+        "journalEntry": "The alarm is live. Defeat the response team, then transmit the cipher.",
+        "objectives": [
+          {
+            "id": "obj_defeat_response",
+            "description": "Defeat the OmniCorp response team",
+            "objectiveType": "KillTarget",
+            "targetId": "enc_omnicorp_patrol_sector09",
+            "requiredCount": 1,
+            "approachType": "Combat"
           }
         ]
       }

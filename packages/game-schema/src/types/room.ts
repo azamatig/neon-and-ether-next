@@ -1,6 +1,15 @@
 import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
 import { GridTileSchema, Vector2DSchema } from './grid.ts';
+import { ConditionSchema } from './conditions.ts';
+import { EffectSchema } from './effects.ts';
+
+export const BaseResourceCostSchema = z.record(z.string(), z.number().int().min(0));
+export const BaseRoomCapacitySchema = z.object({
+  residents: z.number().int().min(0).default(0),
+  workers: z.number().int().min(0).default(0),
+  storage: z.number().int().min(0).default(0),
+});
 
 export const RoomTypeSchema = z.enum([
   'Corridor',
@@ -37,6 +46,12 @@ export const BaseRoomDefinitionSchema = BaseEntitySchema.extend({
   minSecurityLevel: z.number().int().min(1).max(5).default(1),
   isHazardous: z.boolean().default(false),
   ambientEtherBonus: z.number().int().default(0),
+  buildCost: BaseResourceCostSchema.default({}),
+  requirements: z.array(ConditionSchema).default([]),
+  capacity: BaseRoomCapacitySchema.default({ residents: 0, workers: 0, storage: 0 }),
+  effects: z.array(EffectSchema).default([]),
+  allowedSlotTypes: z.array(z.string()).default(['Standard']),
+  maxInstances: z.number().int().min(1).default(1),
 });
 
 export type BaseRoomDefinition = z.infer<typeof BaseRoomDefinitionSchema>;

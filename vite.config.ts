@@ -2,10 +2,17 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
+import {editorContentApiPlugin} from './apps/editor/dev/content-api-plugin.ts';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode, command }) => {
+  const isEditorBuild = mode === 'editor';
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), ...(command === 'serve' ? [editorContentApiPlugin(__dirname)] : [])],
+    build: {
+      rollupOptions: {
+        input: isEditorBuild ? path.resolve(__dirname, 'editor.html') : path.resolve(__dirname, 'index.html'),
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

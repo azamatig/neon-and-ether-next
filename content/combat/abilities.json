@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ability_thermal_burst",
+    "name": "Thermal Burst",
+    "description": "A focused thermal round that burns through light plating.",
+    "tags": ["Weapon", "Ranged"],
+    "apCost": 3,
+    "etherCost": 0,
+    "target": "Enemy",
+    "effects": [
+      { "type": "Damage", "min": 12, "max": 18 },
+      { "type": "ApplyStatus", "statusEffectId": "status_burning", "durationTurns": 2 }
+    ],
+    "icon": "Crosshair"
+  },
+  {
+    "id": "ability_arc_strike",
+    "name": "Arc Strike",
+    "description": "A close-range ether discharge delivered through a shock baton.",
+    "tags": ["Weapon", "Melee", "Ether"],
+    "apCost": 2,
+    "etherCost": 4,
+    "target": "Enemy",
+    "effects": [{ "type": "Damage", "min": 10, "max": 16 }],
+    "icon": "Zap"
+  },
+  {
+    "id": "ability_ether_patch",
+    "name": "Ether Patch",
+    "description": "Redirect ether into damaged bio-circuitry.",
+    "tags": ["Support", "Ether"],
+    "apCost": 2,
+    "etherCost": 8,
+    "target": "Ally",
+    "effects": [{ "type": "Heal", "min": 8, "max": 14 }],
+    "icon": "Activity"
+  }
+]

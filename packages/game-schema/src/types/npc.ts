@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
 import { CharacterAttributesSchema, DerivedVitalsSchema } from './stats.ts';
 import { Vector2DSchema } from './grid.ts';
+import { CharacterRelationshipSchema } from './character-management.ts';
 
 export const CharacterInventorySlotSchema = z.object({
   itemId: z.string().min(1),
@@ -26,6 +27,9 @@ export const NPCSchema = BaseEntitySchema.extend({
   dialogueTreeId: z.string().optional(),
   portraitIcon: z.string().default('User'),
   defaultBehavior: z.enum(['Idle', 'Patrol', 'Guard', 'Wander']).default('Idle'),
+  abilityIds: z.array(z.string()).default([]),
+  traits: z.array(z.string()).default([]),
+  initialRelationship: CharacterRelationshipSchema.optional(),
 });
 
 export type NPC = z.infer<typeof NPCSchema>;

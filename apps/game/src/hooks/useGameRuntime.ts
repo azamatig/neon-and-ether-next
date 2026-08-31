@@ -94,6 +94,7 @@ export function useGameRuntime() {
   const activeCombatResolution = useMemo(() => {
     return session.getActiveCombatResolution();
   }, [session, gameState.world.mode]);
+  const combatAbilities = useMemo(() => session.getContentRegistry().abilities.getAll(), [session]);
 
   // --- Persistence & Savegame Handlers ---
 
@@ -148,6 +149,7 @@ export function useGameRuntime() {
     activeEventState,
     activeCombatPreview,
     activeCombatResolution,
+    combatAbilities,
     lastCheck,
     saveStatus,
     openPoi: (poiId: string) => session.openPoi(poiId),
@@ -176,6 +178,14 @@ export function useGameRuntime() {
       enemyId: string,
       actionId: 'Search' | 'Restrain' | 'Capture' | 'Interrogate' | 'Release' | 'FinishOff'
     ) => session.executePostCombatAction(enemyId, actionId),
+    executeCombatAction: (action: import('@neon-ether/game-schema').CombatAction) => session.executeCombatAction(action),
+    getCharacterManagementActions: (npcId: string) => session.getCharacterManagementActions(npcId),
+    executeCharacterManagementCommand: (command: import('@neon-ether/game-schema').CharacterManagementCommand) =>
+      session.executeCharacterManagementCommand(command),
+    getBaseRoomOptions: (slotId: string) => session.getBaseRoomOptions(slotId),
+    getBaseUpgradeOptions: (roomInstanceId: string) => session.getBaseUpgradeOptions(roomInstanceId),
+    executeBaseManagementCommand: (command: import('@neon-ether/game-schema').BaseManagementCommand) =>
+      session.executeBaseManagementCommand(command),
     dismissCombatResult: () => session.dismissCombatResult(),
     saveToLocalSlot,
     loadFromLocalSlot,

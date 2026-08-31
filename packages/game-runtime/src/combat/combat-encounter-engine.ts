@@ -303,11 +303,6 @@ export class CombatEncounterEngine {
       }
     }
 
-    // Always ensure at least some tactical loot if table empty
-    if (availableLoot.length === 0) {
-      availableLoot.push({ itemId: 'con_ether_vial', quantity: 2, isEquipped: false });
-    }
-
     // Random Credits reward
     const minCred = encounter?.creditsReward.min ?? 60;
     const maxCred = encounter?.creditsReward.max ?? 180;
@@ -491,8 +486,17 @@ export class CombatEncounterEngine {
     let summaryText = '';
     switch (actionId) {
       case 'Search':
-        summaryText = `Searched ${enemyName}. Recovered encrypted Syndicate comm-pad.`;
-        state.player.inventory.items.push({ itemId: 'cyb_neural_jack_v1', quantity: 1, isEquipped: false });
+        summaryText = `Searched ${enemyName} for recoverable equipment.`;
+        const searchableDrop = targetEnemy
+          ? contentRegistry.getEnemy(targetEnemy.enemyId)?.lootTable[0]
+          : undefined;
+        if (searchableDrop) {
+          state.player.inventory.items.push({
+            itemId: searchableDrop.itemId,
+            quantity: searchableDrop.minQuantity,
+            isEquipped: false,
+          });
+        }
         if (targetEnemy) targetEnemy.canBeSearched = false;
         break;
 

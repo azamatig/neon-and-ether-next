@@ -163,7 +163,7 @@ export function deserializeSaveGame(
           playtimeSeconds: rawParsed.time?.elapsedRealSeconds ?? 0,
           playerLevel: rawParsed.player?.level ?? 1,
           playerName: rawParsed.player?.name ?? 'Unknown',
-          currentMapId: rawParsed.world?.currentMapId ?? rawParsed.currentMapId ?? 'map_slums_sec09',
+          currentMapId: rawParsed.world?.currentMapId ?? rawParsed.currentMapId ?? '',
           activeQuestCount: 0,
         },
         state: rawParsed,

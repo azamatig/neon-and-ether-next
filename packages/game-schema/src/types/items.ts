@@ -60,6 +60,7 @@ export const ItemSchema = BaseEntitySchema.extend({
   armorRating: z.number().int().min(0).optional(),
   statRequirements: StatRequirementsSchema.optional(),
   modifiers: z.array(ItemStatModifierSchema).optional().default([]),
+  grantedAbilityIds: z.array(z.string()).default([]),
   icon: z.string().default('Box'),
 });
 

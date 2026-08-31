@@ -93,4 +93,11 @@ All runtime modes now mount through one `GameShell`. `standard`, `immersive`, an
 
 Removed after reference verification: the production `TacticalHUD` and `TerminalLog` components. They were the obsolete top-HUD/sidebar pair responsible for the legacy gameplay frame.
 
-Remaining production components that still contain incremental legacy utility styling internally: `CombatPreviewContainer`, `CombatResultContainer`, `TurnBasedCombatScreen`, `BaseScreen`, `ActionResultModal`, and `SaveStateModal`. They are no longer wrappers or navigation shells, and all render inside `GameShell`; deeper visual refinement can be performed without changing composition or runtime flow.
+Remaining production components that still contain incremental legacy utility styling internally: `CombatPreviewContainer`, `CombatResultContainer`, `TurnBasedCombatScreen`, `BaseScreen`, `ActionResultModal`. They are no longer wrappers or navigation shells, and all render inside `GameShell`; deeper visual refinement can be performed without changing composition or runtime flow.
+
+
+## Character and menu surfaces
+
+`CharacterSheet` is the single player dossier over the unchanged gameplay snapshot. Its Character, Inventory, Equipment, Party, and Quests tabs reuse `PlayerState`, inventory/equipment commands, assigned party members, and authored quest definitions. Closing it is presentation-only and preserves the current gameplay context.
+
+`MainMenu` and `InGameMenu` use the existing local save slots and serializer callbacks. The menu never deletes saves when starting a new game; deletion is explicit and confirmed. Character access is only supplied by the standard HUD, so immersive and combat shell modes cannot open it accidentally.

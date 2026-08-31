@@ -4,7 +4,7 @@
  * Map Screen → click POI → POI Screen → choose action/event/quest → return to Map.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameRuntime } from './hooks/useGameRuntime.ts';
 import { DialogueOverlay } from './components/DialogueOverlay.tsx';
 import { ActionResultModal } from './components/ActionResultModal.tsx';
@@ -12,13 +12,22 @@ import { EventContainer } from './components/EventContainer.tsx';
 import { CombatPreviewContainer } from './components/CombatPreviewContainer.tsx';
 import { CombatResultContainer } from './components/CombatResultContainer.tsx';
 import { TurnBasedCombatScreen } from './components/TurnBasedCombatScreen.tsx';
-import { SaveStateModal } from './components/SaveStateModal.tsx';
+import { CharacterSheet } from './components/CharacterSheet.tsx';
+import { InGameMenu, MainMenu } from './components/GameMenus.tsx';
 import { BaseScreen, CraftingScreen, ExplorationHud, GameShell, PoiScreen, ShopScreen, WorldMapView } from '@neon-ether/shared-ui';
 
 export const GameApp: React.FC = () => {
   const runtime = useGameRuntime();
   const { gameState, activeMap, currentWeather, selectedPoi } = runtime;
-  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showCharacter, setShowCharacter] = useState(false);
+  const [showGameMenu, setShowGameMenu] = useState(false);
+  const [showMainMenu, setShowMainMenu] = useState(() => !new URLSearchParams(window.location.search).has('newGame'));
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('newGame')) return;
+    url.searchParams.delete('newGame');
+    window.history.replaceState({}, '', url);
+  }, []);
   if (!activeMap) return <div className="p-6 text-center text-rose-400 font-mono">[ERROR] No active map found in game session!</div>;
 
   const mode = gameState.world.mode;
@@ -29,7 +38,7 @@ export const GameApp: React.FC = () => {
   const isCombat = mode === 'TacticalCombat';
   const isScreen = mode === 'Screen';
   const shellMode = isCombat || isPreview || isResult ? 'combat' : isEvent || mode === 'Dialogue' ? 'immersive' : 'standard';
-  const hud = ['Map','POI','Screen'].includes(mode) ? <ExplorationHud weather={currentWeather?.definition.name} sector={activeMap.subregion ?? activeMap.district} hp={{current:gameState.player.vitals.currentHp,max:gameState.player.vitals.maxHp}} ether={{current:gameState.player.vitals.currentEther,max:gameState.player.vitals.maxEther}} actionPoints={{current:gameState.player.vitals.actionPointsCurrent,max:gameState.player.vitals.actionPointsMax}} credits={gameState.player.inventory.credits} onOpenMenu={()=>setShowSaveModal(true)}/> : undefined;
+  const hud = ['Map','POI','Screen'].includes(mode) ? <ExplorationHud weather={currentWeather?.definition.name} sector={activeMap.subregion ?? activeMap.district} hp={{current:gameState.player.vitals.currentHp,max:gameState.player.vitals.maxHp}} ether={{current:gameState.player.vitals.currentEther,max:gameState.player.vitals.maxEther}} actionPoints={{current:gameState.player.vitals.actionPointsCurrent,max:gameState.player.vitals.actionPointsMax}} credits={gameState.player.inventory.credits} onOpenCharacterSheet={()=>setShowCharacter(true)} onOpenMenu={()=>setShowGameMenu(true)}/> : undefined;
 
   let content: React.ReactNode;
   if (isEvent) content=<EventContainer eventState={runtime.activeEventState!} onAdvanceStep={runtime.advanceEventStep} onChooseOption={runtime.chooseEventOption} onCompleteEvent={runtime.completeEvent}/>;
@@ -42,9 +51,12 @@ export const GameApp: React.FC = () => {
   else if (isPoi) content=<PoiScreen environment={currentWeather} poi={selectedPoi} map={activeMap} stationedNpcs={runtime.stationedNpcsAtSelectedPoi} onReturnToMap={runtime.returnToMap} onExecuteAction={(id)=>runtime.executePoiAction(selectedPoi.id,id)} onTalkNpc={(_id,treeId)=>treeId&&runtime.startDialogue(treeId)} playerVitals={{actionPointsCurrent:gameState.player.vitals.actionPointsCurrent,actionPointsMax:gameState.player.vitals.actionPointsMax,currentEther:gameState.player.vitals.currentEther,maxEther:gameState.player.vitals.maxEther,currentHp:gameState.player.vitals.currentHp,maxHp:gameState.player.vitals.maxHp,credits:gameState.player.inventory.credits}}/>;
   else content=<WorldMapView environment={currentWeather} map={activeMap} pois={runtime.poisForActiveMap} currentPoiId={gameState.world.currentPoiId} onSelectPoi={runtime.openPoi} onTravelToPoi={runtime.travelToPoi}/>;
 
+  if (showMainMenu) return <MainMenu onNewGame={()=>{const url=new URL(window.location.href);url.searchParams.set('newGame','1');window.location.assign(url)}} onContinue={(slot)=>{const result=runtime.loadFromLocalSlot(slot);if(result.success)setShowMainMenu(false);return result;}}/>;
+
   return <GameShell mode={shellMode} hud={hud}>{content}
     {mode==='ActionResult'&&runtime.activeActionResolution&&<ActionResultModal resolution={runtime.activeActionResolution} onDismiss={runtime.dismissActionResolution}/>}
     {mode==='Dialogue'&&runtime.activeDialogueNode&&<DialogueOverlay node={runtime.activeDialogueNode} onChoose={runtime.chooseDialogueOption} onClose={runtime.endDialogue}/>}
-    {showSaveModal&&<SaveStateModal state={gameState} saveStatus={runtime.saveStatus} onClose={()=>setShowSaveModal(false)} saveToLocalSlot={runtime.saveToLocalSlot} loadFromLocalSlot={runtime.loadFromLocalSlot} exportSaveJson={runtime.exportSaveJson} importSaveJson={runtime.importSaveJson}/>}
+    {showCharacter&&<CharacterSheet state={gameState} items={runtime.itemDefinitions} quests={runtime.questDossiers} party={runtime.partyMembers} onClose={()=>setShowCharacter(false)} onEquip={runtime.equipInventoryEntry} onUnequip={runtime.unequipSlot} onDrop={runtime.dropInventoryItem}/>}
+    {showGameMenu&&<InGameMenu onResume={()=>setShowGameMenu(false)} onMainMenu={()=>{setShowGameMenu(false);setShowMainMenu(true)}} onSave={runtime.saveToLocalSlot} onLoad={(slot)=>{const result=runtime.loadFromLocalSlot(slot);if(result.success)setShowGameMenu(false);return result;}}/>}
   </GameShell>;
 };

@@ -399,12 +399,60 @@
         "actions": [],
         "entryEffects": [],
         "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_09_wounded_officer"
+      },
+      "stage_09_wounded_officer": {
+        "id": "stage_09_wounded_officer",
+        "stageNumber": 9,
+        "title": "The Last Witness",
+        "journalEntry": "Decide what to do with the wounded Ares officer.",
+        "objectives": [
+          {
+            "id": "obj_resolve_officer",
+            "description": "Resolve the wounded officer encounter.",
+            "objectiveType": "Custom",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_10_safehouse_wait"
+      },
+      "stage_10_safehouse_wait": {
+        "id": "stage_10_safehouse_wait",
+        "stageNumber": 10,
+        "title": "Wait for Rhea",
+        "journalEntry": "You reached the safehouse alone. Wait for Rhea to return.",
+        "objectives": [
+          {
+            "id": "obj_wait_for_rhea",
+            "description": "Wait for Rhea at the safehouse.",
+            "objectiveType": "Custom",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
         "branches": []
       }
     },
     "initialStageId": "stage_01_service_entrance",
     "rewardCredits": 0,
-    "rewardXp": 0,
+    "rewardXp": 200,
     "rewardItemIds": [],
     "reputationChanges": {},
     "isMainQuest": true,

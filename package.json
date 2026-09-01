@@ -21,7 +21,8 @@
     "test:character-creation": "bun scripts/test-character-creation.ts",
     "test:prologue-region1": "bun scripts/test-prologue-region1.ts",
     "test:prologue-transition": "bun scripts/test-prologue-transition.ts",
-    "test:prologue-region2": "bun scripts/test-prologue-region2.ts"
+    "test:prologue-region2": "bun scripts/test-prologue-region2.ts",
+    "test:prologue-completion": "bun scripts/test-prologue-completion.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

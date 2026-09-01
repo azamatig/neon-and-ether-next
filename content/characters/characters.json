@@ -508,5 +508,71 @@
       "loyalty": 10
     },
     "availabilityConditions": []
+  },
+  {
+    "id": "npc_prologue_ares_wounded_officer",
+    "name": "Lieutenant Orin Hale",
+    "description": "An Ares response officer left wounded after the containment escape fight.",
+    "tags": [
+      "Ares",
+      "Security",
+      "Sentient",
+      "Prologue"
+    ],
+    "title": "Ares Response Lieutenant",
+    "factionId": "fac_ares_industries",
+    "factionIds": [],
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": false,
+    "level": 2,
+    "progressionDefinitionId": "progression_companion",
+    "attributes": {
+      "body": 12,
+      "reflexes": 11,
+      "mind": 12,
+      "etherTech": 9,
+      "presence": 12
+    },
+    "vitals": {
+      "maxHp": 34,
+      "currentHp": 8,
+      "maxEther": 0,
+      "currentEther": 0,
+      "actionPointsMax": 5,
+      "actionPointsCurrent": 2,
+      "initiative": 10,
+      "armorRating": 2,
+      "etherResistance": 4
+    },
+    "skills": {
+      "combat": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "position": {
+      "x": 0,
+      "y": 0
+    },
+    "facing": "South",
+    "inventory": [],
+    "portraitIcon": "ShieldAlert",
+    "defaultBehavior": "Idle",
+    "abilityIds": [
+      "ability_thermal_burst"
+    ],
+    "traits": [
+      "Sentient",
+      "Disciplined"
+    ],
+    "initialRelationship": {
+      "status": "independent",
+      "affinity": -20,
+      "trust": -20,
+      "fear": 15,
+      "loyalty": 0
+    },
+    "availabilityConditions": []
   }
 ]

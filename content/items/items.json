@@ -458,7 +458,6 @@
     "grantedAbilityIds": [
       "ability_mindmancer_read_mind",
       "ability_mindmancer_command",
-      "ability_mindmancer_memory_fracture",
       "ability_mindmancer_suppression"
     ],
     "icon": "Brain"

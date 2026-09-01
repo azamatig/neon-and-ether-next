@@ -171,6 +171,169 @@
           "type": "event",
           "eventId": "evt_glassline_epilogue"
         }
+      },
+      {
+        "id": "act_prologue_safehouse_rest",
+        "label": "Rest",
+        "description": "Treat your injuries and listen for the safehouse door.",
+        "icon": "Bed",
+        "actionType": "Rest",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.arrived_alone",
+            "operator": "==",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.completed",
+            "operator": "!=",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.rested",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "changeStat",
+            "stat": "currentHp",
+            "value": 38,
+            "mode": "set"
+          },
+          {
+            "type": "changeStat",
+            "stat": "currentEther",
+            "value": 50,
+            "mode": "set"
+          },
+          {
+            "type": "advanceTime",
+            "turns": 1,
+            "hours": 4
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.rested",
+            "value": true
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "A Short Rest",
+          "resultText": "Four hours pass. Rhea does not arrive.",
+          "status": "Success"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_safehouse_messages",
+        "label": "Check Messages",
+        "description": "Search every courier and emergency channel for Rhea.",
+        "icon": "MessageSquareOff",
+        "actionType": "Interact",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.arrived_alone",
+            "operator": "==",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.completed",
+            "operator": "!=",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.messages_checked",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.messages_checked",
+            "value": true
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "No Message",
+          "resultText": "No courier signature. No emergency burst. The connection attempt fails.",
+          "status": "PartialSuccess"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_safehouse_inspect_artifact",
+        "label": "Inspect the Artifact Connection",
+        "description": "Focus on the resonance that followed you out of Ares.",
+        "icon": "Brain",
+        "actionType": "Event",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.arrived_alone",
+            "operator": "==",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.completed",
+            "operator": "!=",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.artifact_inspected",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_inspect_bound_artifact"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_safehouse_wait",
+        "label": "Wait for Rhea",
+        "description": "Keep the receiver open and wait until morning.",
+        "icon": "Clock",
+        "actionType": "Event",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.arrived_alone",
+            "operator": "==",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.completed",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_safehouse_ending"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
       }
     ],
     "npcIds": [

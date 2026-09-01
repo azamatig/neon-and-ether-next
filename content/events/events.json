@@ -1933,11 +1933,719 @@
       }
     ],
     "completionOutcome": {
-      "type": "showResult",
-      "title": "Escape Combat Ready",
-      "resultText": "Dax is dead. The alarm is active, and the surviving pair must fight out of the vault.",
-      "status": "PartialSuccess"
+      "type": "event",
+      "eventId": "evt_prologue_escape_response"
     },
     "isOneShot": true
+  },
+  {
+    "id": "evt_prologue_escape_response",
+    "name": "Ares Response Converges",
+    "description": "Ares Response Converges",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Encounter",
+      "Checkpoint:Mindmancer Combat"
+    ],
+    "type": "encounter",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "cinematic",
+      "ambientGlow": "rose",
+      "themeMood": "containment escape",
+      "weatherPresentation": "disabled"
+    },
+    "steps": [
+      {
+        "id": "response_alarm",
+        "type": "image",
+        "title": "VAULT ACCESS // SECURITY RESPONSE",
+        "text": "Emergency shutters split open. Three officers advance through the smoke while a security drone tracks Rhea across the collapsed gantry.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "response_instinct",
+        "type": "narration",
+        "title": "NEW SIGNALS",
+        "text": "Human intent presses against your awareness as distinct, fragile patterns. The drone is only telemetry and motion\u2014there is no mind behind it to touch.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "response_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "Whatever the artifact gave you, use it on the officers. The drone is mine.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "response_engage",
+        "type": "transition",
+        "title": "BREAK THE RESPONSE LINE",
+        "text": "The first practical test of the new connection begins.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true,
+    "completionOutcome": {
+      "type": "combat",
+      "encounterId": "enc_prologue_ares_vault_response",
+      "previewFirst": true
+    }
+  },
+  {
+    "id": "evt_prologue_wounded_officer",
+    "name": "The Wounded Officer",
+    "description": "The Wounded Officer",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "MindmancerTutorial"
+    ],
+    "type": "choice",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "dialogue",
+      "ambientGlow": "purple",
+      "themeMood": "containment escape",
+      "weatherPresentation": "disabled"
+    },
+    "steps": [
+      {
+        "id": "officer_found",
+        "type": "narration",
+        "title": "ONE SURVIVOR",
+        "text": "An Ares lieutenant remains conscious beneath a broken barrier. His weapon is out of reach; fear and drilled procedure flicker at the edge of your awareness.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "changeNpcState",
+            "npcId": "npc_prologue_ares_wounded_officer",
+            "isAlive": true,
+            "isCompanion": false,
+            "customFlag": {
+              "key": "wounded_after_vault",
+              "value": true
+            }
+          },
+          {
+            "type": "advanceQuest",
+            "questId": "qst_prologue_ares_vault",
+            "targetStageId": "stage_09_wounded_officer"
+          }
+        ],
+        "choices": []
+      },
+      {
+        "id": "officer_choice",
+        "type": "choice",
+        "title": "FIRST CONTACT",
+        "text": "Decide what to do with Lieutenant Hale.",
+        "conditions": [],
+        "effects": [],
+        "choices": [
+          {
+            "id": "choice_read_mind",
+            "text": "READ MIND \u2014 search his surface thoughts for useful information.",
+            "conditions": [
+              {
+                "type": "flag",
+                "flag": "player.mindmancer.unlocked",
+                "operator": "==",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.read_mind",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "prologue.operation_leak_known",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.resolved",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.first_contact_completed",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.officer_outcome",
+                "value": "read_mind"
+              }
+            ],
+            "nextStepId": "officer_read_result",
+            "hideIfUnavailable": false
+          },
+          {
+            "id": "choice_erase_memory",
+            "text": "ERASE MEMORY \u2014 remove his recollection of the team and the artifact.",
+            "conditions": [
+              {
+                "type": "flag",
+                "flag": "player.mindmancer.unlocked",
+                "operator": "==",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.memory_erased",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.resolved",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.first_contact_completed",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.officer_outcome",
+                "value": "memory_erased"
+              },
+              {
+                "type": "changeNpcState",
+                "npcId": "npc_prologue_ares_wounded_officer",
+                "customFlag": {
+                  "key": "recent_memory_erased",
+                  "value": true
+                }
+              }
+            ],
+            "nextStepId": "officer_erase_result",
+            "hideIfUnavailable": false
+          },
+          {
+            "id": "choice_force_sleep",
+            "text": "FORCE SLEEP \u2014 suppress consciousness without killing him.",
+            "conditions": [
+              {
+                "type": "flag",
+                "flag": "player.mindmancer.unlocked",
+                "operator": "==",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.forced_sleep",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.resolved",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.first_contact_completed",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.officer_outcome",
+                "value": "forced_sleep"
+              },
+              {
+                "type": "changeNpcState",
+                "npcId": "npc_prologue_ares_wounded_officer",
+                "customFlag": {
+                  "key": "unconscious",
+                  "value": true
+                }
+              }
+            ],
+            "nextStepId": "officer_sleep_result",
+            "hideIfUnavailable": false
+          },
+          {
+            "id": "choice_kill_officer",
+            "text": "KILL \u2014 end the threat conventionally.",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.killed",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.resolved",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.officer_outcome",
+                "value": "killed"
+              },
+              {
+                "type": "changeNpcState",
+                "npcId": "npc_prologue_ares_wounded_officer",
+                "isAlive": false
+              }
+            ],
+            "nextStepId": "officer_kill_result",
+            "hideIfUnavailable": false
+          },
+          {
+            "id": "choice_attempt_control",
+            "text": "COMMAND \u2014 attempt sustained control.",
+            "conditions": [
+              {
+                "type": "flag",
+                "flag": "player.mindmancer.unlocked",
+                "operator": "==",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.control_attempted",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.resolved",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.first_contact_completed",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.officer_outcome",
+                "value": "unstable_control"
+              }
+            ],
+            "nextStepId": "officer_control_result",
+            "hideIfUnavailable": false
+          }
+        ]
+      },
+      {
+        "id": "officer_read_result",
+        "type": "narration",
+        "title": "BORROWED THOUGHT",
+        "text": "The warning was waiting before your team entered the perimeter. Hale remembers an operation profile delivered through an internal dead channel\u2014but not the sender. Someone leaked the job.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.read_mind",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_escape_facility"
+        }
+      },
+      {
+        "id": "officer_erase_result",
+        "type": "narration",
+        "title": "BLANK INTERVAL",
+        "text": "The last hour loosens and collapses. Hale retains his name and training, but the team and the artifact are gone from recent memory.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.memory_erased",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_escape_facility"
+        }
+      },
+      {
+        "id": "officer_sleep_result",
+        "type": "narration",
+        "title": "QUIET",
+        "text": "His resistance softens. Breath steadies, muscles release, and the officer falls safely unconscious.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.forced_sleep",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_escape_facility"
+        }
+      },
+      {
+        "id": "officer_kill_result",
+        "type": "narration",
+        "title": "NO WITNESS",
+        "text": "The lieutenant dies before the response network can reconnect to his armor.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.killed",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_escape_facility"
+        }
+      },
+      {
+        "id": "officer_control_result",
+        "type": "narration",
+        "title": "CONTROL SLIPS",
+        "text": "You can force a word and interrupt an impulse, but sustained domination fractures immediately. The connection is not yet stable enough to hold another will.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.control_attempted",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_escape_facility"
+        }
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true
+  },
+  {
+    "id": "evt_prologue_escape_facility",
+    "name": "Escape from Ares",
+    "description": "Escape from Ares",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Escape"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "fullscreenScene",
+      "ambientGlow": "rose",
+      "themeMood": "containment escape",
+      "weatherPresentation": "disabled",
+      "backgroundImage": "bg_prologue_ares_escape"
+    },
+    "steps": [
+      {
+        "id": "escape_alarms",
+        "type": "image",
+        "title": "FACILITY COLLAPSE",
+        "text": "Alarms overlap with rupturing conduits. Damaged drones fire blindly through smoke while containment shutters grind closed.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "escape_run",
+        "type": "narration",
+        "text": "You and Rhea cross the research annex through falling glass and dead emergency lights. Every pursuing mind burns as a brief pressure behind your eyes.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "escape_split",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "They are tracking both signatures. We split at the service trench. I will reach the safehouse after I shake them.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "escape_promise",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "Do not wait outside. I will come back.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "escape_separation",
+        "type": "transition",
+        "title": "SEPARATE ROUTES",
+        "text": "Rhea vanishes into the eastern runoff tunnels. You take the artifact connection west toward Glassline.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.escape.facility_cleared",
+        "value": true
+      },
+      {
+        "type": "setFlag",
+        "flag": "prologue.companion_female_promised_return",
+        "value": true
+      },
+      {
+        "type": "setFlag",
+        "flag": "prologue.safehouse.arrived_alone",
+        "value": true
+      },
+      {
+        "type": "advanceQuest",
+        "questId": "qst_prologue_ares_vault",
+        "targetStageId": "stage_10_safehouse_wait"
+      },
+      {
+        "type": "recruitNpc",
+        "npcId": "npc_prologue_companion_female",
+        "asCompanion": false
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_female",
+        "isCompanion": false,
+        "customFlag": {
+          "key": "separated_during_escape",
+          "value": true
+        }
+      }
+    ],
+    "isOneShot": true,
+    "completionOutcome": {
+      "type": "poi",
+      "poiId": "poi_glassline_safehouse",
+      "mapId": "map_slums_sec09"
+    }
+  },
+  {
+    "id": "evt_prologue_inspect_bound_artifact",
+    "name": "Inspect the Bound Artifact",
+    "description": "Inspect the Bound Artifact",
+    "tags": [
+      "Prologue",
+      "Mindmancer"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "fullscreenScene",
+      "ambientGlow": "purple",
+      "themeMood": "containment escape",
+      "weatherPresentation": "disabled",
+      "backgroundImage": "bg_glassline_safehouse"
+    },
+    "steps": [
+      {
+        "id": "inspect_resonance",
+        "type": "narration",
+        "title": "NO OBJECT TO SET DOWN",
+        "text": "The recovered resonance is not lodged in your gear. It answers from somewhere behind thought, where your own memories should be silent.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.artifact_inspected",
+            "value": true
+          }
+        ],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [],
+    "isOneShot": true,
+    "completionOutcome": {
+      "type": "returnToOrigin"
+    }
+  },
+  {
+    "id": "evt_prologue_safehouse_ending",
+    "name": "No Signal from Rhea",
+    "description": "No Signal from Rhea",
+    "tags": [
+      "Prologue",
+      "NarrativeInterlude",
+      "PrologueComplete"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "fullscreenScene",
+      "ambientGlow": "purple",
+      "themeMood": "containment escape",
+      "weatherPresentation": "disabled",
+      "backgroundImage": "bg_glassline_safehouse"
+    },
+    "steps": [
+      {
+        "id": "ending_wait",
+        "type": "narration",
+        "title": "SAFEHOUSE // 06:10",
+        "text": "The door remains closed. The receiver cycles through Rhea\u2019s channel and finds only rain-static.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "advanceTime",
+            "turns": 1,
+            "hours": 8
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.waited",
+            "value": true
+          }
+        ],
+        "choices": []
+      },
+      {
+        "id": "ending_no_message",
+        "type": "narration",
+        "title": "CONNECTION FAILED",
+        "text": "No message arrives. Her courier signature never reaches the district relays.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.companion_female_missing",
+            "value": true
+          },
+          {
+            "type": "changeNpcState",
+            "npcId": "npc_prologue_companion_female",
+            "isCompanion": false,
+            "customFlag": {
+              "key": "missing",
+              "value": true
+            }
+          }
+        ],
+        "choices": []
+      },
+      {
+        "id": "ending_whisper",
+        "type": "narration",
+        "title": "A THOUGHT THAT IS NOT YOURS",
+        "text": "Just before sleep, a voice shaped like your own thinks: she is not the only mind that knows where you are.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "ending_complete",
+        "type": "transition",
+        "title": "PROLOGUE COMPLETE",
+        "text": "The Ares job is over. Its consequences are not.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "ending_three_days",
+        "type": "image",
+        "title": "3 DAYS LATER // MEGACITY-9",
+        "text": "Rain moves across the towers. The city continues without explanation.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.completed",
+        "value": true
+      },
+      {
+        "type": "setFlag",
+        "flag": "intro.completed",
+        "value": true
+      },
+      {
+        "type": "completeQuest",
+        "questId": "qst_prologue_ares_vault",
+        "outcome": "Success",
+        "grantRewards": true
+      },
+      {
+        "type": "advanceTime",
+        "turns": 3,
+        "hours": 72
+      }
+    ],
+    "isOneShot": true,
+    "completionOutcome": {
+      "type": "poi",
+      "poiId": "poi_glassline_safehouse",
+      "mapId": "map_slums_sec09"
+    }
   }
 ]

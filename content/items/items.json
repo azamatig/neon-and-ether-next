@@ -326,5 +326,82 @@
     "equipEffects": [],
     "unequipEffects": [],
     "apUseCost": 1
+  },
+  {
+    "id": "itm_prologue_ares_security_keycard",
+    "name": "Ares Security Keycard",
+    "description": "A checkpoint credential keyed to the inner repository access ring.",
+    "tags": [
+      "Quest",
+      "Ares",
+      "Keycard"
+    ],
+    "category": "quest",
+    "rarity": "StreetGrade",
+    "weightKg": 0.05,
+    "valueCredits": 0,
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "grantedAbilityIds": [],
+    "icon": "KeyRound"
+  },
+  {
+    "id": "itm_prologue_ares_ballistic_cells",
+    "name": "Ares Ballistic Cells",
+    "description": "Sealed ammunition and compact weapon-power cells recovered from checkpoint stores.",
+    "tags": [
+      "Material",
+      "Ammo",
+      "Ares"
+    ],
+    "category": "material",
+    "rarity": "Common",
+    "weightKg": 0.4,
+    "valueCredits": 45,
+    "stackable": true,
+    "maxStack": 20,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "grantedAbilityIds": [],
+    "icon": "BatteryMedium"
+  },
+  {
+    "id": "arm_prologue_ares_light_carrier",
+    "name": "Ares Light Plate Carrier",
+    "description": "A lightweight security carrier with intact impact weave.",
+    "tags": [
+      "Armor",
+      "Ares",
+      "Light"
+    ],
+    "category": "armor",
+    "rarity": "StreetGrade",
+    "weightKg": 2.1,
+    "valueCredits": 260,
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "body"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "armorRating",
+        "operation": "add",
+        "value": 2
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "grantedAbilityIds": [],
+    "icon": "Shield"
   }
 ]

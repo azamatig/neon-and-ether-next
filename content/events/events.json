@@ -1281,8 +1281,8 @@
       {
         "id": "freight_transition",
         "type": "transition",
-        "title": "REGION 1 COMPLETE",
-        "text": "The freight lock disengages. Beyond it, Ares security is already moving.",
+        "title": "CHECKPOINT BREACH",
+        "text": "The freight lock disengages. Ares security moves on the far side.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1304,10 +1304,239 @@
     ],
     "isOneShot": true,
     "completionOutcome": {
-      "type": "showResult",
-      "title": "Deeper Access Open",
-      "resultText": "Region 1 complete. The next operation begins beyond the freight gate.",
-      "status": "Success"
+      "type": "event",
+      "eventId": "evt_prologue_freight_encounter"
     }
+  },
+  {
+    "id": "evt_prologue_freight_encounter",
+    "name": "Freight Checkpoint Lockdown",
+    "description": "The sealed freight approach becomes the first serious fight of the operation.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Encounter",
+      "Checkpoint:Before Freight Encounter"
+    ],
+    "type": "encounter",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "cinematic",
+      "ambientGlow": "amber",
+      "themeMood": "sealed checkpoint ambush",
+      "weatherPresentation": "disabled"
+    },
+    "steps": [
+      {
+        "id": "checkpoint_seal",
+        "type": "image",
+        "title": "ACCESS ROUTE SEALED",
+        "text": "The gate slams shut behind the team. Two security officers spread across the loading lane while a sentry drone drops from its cradle.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "checkpoint_route_advantage",
+        "type": "narration",
+        "title": "MAINTENANCE ANGLE",
+        "text": "The stolen route data exposes a protected loading recess. The team reaches cover before the firing line settles.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.entry_advantage",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "checkpoint_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "Gate is locked. We clear the lane or we stay here.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "checkpoint_dax",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "Drone first. I will keep the officers off you.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "checkpoint_engage",
+        "type": "transition",
+        "title": "ARES SECURITY ENGAGED",
+        "text": "The checkpoint opens fire.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [
+      {
+        "type": "startQuest",
+        "questId": "qst_prologue_ares_vault",
+        "initialStageId": "stage_03_freight_access"
+      },
+      {
+        "type": "recruitNpc",
+        "npcId": "npc_prologue_companion_female",
+        "asCompanion": true
+      },
+      {
+        "type": "recruitNpc",
+        "npcId": "npc_prologue_companion_male",
+        "asCompanion": true
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_female",
+        "location": {
+          "mapId": "map_prologue_ares_logistics",
+          "poiId": "poi_prologue_freight_access"
+        }
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_male",
+        "location": {
+          "mapId": "map_prologue_ares_logistics",
+          "poiId": "poi_prologue_freight_access"
+        }
+      }
+    ],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.freight_route_sealed",
+        "value": true
+      }
+    ],
+    "completionOutcome": {
+      "type": "combat",
+      "encounterId": "enc_prologue_ares_freight_checkpoint",
+      "previewFirst": true
+    },
+    "isOneShot": true
+  },
+  {
+    "id": "evt_prologue_checkpoint_victory",
+    "name": "Checkpoint Secured",
+    "description": "The party crosses into the Ares inner facility after collecting the checkpoint supplies.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Transition"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "cinematic",
+      "ambientGlow": "cyan",
+      "themeMood": "post-combat threshold",
+      "weatherPresentation": "disabled"
+    },
+    "steps": [
+      {
+        "id": "checkpoint_advantage_cleanup",
+        "type": "effect",
+        "text": "The route advantage has served its purpose.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.encounter_advantage_applied",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "changeStat",
+            "stat": "initiative",
+            "mode": "add",
+            "delta": -3
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.encounter_advantage_applied",
+            "value": false
+          }
+        ],
+        "choices": []
+      },
+      {
+        "id": "checkpoint_aftermath",
+        "type": "narration",
+        "title": "INNER ACCESS",
+        "text": "The keycard releases the inner bulkhead. Rhea checks the dark corridor while Dax seals the damaged checkpoint behind you.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "checkpoint_cross",
+        "type": "transition",
+        "title": "ARES INNER FACILITY",
+        "text": "The team crosses into the security-damaged interior.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.checkpoint_cleared",
+        "value": true
+      },
+      {
+        "type": "advanceQuest",
+        "questId": "qst_prologue_ares_vault",
+        "targetStageId": "stage_04_inner_facility"
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_female",
+        "location": {
+          "mapId": "map_prologue_ares_inner_vault",
+          "poiId": "poi_prologue_inner_checkpoint"
+        }
+      },
+      {
+        "type": "changeNpcState",
+        "npcId": "npc_prologue_companion_male",
+        "location": {
+          "mapId": "map_prologue_ares_inner_vault",
+          "poiId": "poi_prologue_inner_checkpoint"
+        }
+      }
+    ],
+    "completionOutcome": {
+      "type": "poi",
+      "poiId": "poi_prologue_inner_checkpoint",
+      "mapId": "map_prologue_ares_inner_vault"
+    },
+    "isOneShot": true
   }
 ]

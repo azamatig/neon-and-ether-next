@@ -273,6 +273,32 @@
         "actions": [],
         "entryEffects": [],
         "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_04_inner_facility"
+      },
+      "stage_04_inner_facility": {
+        "id": "stage_04_inner_facility",
+        "stageNumber": 4,
+        "title": "Enter the Inner Facility",
+        "journalEntry": "The freight checkpoint is clear. Continue into the damaged Ares interior.",
+        "objectives": [
+          {
+            "id": "obj_reach_inner_checkpoint",
+            "description": "Enter the Ares inner facility.",
+            "objectiveType": "ReachLocation",
+            "targetId": "poi_prologue_inner_checkpoint",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false,
+            "approachType": "Combat"
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
         "branches": []
       }
     },

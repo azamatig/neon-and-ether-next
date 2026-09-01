@@ -124,7 +124,7 @@
     "connectedMapIds": [],
     "ambientEtherLevel": 12,
     "securityLevel": 3,
-    "controllingFactionId": "fac_omnicorp",
+    "controllingFactionId": "fac_ares_industries",
     "recommendedLevel": 1,
     "regions": [
       {
@@ -132,7 +132,7 @@
         "name": "Warehouse Perimeter",
         "description": "Service lanes, storage sheds, and controlled freight infrastructure.",
         "securityLevel": 3,
-        "controllingFactionId": "fac_omnicorp",
+        "controllingFactionId": "fac_ares_industries",
         "weatherProfileId": "weather_profile_urban",
         "bounds": {
           "x": 3,
@@ -186,5 +186,51 @@
     ],
     "defaultTravelTimeMinutes": 8,
     "weatherProfileId": "weather_profile_urban"
+  },
+  {
+    "id": "map_prologue_ares_inner_vault",
+    "name": "Ares Inner Facility",
+    "description": "The security-damaged interior beyond the logistics checkpoint.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Industrial",
+      "Region2"
+    ],
+    "district": "Ares Central Repository",
+    "subregion": "Inner Access Ring",
+    "backgroundImage": "bg_prologue_ares_inner_vault",
+    "poiIds": [
+      "poi_prologue_inner_checkpoint"
+    ],
+    "defaultPoiId": "poi_prologue_inner_checkpoint",
+    "connectedMapIds": [
+      "map_prologue_ares_logistics"
+    ],
+    "ambientEtherLevel": 18,
+    "securityLevel": 4,
+    "controllingFactionId": "fac_ares_industries",
+    "recommendedLevel": 1,
+    "regions": [
+      {
+        "id": "reg_prologue_ares_inner_access",
+        "name": "Inner Access Ring",
+        "description": "A sealed staging corridor inside the central repository.",
+        "securityLevel": 4,
+        "controllingFactionId": "fac_ares_industries",
+        "bounds": {
+          "x": 3,
+          "y": 5,
+          "width": 94,
+          "height": 90
+        },
+        "metadata": {}
+      }
+    ],
+    "metadata": {
+      "visualTheme": "ares-damaged-interior"
+    },
+    "routes": [],
+    "defaultTravelTimeMinutes": 5
   }
 ]

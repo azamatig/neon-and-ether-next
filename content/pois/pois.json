@@ -778,7 +778,7 @@
     ],
     "dangerLevel": 1,
     "ambientEtherLevel": 10,
-    "controllingFactionId": "fac_omnicorp",
+    "controllingFactionId": "fac_ares_industries",
     "id": "poi_prologue_service_entrance",
     "name": "Service Entrance",
     "description": "A recessed staff entrance watched by an aging badge reader and a single security camera.",
@@ -885,7 +885,7 @@
     ],
     "dangerLevel": 1,
     "ambientEtherLevel": 10,
-    "controllingFactionId": "fac_omnicorp",
+    "controllingFactionId": "fac_ares_industries",
     "id": "poi_prologue_warehouse",
     "name": "Warehouse",
     "description": "Automated racks stand in dark aisles between dormant freight lifters.",
@@ -997,7 +997,7 @@
     ],
     "dangerLevel": 1,
     "ambientEtherLevel": 10,
-    "controllingFactionId": "fac_omnicorp",
+    "controllingFactionId": "fac_ares_industries",
     "id": "poi_prologue_maintenance_office",
     "name": "Maintenance Office",
     "description": "A glass-walled control room overlooks the freight conveyors and internal security routes.",
@@ -1095,7 +1095,7 @@
     ],
     "dangerLevel": 1,
     "ambientEtherLevel": 10,
-    "controllingFactionId": "fac_omnicorp",
+    "controllingFactionId": "fac_ares_industries",
     "id": "poi_prologue_freight_access",
     "name": "Freight Access",
     "description": "A pressure-rated freight gate separates the warehouse perimeter from the deeper Ares facility.",
@@ -1181,5 +1181,48 @@
         "isRepeatable": false
       }
     ]
+  },
+  {
+    "id": "poi_prologue_inner_checkpoint",
+    "name": "Inner Checkpoint",
+    "description": "The disabled security threshold opens onto the damaged Ares interior.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Region2"
+    ],
+    "mapId": "map_prologue_ares_inner_vault",
+    "mapPosition": {
+      "x": 18,
+      "y": 70
+    },
+    "district": "Ares Central Repository",
+    "regionId": "reg_prologue_ares_inner_access",
+    "image": "poi_prologue_inner_checkpoint",
+    "icon": "DoorOpen",
+    "category": "SecurityNode",
+    "visibilityConditions": [],
+    "availabilityConditions": [
+      {
+        "type": "flag",
+        "flag": "prologue.checkpoint_cleared",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "actions": [],
+    "npcIds": [
+      "npc_prologue_companion_female",
+      "npc_prologue_companion_male"
+    ],
+    "questIds": [
+      "qst_prologue_ares_vault"
+    ],
+    "eventIds": [],
+    "encounterIds": [],
+    "dangerLevel": 2,
+    "ambientEtherLevel": 18,
+    "controllingFactionId": "fac_ares_industries",
+    "environmentalExposure": "indoor"
   }
 ]

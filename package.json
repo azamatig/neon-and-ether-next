@@ -19,7 +19,8 @@
     "test:quest-walkthrough": "bun scripts/test-quest-walkthrough.ts",
     "test:telemetry": "bun scripts/test-development-telemetry.ts",
     "test:character-creation": "bun scripts/test-character-creation.ts",
-    "test:prologue-region1": "bun scripts/test-prologue-region1.ts"
+    "test:prologue-region1": "bun scripts/test-prologue-region1.ts",
+    "test:prologue-transition": "bun scripts/test-prologue-transition.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

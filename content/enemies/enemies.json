@@ -223,5 +223,102 @@
     "perks": [],
     "temporaryModifiers": [],
     "statusEffects": []
+  },
+  {
+    "id": "enm_prologue_ares_security",
+    "name": "Ares Security Officer",
+    "description": "Ares checkpoint response unit.",
+    "tags": [
+      "Ares",
+      "Security",
+      "Humanoid"
+    ],
+    "factionId": "fac_ares_industries",
+    "level": 1,
+    "tier": "Standard",
+    "attributes": {
+      "body": 11,
+      "reflexes": 11,
+      "mind": 9,
+      "etherTech": 7,
+      "presence": 9
+    },
+    "vitals": {
+      "maxHp": 27,
+      "currentHp": 27,
+      "maxEther": 0,
+      "currentEther": 0,
+      "actionPointsMax": 5,
+      "actionPointsCurrent": 5,
+      "initiative": 10,
+      "armorRating": 2,
+      "etherResistance": 3
+    },
+    "aiArchetype": "RangedFlanker",
+    "equippedWeaponId": "wpn_thermal_pistol",
+    "lootTable": [],
+    "grantedXp": 30,
+    "bountyCredits": 0,
+    "portraitIcon": "Crosshair",
+    "combatAIProfileId": "ai_flanker",
+    "abilityIds": [
+      "ability_thermal_burst"
+    ],
+    "skills": {
+      "combat": 1
+    },
+    "traits": [],
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": []
+  },
+  {
+    "id": "enm_prologue_ares_security_drone",
+    "name": "Ares Sentry Drone",
+    "description": "Ares checkpoint response unit.",
+    "tags": [
+      "Ares",
+      "Security",
+      "Drone",
+      "Robot"
+    ],
+    "factionId": "fac_ares_industries",
+    "level": 1,
+    "tier": "CombatDrone",
+    "attributes": {
+      "body": 9,
+      "reflexes": 12,
+      "mind": 8,
+      "etherTech": 10,
+      "presence": 4
+    },
+    "vitals": {
+      "maxHp": 22,
+      "currentHp": 22,
+      "maxEther": 10,
+      "currentEther": 10,
+      "actionPointsMax": 5,
+      "actionPointsCurrent": 5,
+      "initiative": 12,
+      "armorRating": 2,
+      "etherResistance": 9
+    },
+    "aiArchetype": "MeleeRusher",
+    "equippedWeaponId": "wpn_ether_baton",
+    "lootTable": [],
+    "grantedXp": 35,
+    "bountyCredits": 0,
+    "portraitIcon": "Cpu",
+    "combatAIProfileId": "ai_aggressive",
+    "abilityIds": [
+      "ability_arc_strike"
+    ],
+    "skills": {
+      "combat": 1
+    },
+    "traits": [],
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": []
   }
 ]

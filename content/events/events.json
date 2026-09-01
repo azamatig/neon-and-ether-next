@@ -1520,7 +1520,7 @@
         "npcId": "npc_prologue_companion_female",
         "location": {
           "mapId": "map_prologue_ares_inner_vault",
-          "poiId": "poi_prologue_inner_checkpoint"
+          "poiId": "poi_prologue_decontamination_hall"
         }
       },
       {
@@ -1528,14 +1528,415 @@
         "npcId": "npc_prologue_companion_male",
         "location": {
           "mapId": "map_prologue_ares_inner_vault",
-          "poiId": "poi_prologue_inner_checkpoint"
+          "poiId": "poi_prologue_decontamination_hall"
         }
       }
     ],
     "completionOutcome": {
       "type": "poi",
-      "poiId": "poi_prologue_inner_checkpoint",
+      "poiId": "poi_prologue_decontamination_hall",
       "mapId": "map_prologue_ares_inner_vault"
+    },
+    "isOneShot": true
+  },
+  {
+    "id": "evt_prologue_decontamination_investigation",
+    "name": "Decontamination Hall Investigation",
+    "description": "Decontamination Hall Investigation",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Region2"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "cinematic",
+      "ambientGlow": "cyan",
+      "themeMood": "restricted containment",
+      "weatherPresentation": "disabled"
+    },
+    "steps": [
+      {
+        "id": "decon_bodies",
+        "type": "narration",
+        "title": "NO EXTERNAL TRAUMA",
+        "text": "The personnel are dead where they fell. Armor is intact; there are no burns, wounds, or decompression signs. Damaged drones lie among them, destroyed by ordinary impacts.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "decon_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "The drones were fought. The people simply stopped. That is not the same cause.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "decon_dax",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "No alarms in the bodies, no trauma. I want a clear path behind us.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.region2.decon_investigated",
+        "value": true
+      },
+      {
+        "type": "advanceQuest",
+        "questId": "qst_prologue_ares_vault",
+        "targetStageId": "stage_05_research_annex",
+        "completeObjectiveId": "obj_reach_inner_checkpoint"
+      }
+    ],
+    "completionOutcome": {
+      "type": "returnToOrigin"
+    },
+    "isOneShot": true
+  },
+  {
+    "id": "evt_prologue_research_annex",
+    "name": "Cognitive Project Files",
+    "description": "Cognitive Project Files",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Region2"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "cinematic",
+      "ambientGlow": "cyan",
+      "themeMood": "restricted containment",
+      "weatherPresentation": "disabled"
+    },
+    "steps": [
+      {
+        "id": "annex_project",
+        "type": "narration",
+        "title": "PROJECT PALIMPSEST",
+        "text": "Recovered files describe a contained interface that responds to attention, memory, and conscious expectation rather than conventional input.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "annex_subjects",
+        "type": "narration",
+        "title": "CONTACT TRIALS",
+        "text": "Every recorded subject was marked incompatible. The final reports stop before defining what compatibility would mean.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "annex_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "Ares kept asking it questions with living people. We still do not know what answered.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.region2.annex_investigated",
+        "value": true
+      },
+      {
+        "type": "setFlag",
+        "flag": "prologue.region2.project_palimsest_known",
+        "value": true
+      },
+      {
+        "type": "advanceQuest",
+        "questId": "qst_prologue_ares_vault",
+        "targetStageId": "stage_06_security_nexus"
+      }
+    ],
+    "completionOutcome": {
+      "type": "returnToOrigin"
+    },
+    "isOneShot": true
+  },
+  {
+    "id": "evt_prologue_security_nexus_companions",
+    "name": "Before the Central Vault",
+    "description": "Before the Central Vault",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Region2"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "cinematic",
+      "ambientGlow": "cyan",
+      "themeMood": "restricted containment",
+      "weatherPresentation": "disabled"
+    },
+    "steps": [
+      {
+        "id": "nexus_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "Whatever happened here passed through armor and walls. If either of us says stop, we stop.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "nexus_dax",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "I will hold the access line. You two read the chamber and come back out.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "nexus_open",
+        "type": "transition",
+        "title": "VAULT ROUTE OPEN",
+        "text": "The last containment seal accepts the checkpoint keycard.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.region2.vault_route_open",
+        "value": true
+      },
+      {
+        "type": "advanceQuest",
+        "questId": "qst_prologue_ares_vault",
+        "targetStageId": "stage_07_central_vault"
+      }
+    ],
+    "completionOutcome": {
+      "type": "returnToOrigin"
+    },
+    "isOneShot": true
+  },
+  {
+    "id": "evt_prologue_central_vault_bonding",
+    "name": "Central Vault Contact",
+    "description": "Central Vault Contact",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Region2"
+    ],
+    "type": "scene",
+    "conditions": [],
+    "triggerConditions": [],
+    "availabilityConditions": [],
+    "presentation": {
+      "layoutStyle": "fullscreenScene",
+      "ambientGlow": "purple",
+      "themeMood": "restricted containment",
+      "weatherPresentation": "disabled",
+      "backgroundImage": "bg_prologue_central_vault"
+    },
+    "steps": [
+      {
+        "id": "vault_reveal",
+        "type": "image",
+        "title": "CONTAINMENT CORE",
+        "text": "Inside overlapping magnetic frames hangs an object with machined edges and a surface that bends the chamber lights like deep water.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "vault_approach",
+        "type": "narration",
+        "title": "SIGNAL WITHOUT SOUND",
+        "text": "The chamber tone stretches downward until sound becomes pressure. Motion separates into delayed images. The artifact seems closer each time you blink.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "vault_rhea_thought",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea // Surface Thought"
+        },
+        "text": "Do not let it notice that I am afraid.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "vault_dax_thought",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax // Surface Thought"
+        },
+        "text": "If the seal fails, get them behind me.",
+        "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "vault_contact",
+        "type": "effect",
+        "title": "CONTACT",
+        "text": "Your hand meets cold alloy. Something on the other side meets the shape of your mind. Thought, command, memory, and silence become distinct pressures you can reach.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "player.mindmancer.unlocked",
+            "value": true
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.mindmancer_bonded",
+            "value": true
+          },
+          {
+            "type": "addItem",
+            "itemId": "itm_prologue_mindmancer_resonance",
+            "quantity": 1,
+            "autoEquip": true
+          }
+        ],
+        "choices": []
+      },
+      {
+        "id": "vault_alarm",
+        "type": "image",
+        "title": "CONTAINMENT FAILURE",
+        "text": "Sound returns as an alarm. The magnetic frames shear apart and the chamber floor lifts in a white concussion.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.containment_failed",
+            "value": true
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.alarm_triggered",
+            "value": true
+          }
+        ],
+        "choices": []
+      },
+      {
+        "id": "vault_dax_death",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "Move. I have the door.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "changeNpcState",
+            "npcId": "npc_prologue_companion_male",
+            "isAlive": false,
+            "isCompanion": false,
+            "customFlag": {
+              "key": "prologue_death",
+              "value": true
+            }
+          },
+          {
+            "type": "recruitNpc",
+            "npcId": "npc_prologue_companion_male",
+            "asCompanion": false
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.companion_male_dead",
+            "value": true
+          }
+        ],
+        "choices": []
+      },
+      {
+        "id": "vault_escape_prepare",
+        "type": "transition",
+        "title": "ESCAPE ROUTE // SECURITY RESPONSE",
+        "text": "The blast seals Dax behind the collapsing access frame. Rhea pulls you toward the emergency route as security units converge.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.escape_combat_pending",
+            "value": true
+          }
+        ],
+        "choices": []
+      }
+    ],
+    "entryEffects": [],
+    "completionEffects": [
+      {
+        "type": "advanceQuest",
+        "questId": "qst_prologue_ares_vault",
+        "targetStageId": "stage_08_escape_combat"
+      }
+    ],
+    "completionOutcome": {
+      "type": "showResult",
+      "title": "Escape Combat Ready",
+      "resultText": "Dax is dead. The alarm is active, and the surviving pair must fight out of the vault.",
+      "status": "PartialSuccess"
     },
     "isOneShot": true
   }

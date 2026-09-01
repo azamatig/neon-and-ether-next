@@ -155,6 +155,9 @@ export class TurnBasedCombatEngine {
     if (ability.target === 'Self' && actor.id !== target.id) return 'Ability targets self.';
     if (ability.target === 'Ally' && actor.team !== target.team) return 'Ability targets an ally.';
     if (ability.target === 'Enemy' && actor.team === target.team) return 'Ability targets an enemy.';
+    const targetDefinition=this.content.getEnemy(target.sourceId)??this.content.getCharacter(target.sourceId);const tags=targetDefinition?.tags??[];
+    if(ability.requiredTargetTags.length&&!ability.requiredTargetTags.every(tag=>tags.includes(tag)))return 'Target is incompatible with this ability.';
+    if(ability.excludedTargetTags.some(tag=>tags.includes(tag)))return 'Target is immune to this ability.';
   }
 
   private dealDamage(state: CombatState, actor: Combatant, target: Combatant, rawDamage: number, label: string): void {

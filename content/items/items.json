@@ -403,5 +403,64 @@
     "unequipEffects": [],
     "grantedAbilityIds": [],
     "icon": "Shield"
+  },
+  {
+    "id": "cyb_prologue_ares_cognitive_filter",
+    "name": "Ares Cognitive Filter",
+    "description": "A research-grade neural filter designed to isolate hostile cognitive feedback.",
+    "tags": [
+      "Cyberware",
+      "Ares",
+      "Technical"
+    ],
+    "category": "armor",
+    "rarity": "MilitarySpec",
+    "weightKg": 0.2,
+    "valueCredits": 420,
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "neural"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "etherResistance",
+        "operation": "add",
+        "value": 3
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "grantedAbilityIds": [],
+    "icon": "BrainCircuit"
+  },
+  {
+    "id": "itm_prologue_mindmancer_resonance",
+    "name": "Bound Cognitive Resonance",
+    "description": "A persistent neural resonance left by contact with the contained artifact.",
+    "tags": [
+      "Quest",
+      "Mindmancer",
+      "Bound"
+    ],
+    "category": "quest",
+    "rarity": "EtherArtifact",
+    "weightKg": 0,
+    "valueCredits": 0,
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": [],
+    "grantedAbilityIds": [
+      "ability_mindmancer_read_mind",
+      "ability_mindmancer_command",
+      "ability_mindmancer_memory_fracture",
+      "ability_mindmancer_suppression"
+    ],
+    "icon": "Brain"
   }
 ]

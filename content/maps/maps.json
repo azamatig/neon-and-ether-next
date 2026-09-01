@@ -201,9 +201,12 @@
     "subregion": "Inner Access Ring",
     "backgroundImage": "bg_prologue_ares_inner_vault",
     "poiIds": [
-      "poi_prologue_inner_checkpoint"
+      "poi_prologue_decontamination_hall",
+      "poi_prologue_research_annex",
+      "poi_prologue_security_nexus",
+      "poi_prologue_central_vault"
     ],
-    "defaultPoiId": "poi_prologue_inner_checkpoint",
+    "defaultPoiId": "poi_prologue_decontamination_hall",
     "connectedMapIds": [
       "map_prologue_ares_logistics"
     ],
@@ -230,7 +233,35 @@
     "metadata": {
       "visualTheme": "ares-damaged-interior"
     },
-    "routes": [],
+    "routes": [
+      {
+        "id": "route_decon_annex",
+        "fromPoiId": "poi_prologue_decontamination_hall",
+        "toPoiId": "poi_prologue_research_annex",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_annex_nexus",
+        "fromPoiId": "poi_prologue_research_annex",
+        "toPoiId": "poi_prologue_security_nexus",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_nexus_vault",
+        "fromPoiId": "poi_prologue_security_nexus",
+        "toPoiId": "poi_prologue_central_vault",
+        "bidirectional": true,
+        "travelCost": 2,
+        "travelTimeMinutes": 8,
+        "metadata": {}
+      }
+    ],
     "defaultTravelTimeMinutes": 5
   }
 ]

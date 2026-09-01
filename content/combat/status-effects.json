@@ -26,5 +26,62 @@
     "healingPerTick": 0,
     "armorModifier": -1,
     "icon": "Activity"
+  },
+  {
+    "id": "status_mind_exposed",
+    "name": "Mind Exposed",
+    "description": "Surface intent is readable through weakened mental defenses.",
+    "tags": [
+      "Mindmancer",
+      "Mental"
+    ],
+    "tickTiming": "TurnEnd",
+    "damagePerTick": 0,
+    "healingPerTick": 0,
+    "armorModifier": -1,
+    "icon": "ScanEye"
+  },
+  {
+    "id": "status_mind_compelled",
+    "name": "Compelled",
+    "description": "A foreign imperative disrupts deliberate resistance.",
+    "tags": [
+      "Mindmancer",
+      "Mental"
+    ],
+    "tickTiming": "TurnEnd",
+    "damagePerTick": 0,
+    "healingPerTick": 0,
+    "armorModifier": -2,
+    "icon": "MessageCircleWarning"
+  },
+  {
+    "id": "status_memory_disrupted",
+    "name": "Memory Disrupted",
+    "description": "Short-term recall fragments under cognitive interference.",
+    "tags": [
+      "Mindmancer",
+      "Mental"
+    ],
+    "tickTiming": "TurnEnd",
+    "damagePerTick": 1,
+    "healingPerTick": 0,
+    "armorModifier": -1,
+    "icon": "BrainCog"
+  },
+  {
+    "id": "status_mental_suppression",
+    "name": "Mental Suppression",
+    "description": "Conscious activity is forced toward sleep.",
+    "tags": [
+      "Mindmancer",
+      "Mental",
+      "Sleep"
+    ],
+    "tickTiming": "TurnEnd",
+    "damagePerTick": 0,
+    "healingPerTick": 0,
+    "armorModifier": -3,
+    "icon": "Moon"
   }
 ]

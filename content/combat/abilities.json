@@ -3,13 +3,24 @@
     "id": "ability_thermal_burst",
     "name": "Thermal Burst",
     "description": "A focused thermal round that burns through light plating.",
-    "tags": ["Weapon", "Ranged"],
+    "tags": [
+      "Weapon",
+      "Ranged"
+    ],
     "apCost": 3,
     "etherCost": 0,
     "target": "Enemy",
     "effects": [
-      { "type": "Damage", "min": 12, "max": 18 },
-      { "type": "ApplyStatus", "statusEffectId": "status_burning", "durationTurns": 2 }
+      {
+        "type": "Damage",
+        "min": 12,
+        "max": 18
+      },
+      {
+        "type": "ApplyStatus",
+        "statusEffectId": "status_burning",
+        "durationTurns": 2
+      }
     ],
     "icon": "Crosshair"
   },
@@ -17,22 +28,158 @@
     "id": "ability_arc_strike",
     "name": "Arc Strike",
     "description": "A close-range ether discharge delivered through a shock baton.",
-    "tags": ["Weapon", "Melee", "Ether"],
+    "tags": [
+      "Weapon",
+      "Melee",
+      "Ether"
+    ],
     "apCost": 2,
     "etherCost": 4,
     "target": "Enemy",
-    "effects": [{ "type": "Damage", "min": 10, "max": 16 }],
+    "effects": [
+      {
+        "type": "Damage",
+        "min": 10,
+        "max": 16
+      }
+    ],
     "icon": "Zap"
   },
   {
     "id": "ability_ether_patch",
     "name": "Ether Patch",
     "description": "Redirect ether into damaged bio-circuitry.",
-    "tags": ["Support", "Ether"],
+    "tags": [
+      "Support",
+      "Ether"
+    ],
     "apCost": 2,
     "etherCost": 8,
     "target": "Ally",
-    "effects": [{ "type": "Heal", "min": 8, "max": 14 }],
+    "effects": [
+      {
+        "type": "Heal",
+        "min": 8,
+        "max": 14
+      }
+    ],
     "icon": "Activity"
+  },
+  {
+    "id": "ability_mindmancer_read_mind",
+    "name": "Read Mind",
+    "description": "Expose surface intent in a sentient mind.",
+    "tags": [
+      "Mindmancer",
+      "Mental",
+      "SentientOnly"
+    ],
+    "apCost": 2,
+    "etherCost": 4,
+    "target": "Enemy",
+    "effects": [
+      {
+        "type": "ApplyStatus",
+        "min": 0,
+        "max": 0,
+        "statusEffectId": "status_mind_exposed",
+        "durationTurns": 2
+      }
+    ],
+    "icon": "ScanEye",
+    "requiredTargetTags": [],
+    "excludedTargetTags": [
+      "Robot",
+      "Drone"
+    ]
+  },
+  {
+    "id": "ability_mindmancer_command",
+    "name": "Influence / Command",
+    "description": "Impose a brief imperative on a sentient target.",
+    "tags": [
+      "Mindmancer",
+      "Mental",
+      "SentientOnly"
+    ],
+    "apCost": 3,
+    "etherCost": 8,
+    "target": "Enemy",
+    "effects": [
+      {
+        "type": "ApplyStatus",
+        "min": 0,
+        "max": 0,
+        "statusEffectId": "status_mind_compelled",
+        "durationTurns": 2
+      }
+    ],
+    "icon": "MessageCircleWarning",
+    "requiredTargetTags": [],
+    "excludedTargetTags": [
+      "Robot",
+      "Drone"
+    ]
+  },
+  {
+    "id": "ability_mindmancer_memory_fracture",
+    "name": "Memory Fracture",
+    "description": "Disrupt short-term memory and orientation.",
+    "tags": [
+      "Mindmancer",
+      "Mental",
+      "SentientOnly"
+    ],
+    "apCost": 3,
+    "etherCost": 10,
+    "target": "Enemy",
+    "effects": [
+      {
+        "type": "Damage",
+        "min": 3,
+        "max": 6
+      },
+      {
+        "type": "ApplyStatus",
+        "min": 0,
+        "max": 0,
+        "statusEffectId": "status_memory_disrupted",
+        "durationTurns": 2
+      }
+    ],
+    "icon": "BrainCog",
+    "requiredTargetTags": [],
+    "excludedTargetTags": [
+      "Robot",
+      "Drone"
+    ]
+  },
+  {
+    "id": "ability_mindmancer_suppression",
+    "name": "Mental Suppression",
+    "description": "Push a sentient consciousness toward forced sleep.",
+    "tags": [
+      "Mindmancer",
+      "Mental",
+      "SentientOnly"
+    ],
+    "apCost": 4,
+    "etherCost": 12,
+    "target": "Enemy",
+    "effects": [
+      {
+        "type": "ApplyStatus",
+        "min": 0,
+        "max": 0,
+        "statusEffectId": "status_mental_suppression",
+        "durationTurns": 2
+      }
+    ],
+    "icon": "Moon",
+    "requiredTargetTags": [],
+    "excludedTargetTags": [
+      "Robot",
+      "Drone"
+    ]
   }
 ]

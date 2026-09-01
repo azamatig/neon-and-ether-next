@@ -280,13 +280,113 @@
         "id": "stage_04_inner_facility",
         "stageNumber": 4,
         "title": "Enter the Inner Facility",
-        "journalEntry": "The freight checkpoint is clear. Continue into the damaged Ares interior.",
+        "journalEntry": "Investigate the decontamination hall.",
         "objectives": [
           {
             "id": "obj_reach_inner_checkpoint",
-            "description": "Enter the Ares inner facility.",
-            "objectiveType": "ReachLocation",
-            "targetId": "poi_prologue_inner_checkpoint",
+            "description": "Investigate the decontamination hall.",
+            "objectiveType": "InteractPOI",
+            "targetId": "poi_prologue_decontamination_hall",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false,
+            "approachType": "Infiltration"
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_05_research_annex"
+      },
+      "stage_05_research_annex": {
+        "id": "stage_05_research_annex",
+        "stageNumber": 5,
+        "title": "Trace the Research",
+        "journalEntry": "Search the Research Annex for the cause of the containment deaths.",
+        "objectives": [
+          {
+            "id": "obj_investigate_annex",
+            "description": "Review Project Palimpsest.",
+            "objectiveType": "InteractPOI",
+            "targetId": "poi_prologue_research_annex",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_06_security_nexus"
+      },
+      "stage_06_security_nexus": {
+        "id": "stage_06_security_nexus",
+        "stageNumber": 6,
+        "title": "Prepare the Vault Approach",
+        "journalEntry": "Use the Security Nexus and regroup before containment.",
+        "objectives": [
+          {
+            "id": "obj_prepare_nexus",
+            "description": "Open the route to the Central Vault.",
+            "objectiveType": "InteractPOI",
+            "targetId": "poi_prologue_security_nexus",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_07_central_vault"
+      },
+      "stage_07_central_vault": {
+        "id": "stage_07_central_vault",
+        "stageNumber": 7,
+        "title": "Enter the Central Vault",
+        "journalEntry": "Approach the contained artifact with Rhea and Dax.",
+        "objectives": [
+          {
+            "id": "obj_contact_artifact",
+            "description": "Enter containment.",
+            "objectiveType": "InteractPOI",
+            "targetId": "poi_prologue_central_vault",
+            "requiredCount": 1,
+            "currentCount": 0,
+            "isOptional": false,
+            "isCompleted": false
+          }
+        ],
+        "entryConditions": [],
+        "completionConditions": [],
+        "actions": [],
+        "entryEffects": [],
+        "completionEffects": [],
+        "branches": [],
+        "nextStageId": "stage_08_escape_combat"
+      },
+      "stage_08_escape_combat": {
+        "id": "stage_08_escape_combat",
+        "stageNumber": 8,
+        "title": "Escape the Vault",
+        "journalEntry": "Dax is dead. Prepare to fight through the security response with Rhea.",
+        "objectives": [
+          {
+            "id": "obj_survive_escape",
+            "description": "Survive the escape combat.",
+            "objectiveType": "Custom",
             "requiredCount": 1,
             "currentCount": 0,
             "isOptional": false,

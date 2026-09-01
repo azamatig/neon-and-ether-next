@@ -16,6 +16,8 @@ export const AbilitySchema = BaseEntitySchema.extend({
   target: CombatTargetSchema.default('Enemy'),
   effects: z.array(AbilityEffectSchema).min(1),
   icon: z.string().default('Zap'),
+  requiredTargetTags:z.array(z.string()).default([]),
+  excludedTargetTags:z.array(z.string()).default([]),
 });
 export type Ability = z.infer<typeof AbilitySchema>;
 

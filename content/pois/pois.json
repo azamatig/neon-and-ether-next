@@ -1183,25 +1183,32 @@
     ]
   },
   {
-    "id": "poi_prologue_inner_checkpoint",
-    "name": "Inner Checkpoint",
-    "description": "The disabled security threshold opens onto the damaged Ares interior.",
+    "mapId": "map_prologue_ares_inner_vault",
+    "district": "Ares Central Repository",
+    "regionId": "reg_prologue_ares_inner_access",
     "tags": [
       "Prologue",
       "Ares",
       "Region2"
     ],
-    "mapId": "map_prologue_ares_inner_vault",
+    "visibilityConditions": [],
+    "questIds": [
+      "qst_prologue_ares_vault"
+    ],
+    "dangerLevel": 2,
+    "ambientEtherLevel": 18,
+    "controllingFactionId": "fac_ares_industries",
+    "environmentalExposure": "indoor",
+    "id": "poi_prologue_decontamination_hall",
+    "name": "Decontamination Hall",
+    "description": "A breached cleansing corridor littered with dead personnel and disabled security drones.",
     "mapPosition": {
-      "x": 18,
+      "x": 16,
       "y": 70
     },
-    "district": "Ares Central Repository",
-    "regionId": "reg_prologue_ares_inner_access",
-    "image": "poi_prologue_inner_checkpoint",
-    "icon": "DoorOpen",
+    "image": "poi_prologue_decontamination_hall",
+    "icon": "ScanLine",
     "category": "SecurityNode",
-    "visibilityConditions": [],
     "availabilityConditions": [
       {
         "type": "flag",
@@ -1210,19 +1217,515 @@
         "value": true
       }
     ],
-    "actions": [],
     "npcIds": [
       "npc_prologue_companion_female",
       "npc_prologue_companion_male"
     ],
+    "eventIds": [
+      "evt_prologue_decontamination_investigation"
+    ],
+    "encounterIds": [],
+    "actions": [
+      {
+        "id": "act_prologue_investigate_decontamination",
+        "label": "Examine the dead",
+        "description": "Determine what killed the personnel without leaving obvious trauma.",
+        "icon": "ScanSearch",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.decon_investigated",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_decontamination_investigation"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_search_decon_guards",
+        "label": "Search the fallen guards",
+        "description": "Recover supplies from the security detail.",
+        "icon": "Search",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.guards_searched",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "changeMoney",
+            "amount": 40,
+            "mode": "add"
+          },
+          {
+            "type": "addItem",
+            "itemId": "itm_prologue_ares_ballistic_cells",
+            "quantity": 2
+          },
+          {
+            "type": "addItem",
+            "itemId": "con_trauma_patch",
+            "quantity": 1
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.region2.guards_searched",
+            "value": true
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "Security Supplies",
+          "resultText": "You recover 40 credits, ammunition cells, and one trauma patch.",
+          "status": "Success"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      }
+    ]
+  },
+  {
+    "mapId": "map_prologue_ares_inner_vault",
+    "district": "Ares Central Repository",
+    "regionId": "reg_prologue_ares_inner_access",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Region2"
+    ],
+    "visibilityConditions": [],
     "questIds": [
       "qst_prologue_ares_vault"
     ],
-    "eventIds": [],
-    "encounterIds": [],
     "dangerLevel": 2,
     "ambientEtherLevel": 18,
     "controllingFactionId": "fac_ares_industries",
-    "environmentalExposure": "indoor"
+    "environmentalExposure": "indoor",
+    "id": "poi_prologue_research_annex",
+    "name": "Research Annex",
+    "description": "A restricted cognitive-research wing whose terminals still pulse behind cracked observation glass.",
+    "mapPosition": {
+      "x": 40,
+      "y": 38
+    },
+    "image": "poi_prologue_research_annex",
+    "icon": "Microscope",
+    "category": "Landmark",
+    "availabilityConditions": [
+      {
+        "type": "flag",
+        "flag": "prologue.region2.decon_investigated",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "npcIds": [
+      "npc_prologue_companion_female",
+      "npc_prologue_companion_male"
+    ],
+    "eventIds": [
+      "evt_prologue_research_annex"
+    ],
+    "encounterIds": [],
+    "actions": [
+      {
+        "id": "act_prologue_review_cognitive_project",
+        "label": "Review the cognitive project files",
+        "description": "Reconstruct what Ares learned from previous contact trials.",
+        "icon": "FileSearch",
+        "actionType": "Explore",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.annex_investigated",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_research_annex"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_recover_cognitive_filter",
+        "label": "Open the neural equipment case",
+        "description": "Bypass the case seal and recover its technical prototype.",
+        "icon": "BrainCircuit",
+        "actionType": "Interact",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.filter_recovered",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.region2.filter_attempted",
+            "value": true
+          }
+        ],
+        "check": {
+          "attribute": "mind",
+          "skill": "intrusion",
+          "difficulty": "Moderate",
+          "modifiers": [],
+          "passEffects": [
+            {
+              "type": "addItem",
+              "itemId": "cyb_prologue_ares_cognitive_filter",
+              "quantity": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "prologue.region2.filter_recovered",
+              "value": true
+            }
+          ],
+          "partialEffects": [
+            {
+              "type": "addItem",
+              "itemId": "itm_signal_scrap",
+              "quantity": 2
+            }
+          ],
+          "failEffects": [],
+          "passText": "The case opens around an intact cognitive filter.",
+          "partialText": "The filter is ruined, but useful control components remain.",
+          "failText": "The biometric seal destroys its own control board."
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      }
+    ]
+  },
+  {
+    "mapId": "map_prologue_ares_inner_vault",
+    "district": "Ares Central Repository",
+    "regionId": "reg_prologue_ares_inner_access",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Region2"
+    ],
+    "visibilityConditions": [],
+    "questIds": [
+      "qst_prologue_ares_vault"
+    ],
+    "dangerLevel": 2,
+    "ambientEtherLevel": 18,
+    "controllingFactionId": "fac_ares_industries",
+    "environmentalExposure": "indoor",
+    "id": "poi_prologue_security_nexus",
+    "name": "Security Nexus",
+    "description": "A hardened command station controls the vault alarms, response shutters, and a compact armory.",
+    "mapPosition": {
+      "x": 67,
+      "y": 56
+    },
+    "image": "poi_prologue_security_nexus",
+    "icon": "ShieldCheck",
+    "category": "SecurityNode",
+    "availabilityConditions": [
+      {
+        "type": "flag",
+        "flag": "prologue.region2.decon_investigated",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "npcIds": [
+      "npc_prologue_companion_female",
+      "npc_prologue_companion_male"
+    ],
+    "eventIds": [
+      "evt_prologue_security_nexus_companions"
+    ],
+    "encounterIds": [],
+    "actions": [
+      {
+        "id": "act_prologue_disable_vault_security",
+        "label": "Disable the vault response grid",
+        "description": "Suppress automated security before approaching containment.",
+        "icon": "ShieldOff",
+        "actionType": "Terminal",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.security_attempted",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.region2.security_attempted",
+            "value": true
+          }
+        ],
+        "check": {
+          "attribute": "etherTech",
+          "skill": "intrusion",
+          "difficulty": "Hard",
+          "modifiers": [],
+          "passEffects": [
+            {
+              "type": "setFlag",
+              "flag": "prologue.region2.security_disabled",
+              "value": true
+            },
+            {
+              "type": "setFlag",
+              "flag": "prologue.escape_combat_advantage",
+              "value": true
+            }
+          ],
+          "partialEffects": [
+            {
+              "type": "setFlag",
+              "flag": "prologue.region2.security_degraded",
+              "value": true
+            }
+          ],
+          "failEffects": [
+            {
+              "type": "setFlag",
+              "flag": "prologue.region2.security_alert",
+              "value": true
+            }
+          ],
+          "passText": "The response grid enters maintenance lockout.",
+          "partialText": "Several response shutters remain offline.",
+          "failText": "The Nexus rejects the override and hardens its remaining channels."
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_open_nexus_armory_keycard",
+        "label": "Open the emergency armory",
+        "description": "Use the recovered Ares security keycard.",
+        "icon": "KeyRound",
+        "actionType": "Interact",
+        "conditions": [
+          {
+            "type": "hasItem",
+            "itemId": "itm_prologue_ares_security_keycard",
+            "quantity": 1
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.region2.armory_opened",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "addItem",
+            "itemId": "con_trauma_patch",
+            "quantity": 2
+          },
+          {
+            "type": "addItem",
+            "itemId": "itm_prologue_ares_ballistic_cells",
+            "quantity": 3
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.region2.armory_opened",
+            "value": true
+          }
+        ],
+        "outcome": {
+          "type": "showResult",
+          "title": "Emergency Armory",
+          "resultText": "The keycard releases medical patches and ammunition cells.",
+          "status": "Success"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_force_nexus_armory",
+        "label": "Force the emergency armory",
+        "description": "Break the warped secondary lock without a valid keycard.",
+        "icon": "Wrench",
+        "actionType": "Interact",
+        "conditions": [
+          {
+            "type": "not",
+            "condition": {
+              "type": "hasItem",
+              "itemId": "itm_prologue_ares_security_keycard",
+              "quantity": 1
+            }
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.region2.armory_opened",
+            "operator": "!=",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.region2.armory_attempted",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.region2.armory_attempted",
+            "value": true
+          }
+        ],
+        "check": {
+          "attribute": "body",
+          "skill": "intrusion",
+          "difficulty": "Moderate",
+          "modifiers": [],
+          "passEffects": [
+            {
+              "type": "addItem",
+              "itemId": "con_trauma_patch",
+              "quantity": 2
+            },
+            {
+              "type": "addItem",
+              "itemId": "itm_prologue_ares_ballistic_cells",
+              "quantity": 3
+            },
+            {
+              "type": "setFlag",
+              "flag": "prologue.region2.armory_opened",
+              "value": true
+            }
+          ],
+          "partialEffects": [
+            {
+              "type": "addItem",
+              "itemId": "con_trauma_patch",
+              "quantity": 1
+            }
+          ],
+          "failEffects": [],
+          "passText": "The armory yields medical patches and ammunition cells.",
+          "partialText": "Only the medical drawer releases.",
+          "failText": "The warped lock refuses to cycle."
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      },
+      {
+        "id": "act_prologue_final_vault_briefing",
+        "label": "Regroup before the vault",
+        "description": "Speak with Rhea and Dax before opening containment access.",
+        "icon": "Users",
+        "actionType": "Talk",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.vault_route_open",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_security_nexus_companions"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      }
+    ]
+  },
+  {
+    "mapId": "map_prologue_ares_inner_vault",
+    "district": "Ares Central Repository",
+    "regionId": "reg_prologue_ares_inner_access",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Region2"
+    ],
+    "visibilityConditions": [],
+    "questIds": [
+      "qst_prologue_ares_vault"
+    ],
+    "dangerLevel": 4,
+    "ambientEtherLevel": 70,
+    "controllingFactionId": "fac_ares_industries",
+    "environmentalExposure": "indoor",
+    "id": "poi_prologue_central_vault",
+    "name": "Central Vault",
+    "description": "A layered containment chamber surrounds an object that registers as machinery and impossible ether resonance at once.",
+    "mapPosition": {
+      "x": 87,
+      "y": 25
+    },
+    "image": "poi_prologue_central_vault",
+    "icon": "Hexagon",
+    "category": "Vault",
+    "availabilityConditions": [
+      {
+        "type": "flag",
+        "flag": "prologue.region2.vault_route_open",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "npcIds": [
+      "npc_prologue_companion_female",
+      "npc_prologue_companion_male"
+    ],
+    "eventIds": [
+      "evt_prologue_central_vault_bonding"
+    ],
+    "encounterIds": [],
+    "actions": [
+      {
+        "id": "act_prologue_enter_central_vault",
+        "label": "Enter containment",
+        "description": "Approach the artifact with Rhea and Dax.",
+        "icon": "Orbit",
+        "actionType": "Event",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.mindmancer_bonded",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "outcome": {
+          "type": "event",
+          "eventId": "evt_prologue_central_vault_bonding"
+        },
+        "hideIfUnavailable": true,
+        "isRepeatable": false
+      }
+    ]
   }
 ]

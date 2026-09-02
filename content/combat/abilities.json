@@ -87,11 +87,10 @@
       }
     ],
     "icon": "ScanEye",
-    "requiredTargetTags": [],
-    "excludedTargetTags": [
-      "Robot",
-      "Drone"
-    ]
+    "requiredTargetTags": [
+      "HasMind"
+    ],
+    "excludedTargetTags": []
   },
   {
     "id": "ability_mindmancer_command",
@@ -115,11 +114,10 @@
       }
     ],
     "icon": "MessageCircleWarning",
-    "requiredTargetTags": [],
-    "excludedTargetTags": [
-      "Robot",
-      "Drone"
-    ]
+    "requiredTargetTags": [
+      "HasMind"
+    ],
+    "excludedTargetTags": []
   },
   {
     "id": "ability_mindmancer_memory_fracture",
@@ -148,11 +146,10 @@
       }
     ],
     "icon": "BrainCog",
-    "requiredTargetTags": [],
-    "excludedTargetTags": [
-      "Robot",
-      "Drone"
-    ]
+    "requiredTargetTags": [
+      "HasMind"
+    ],
+    "excludedTargetTags": []
   },
   {
     "id": "ability_mindmancer_suppression",
@@ -176,10 +173,9 @@
       }
     ],
     "icon": "Moon",
-    "requiredTargetTags": [],
-    "excludedTargetTags": [
-      "Robot",
-      "Drone"
-    ]
+    "requiredTargetTags": [
+      "HasMind"
+    ],
+    "excludedTargetTags": []
   }
 ]

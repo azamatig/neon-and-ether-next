@@ -19,6 +19,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     shop: new Set(content.shops.map((value) => value.id)),
     weather: new Set(content.weatherDefinitions.map((value) => value.id)), weatherProfile: new Set(content.weatherProfiles.map((value) => value.id)),
     statusEffect: new Set(content.statusEffects.map((value) => value.id)),
+    ability:new Set(content.abilities.map(value=>value.id)),
     minigame:new Set(content.minigames.map(value=>value.id)),
   };
   const missing = (set: ReadonlySet<string>, id: string | undefined, kind: string, owner: Owner) => {
@@ -66,6 +67,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if (current.type === 'setWeather') missing(ids.weather, current.weatherId, 'weather', owner);
     if (current.type === 'changeWeather') missing(ids.weatherProfile, current.weatherProfileId, 'weather profile', owner);
     if (current.type === 'applyStatusEffect') missing(ids.statusEffect, current.statusEffectId, 'status effect', owner);
+    if(current.type==='setAbilityUnlocked')missing(ids.ability,current.abilityId,'ability',owner);
   };
   const outcome = (value: GameplayOutcome | undefined, owner: Owner): void => {
     if (!value) return;

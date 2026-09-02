@@ -101,6 +101,7 @@ export const PlayerStateSchema = z.object({
   equipment: EquipmentStateSchema.default({ slots: {}, appliedModifiers: {} }),
   traits: z.array(z.string()).default([]),
   perks: z.array(z.string()).default([]),
+  abilityIds: z.array(z.string()).default([]),
   temporaryModifiers: z.array(CharacterStatModifierSchema).default([]),
   statusEffects: z.array(CharacterStatusEffectSchema).default([]),
   activeStatusEffects: z.array(ActiveStatusEffectSchema).default([]),

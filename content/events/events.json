@@ -1848,8 +1848,22 @@
           {
             "type": "addItem",
             "itemId": "itm_prologue_mindmancer_resonance",
-            "quantity": 1,
-            "autoEquip": true
+            "quantity": 1
+          },
+          {
+            "type": "setAbilityUnlocked",
+            "abilityId": "ability_mindmancer_read_mind",
+            "unlocked": true
+          },
+          {
+            "type": "setAbilityUnlocked",
+            "abilityId": "ability_mindmancer_command",
+            "unlocked": true
+          },
+          {
+            "type": "setAbilityUnlocked",
+            "abilityId": "ability_mindmancer_suppression",
+            "unlocked": true
           }
         ],
         "choices": []

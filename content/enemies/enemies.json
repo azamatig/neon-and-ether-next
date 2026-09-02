@@ -6,7 +6,8 @@
     "tags": [
       "OmniCorp",
       "Security",
-      "Humanoid"
+      "Humanoid",
+      "HasMind"
     ],
     "factionId": "fac_omnicorp",
     "level": 2,
@@ -116,7 +117,8 @@
     "tags": [
       "OmniCorp",
       "Security",
-      "EtherTech"
+      "EtherTech",
+      "HasMind"
     ],
     "factionId": "fac_omnicorp",
     "level": 2,
@@ -176,7 +178,8 @@
     "tags": [
       "Humanoid",
       "Scavenger",
-      "Surrenderable"
+      "Surrenderable",
+      "HasMind"
     ],
     "factionId": "fac_undercity_drifters",
     "level": 1,
@@ -231,7 +234,8 @@
     "tags": [
       "Ares",
       "Security",
-      "Humanoid"
+      "Humanoid",
+      "HasMind"
     ],
     "factionId": "fac_ares_industries",
     "level": 1,

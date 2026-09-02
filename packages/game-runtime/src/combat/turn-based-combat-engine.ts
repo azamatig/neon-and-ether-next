@@ -27,6 +27,7 @@ export class TurnBasedCombatEngine {
       .filter((item) => item !== undefined);
     const playerAbilities = new Set([
       ...(playerDefinition?.abilityIds ?? []),
+      ...gameState.player.abilityIds,
       ...equippedItems.flatMap((item) => item.grantedAbilityIds),
     ]);
     const weapon = equippedItems.find((item) => item.category === 'weapon');

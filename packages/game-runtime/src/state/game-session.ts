@@ -421,7 +421,7 @@ export class GameSession {
       inventory: p.inventory.items.map((slot) => ({ ...slot })),
       portraitIcon: 'User',
       defaultBehavior: 'Idle',
-      abilityIds: this.contentRegistry.getCharacter(p.characterId)?.abilityIds ?? [],
+      abilityIds: [...new Set([...(this.contentRegistry.getCharacter(p.characterId)?.abilityIds??[]),...p.abilityIds])],
       traits: this.contentRegistry.getCharacter(p.characterId)?.traits ?? [],
       availabilityConditions: [],
     };

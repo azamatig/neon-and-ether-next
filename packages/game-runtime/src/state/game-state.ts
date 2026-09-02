@@ -115,6 +115,7 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
     equipment: overrides.equipment ?? { slots: {}, appliedModifiers: {} },
     traits: overrides.traits ?? [],
     perks: overrides.perks ?? [],
+    abilityIds:overrides.abilityIds??[],
     temporaryModifiers: overrides.temporaryModifiers ?? [],
     statusEffects: overrides.statusEffects ?? [],
     activeStatusEffects: overrides.activeStatusEffects ?? [],
@@ -309,6 +310,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         facing: playerBlueprint.facing,
         traits: [...playerBlueprint.traits],
         perks: [...playerBlueprint.perks],
+        abilityIds:[...playerBlueprint.abilityIds],
         temporaryModifiers: [...playerBlueprint.temporaryModifiers],
         statusEffects: [...playerBlueprint.statusEffects],
         inventory: createInitialInventoryState({

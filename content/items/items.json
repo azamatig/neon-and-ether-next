@@ -455,11 +455,7 @@
     "modifiers": [],
     "equipEffects": [],
     "unequipEffects": [],
-    "grantedAbilityIds": [
-      "ability_mindmancer_read_mind",
-      "ability_mindmancer_command",
-      "ability_mindmancer_suppression"
-    ],
+    "grantedAbilityIds": [],
     "icon": "Brain"
   }
 ]

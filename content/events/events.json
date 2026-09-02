@@ -23,8 +23,8 @@
       {
         "id": "intro_arrival",
         "type": "image",
-        "title": "ARES LOGISTICS PERIMETER // DAY 1 // 20:00",
-        "text": "Rain washes the Ares freight lights into pale bands. Two silhouettes wait beside the service entrance.",
+        "title": "ARES LOGISTICS RING // 20:00",
+        "text": "Rain turns the freight lights into long white smears. Rhea and Dax wait beneath Service Gate 6.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -93,7 +93,7 @@
         "id": "intro_threshold",
         "type": "transition",
         "title": "THE ARES JOB",
-        "text": "Rhea and Dax are in position. The service entrance is the first controlled threshold.",
+        "text": "The camera turns away. For seven seconds, the service door belongs to you.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1066,7 +1066,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "Camera sweep is slow. We cross together, then stay below the rack lights.",
+        "text": "\u201cCamera sweeps every twelve seconds. Stay behind me and don\u2019t silhouette the door.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1079,16 +1079,56 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "Freight gate is our only route deeper. I will keep it open when we get there.",
+        "text": "\u201cLock 3 is the point of no return. Until then, quiet tools.\u201d",
         "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "service_bypass_clean",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_female",
+          "name": "Rhea Voss"
+        },
+        "text": "\u201cClean loop. They\u2019ll blame the reader before they blame us.\u201d",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.service_security_bypassed",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "service_bypass_alert",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "\u201cPort logged the splice. We keep moving and make the timestamp useless.\u201d",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.service_security_alerted",
+            "operator": "==",
+            "value": true
+          }
+        ],
         "effects": [],
         "choices": []
       },
       {
         "id": "service_enter",
         "type": "transition",
-        "title": "WAREHOUSE PERIMETER",
-        "text": "The service door seals behind the team.",
+        "title": "INSIDE THE PERIMETER",
+        "text": "The latch catches behind you. No alarm follows.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1179,8 +1219,28 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "Office terminal is still live. A clean route pull could save us trouble at freight access.",
+        "text": "\u201cMaintenance booth is live. A route pull now could buy us cover at Lock 3.\u201d",
         "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "warehouse_loot_reaction",
+        "type": "dialogue",
+        "speaker": {
+          "type": "companion",
+          "npcId": "npc_prologue_companion_male",
+          "name": "Dax Mercer"
+        },
+        "text": "\u201cBaton\u2019s charged. Keep it where you can reach it.\u201d",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.warehouse.lockers_searched",
+            "operator": "==",
+            "value": true
+          }
+        ],
         "effects": [],
         "choices": []
       },
@@ -1192,7 +1252,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "Take what you need from the lockers. Past that gate, we do not stop.",
+        "text": "\u201cTake patches, cells, one weapon. Anything heavier will slow the exit.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1233,8 +1293,8 @@
       {
         "id": "freight_route",
         "type": "narration",
-        "title": "ROUTE CONFIRMED",
-        "text": "The stolen security route exposes a maintenance channel below the checkpoint.",
+        "title": "A BLIND ANGLE",
+        "text": "The stolen map exposes a maintenance trench below the checkpoint sightline.",
         "conditions": [
           {
             "type": "flag",
@@ -1253,6 +1313,22 @@
         "choices": []
       },
       {
+        "id": "freight_maintenance_payload",
+        "type": "narration",
+        "title": "SHIFT-NET ACCESS",
+        "text": "The Maintenance Control breach left a valid service handshake in the lock controller.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.maintenance.breach_completed",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
         "id": "freight_rhea",
         "type": "dialogue",
         "speaker": {
@@ -1260,7 +1336,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "Once the gate cycles, the perimeter cannot cover us. Stay close.",
+        "text": "\u201cRoute is good until the gate cycles. After that, assume every camera is awake.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1273,7 +1349,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "Charges are set. Your call opens the door.",
+        "text": "\u201cCharges are seated. Say the word and Lock 3 forgets it was closed.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1281,8 +1357,8 @@
       {
         "id": "freight_transition",
         "type": "transition",
-        "title": "CHECKPOINT BREACH",
-        "text": "The freight lock disengages. Ares security moves on the far side.",
+        "title": "LOCK 3 CYCLING",
+        "text": "Steel withdraws into the walls. Boots move on the far side.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1332,8 +1408,8 @@
       {
         "id": "checkpoint_seal",
         "type": "image",
-        "title": "ACCESS ROUTE SEALED",
-        "text": "The gate slams shut behind the team. Two security officers spread across the loading lane while a sentry drone drops from its cradle.",
+        "title": "AMBUSH AT LOCK 3",
+        "text": "The rear gate slams down. Two officers spread across the cargo lane as a sentry drone drops from its cradle.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1341,8 +1417,8 @@
       {
         "id": "checkpoint_route_advantage",
         "type": "narration",
-        "title": "MAINTENANCE ANGLE",
-        "text": "The stolen route data exposes a protected loading recess. The team reaches cover before the firing line settles.",
+        "title": "THE MAP WAS RIGHT",
+        "text": "A narrow loading recess opens exactly where the stolen route promised it would.",
         "conditions": [
           {
             "type": "flag",
@@ -1362,7 +1438,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "Gate is locked. We clear the lane or we stay here.",
+        "text": "\u201cOfficers left. Drone high. Don\u2019t let it pin us.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1375,7 +1451,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "Drone first. I will keep the officers off you.",
+        "text": "\u201cI\u2019ll break their line. Move when I move.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1383,8 +1459,8 @@
       {
         "id": "checkpoint_engage",
         "type": "transition",
-        "title": "ARES SECURITY ENGAGED",
-        "text": "The checkpoint opens fire.",
+        "title": "ARES SECURITY // ENGAGED",
+        "text": "The first thermal round cuts through the rain mist.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1487,8 +1563,8 @@
       {
         "id": "checkpoint_aftermath",
         "type": "narration",
-        "title": "INNER ACCESS",
-        "text": "The keycard releases the inner bulkhead. Rhea checks the dark corridor while Dax seals the damaged checkpoint behind you.",
+        "title": "BEYOND THE PERIMETER",
+        "text": "The checkpoint keycard releases an inner bulkhead. Past it, the facility is dark\u2014and already damaged.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1496,8 +1572,8 @@
       {
         "id": "checkpoint_cross",
         "type": "transition",
-        "title": "ARES INNER FACILITY",
-        "text": "The team crosses into the security-damaged interior.",
+        "title": "ARES CENTRAL VAULT",
+        "text": "Dax seals Lock 3 behind you. The air beyond smells of antiseptic and burned insulation.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1562,9 +1638,25 @@
       {
         "id": "decon_bodies",
         "type": "narration",
-        "title": "NO EXTERNAL TRAUMA",
-        "text": "The personnel are dead where they fell. Armor is intact; there are no burns, wounds, or decompression signs. Damaged drones lie among them, destroyed by ordinary impacts.",
+        "title": "NO MARKS",
+        "text": "The drones were smashed against the walls. The guards simply fell. Their armor, eyes, and implants show no lethal trauma.",
         "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "decon_route_ends",
+        "type": "narration",
+        "title": "OFF THE MAP",
+        "text": "The stolen security route ends at this hall. Everything below was omitted from the logistics network.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.security_route_discovered",
+            "operator": "==",
+            "value": true
+          }
+        ],
         "effects": [],
         "choices": []
       },
@@ -1576,7 +1668,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "The drones were fought. The people simply stopped. That is not the same cause.",
+        "text": "\u201cMachines fought something. People didn\u2019t get the chance.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1589,7 +1681,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "No alarms in the bodies, no trauma. I want a clear path behind us.",
+        "text": "\u201cNo wounds, no gas alert. Keep your helmets sealed anyway.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1638,7 +1730,7 @@
         "id": "annex_project",
         "type": "narration",
         "title": "PROJECT PALIMPSEST",
-        "text": "Recovered files describe a contained interface that responds to attention, memory, and conscious expectation rather than conventional input.",
+        "text": "The files describe an interface that responds to attention, memory, and expectation\u2014not commands.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1646,9 +1738,41 @@
       {
         "id": "annex_subjects",
         "type": "narration",
-        "title": "CONTACT TRIALS",
-        "text": "Every recorded subject was marked incompatible. The final reports stop before defining what compatibility would mean.",
+        "title": "INCOMPATIBLE",
+        "text": "Every contact subject was rejected. The reports record the aftermath, then stop before defining success.",
         "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "annex_research_background",
+        "type": "narration",
+        "title": "FAMILIAR METHODOLOGY",
+        "text": "The trial notation is careful until the final week. Then every protocol becomes a request for more exposure time.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "origin.research",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "annex_corporate_background",
+        "type": "narration",
+        "title": "AN INTERNAL BLACK SITE",
+        "text": "The budget codes are buried under routine logistics\u2014exactly how corporate research hides a project from its own auditors.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "origin.corporate",
+            "operator": "==",
+            "value": true
+          }
+        ],
         "effects": [],
         "choices": []
       },
@@ -1660,7 +1784,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "Ares kept asking it questions with living people. We still do not know what answered.",
+        "text": "\u201cAres kept putting people in front of it. Whatever answered, they couldn\u2019t shut it back up.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1710,6 +1834,38 @@
     },
     "steps": [
       {
+        "id": "nexus_route_intel",
+        "type": "narration",
+        "title": "SECURITY ROUTE CONFIRMED",
+        "text": "The route cache identifies two emergency shutters the Nexus can keep open during withdrawal.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.security_route_discovered",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "nexus_annex_warning",
+        "type": "narration",
+        "title": "PALIMPSEST CONTAINMENT",
+        "text": "The Annex files mark the vault controls as observational only. Ares never found a command channel.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.project_palimsest_known",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
         "id": "nexus_rhea",
         "type": "dialogue",
         "speaker": {
@@ -1717,7 +1873,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "Whatever happened here passed through armor and walls. If either of us says stop, we stop.",
+        "text": "\u201cThis is where we walk away if we\u2019re walking away.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1730,7 +1886,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "I will hold the access line. You two read the chamber and come back out.",
+        "text": "\u201cI\u2019ll hold the seal. You read the chamber, take nothing you can\u2019t carry, and come back.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1738,8 +1894,8 @@
       {
         "id": "nexus_open",
         "type": "transition",
-        "title": "VAULT ROUTE OPEN",
-        "text": "The last containment seal accepts the checkpoint keycard.",
+        "title": "CENTRAL VAULT // ACCESS GRANTED",
+        "text": "The last seal opens without venting air. That is worse than an alarm.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1787,8 +1943,8 @@
       {
         "id": "vault_reveal",
         "type": "image",
-        "title": "CONTAINMENT CORE",
-        "text": "Inside overlapping magnetic frames hangs an object with machined edges and a surface that bends the chamber lights like deep water.",
+        "title": "THE OBJECT IN THE FRAME",
+        "text": "A black assembly hangs between magnetic rings. Its edges are machined; its depth does not agree with the room around it.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1796,8 +1952,8 @@
       {
         "id": "vault_approach",
         "type": "narration",
-        "title": "SIGNAL WITHOUT SOUND",
-        "text": "The chamber tone stretches downward until sound becomes pressure. Motion separates into delayed images. The artifact seems closer each time you blink.",
+        "title": "SOUND FALLS AWAY",
+        "text": "The chamber tone lengthens until it becomes pressure. Rhea moves, then her image follows a heartbeat later.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1810,7 +1966,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea // Surface Thought"
         },
-        "text": "Do not let it notice that I am afraid.",
+        "text": "Don\u2019t let it hear me being afraid.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1823,8 +1979,40 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax // Surface Thought"
         },
-        "text": "If the seal fails, get them behind me.",
+        "text": "If the frame breaks, get them behind me.",
         "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "vault_research_recognition",
+        "type": "narration",
+        "title": "THE MISSING DEFINITION",
+        "text": "Palimpsest called every subject incompatible. Looking at the object now, you understand the reports were describing refusal.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.project_palimsest_known",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "vault_street_instinct",
+        "type": "narration",
+        "title": "PREDATOR STILLNESS",
+        "text": "You know the stillness before violence. The chamber has the same stillness, but it is waiting for thought.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "origin.street",
+            "operator": "==",
+            "value": true
+          }
+        ],
         "effects": [],
         "choices": []
       },
@@ -1832,7 +2020,7 @@
         "id": "vault_contact",
         "type": "effect",
         "title": "CONTACT",
-        "text": "Your hand meets cold alloy. Something on the other side meets the shape of your mind. Thought, command, memory, and silence become distinct pressures you can reach.",
+        "text": "Cold alloy touches your palm. Something meets the shape of your mind\u2014not entering, not speaking, simply recognizing a door.",
         "conditions": [],
         "effects": [
           {
@@ -1872,7 +2060,7 @@
         "id": "vault_alarm",
         "type": "image",
         "title": "CONTAINMENT FAILURE",
-        "text": "Sound returns as an alarm. The magnetic frames shear apart and the chamber floor lifts in a white concussion.",
+        "text": "Sound returns all at once. The frames twist apart and the floor rises in a white concussion.",
         "conditions": [],
         "effects": [
           {
@@ -1896,7 +2084,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "Move. I have the door.",
+        "text": "\u201cGo.\u201d",
         "conditions": [],
         "effects": [
           {
@@ -1925,8 +2113,8 @@
       {
         "id": "vault_escape_prepare",
         "type": "transition",
-        "title": "ESCAPE ROUTE // SECURITY RESPONSE",
-        "text": "The blast seals Dax behind the collapsing access frame. Rhea pulls you toward the emergency route as security units converge.",
+        "title": "DAX IS GONE",
+        "text": "The access frame collapses between heartbeats. Rhea drags you toward the emergency route as security boots fill the corridor.",
         "conditions": [],
         "effects": [
           {
@@ -1976,8 +2164,8 @@
       {
         "id": "response_alarm",
         "type": "image",
-        "title": "VAULT ACCESS // SECURITY RESPONSE",
-        "text": "Emergency shutters split open. Three officers advance through the smoke while a security drone tracks Rhea across the collapsed gantry.",
+        "title": "RESPONSE LINE",
+        "text": "Three officers enter through the smoke. A drone floats above them, precise and empty.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1985,8 +2173,8 @@
       {
         "id": "response_instinct",
         "type": "narration",
-        "title": "NEW SIGNALS",
-        "text": "Human intent presses against your awareness as distinct, fragile patterns. The drone is only telemetry and motion\u2014there is no mind behind it to touch.",
+        "title": "MINDS IN THE STATIC",
+        "text": "Human intent brushes your awareness\u2014fear, aim, obedience. The drone gives you nothing at all.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1999,7 +2187,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "Whatever the artifact gave you, use it on the officers. The drone is mine.",
+        "text": "\u201cThe officers hesitate when you touch them. The drone won\u2019t. I\u2019ll take it.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2007,8 +2195,8 @@
       {
         "id": "response_engage",
         "type": "transition",
-        "title": "BREAK THE RESPONSE LINE",
-        "text": "The first practical test of the new connection begins.",
+        "title": "FIRST CONTACT UNDER FIRE",
+        "text": "You reach for the nearest human thought before you know what reaching means.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2046,8 +2234,8 @@
       {
         "id": "officer_found",
         "type": "narration",
-        "title": "ONE SURVIVOR",
-        "text": "An Ares lieutenant remains conscious beneath a broken barrier. His weapon is out of reach; fear and drilled procedure flicker at the edge of your awareness.",
+        "title": "ONE MIND LEFT AWAKE",
+        "text": "Lieutenant Hale is trapped under a barrier, weapon gone. His fear arrives before his voice does.",
         "conditions": [],
         "effects": [
           {
@@ -2072,13 +2260,13 @@
         "id": "officer_choice",
         "type": "choice",
         "title": "FIRST CONTACT",
-        "text": "Decide what to do with Lieutenant Hale.",
+        "text": "His thoughts are close enough to touch. That does not make any choice harmless.",
         "conditions": [],
         "effects": [],
         "choices": [
           {
             "id": "choice_read_mind",
-            "text": "READ MIND \u2014 search his surface thoughts for useful information.",
+            "text": "READ MIND \u2014 follow the memory behind his fear.",
             "conditions": [
               {
                 "type": "flag",
@@ -2119,7 +2307,7 @@
           },
           {
             "id": "choice_erase_memory",
-            "text": "ERASE MEMORY \u2014 remove his recollection of the team and the artifact.",
+            "text": "ERASE MEMORY \u2014 remove the last hour.",
             "conditions": [
               {
                 "type": "flag",
@@ -2163,7 +2351,7 @@
           },
           {
             "id": "choice_force_sleep",
-            "text": "FORCE SLEEP \u2014 suppress consciousness without killing him.",
+            "text": "FORCE SLEEP \u2014 put him down without killing him.",
             "conditions": [
               {
                 "type": "flag",
@@ -2207,7 +2395,7 @@
           },
           {
             "id": "choice_kill_officer",
-            "text": "KILL \u2014 end the threat conventionally.",
+            "text": "KILL \u2014 leave no conscious witness.",
             "conditions": [],
             "effects": [
               {
@@ -2236,7 +2424,7 @@
           },
           {
             "id": "choice_attempt_control",
-            "text": "COMMAND \u2014 attempt sustained control.",
+            "text": "COMMAND \u2014 try to hold his will.",
             "conditions": [
               {
                 "type": "flag",
@@ -2275,8 +2463,8 @@
       {
         "id": "officer_read_result",
         "type": "narration",
-        "title": "BORROWED THOUGHT",
-        "text": "The warning was waiting before your team entered the perimeter. Hale remembers an operation profile delivered through an internal dead channel\u2014but not the sender. Someone leaked the job.",
+        "title": "A MEMORY THAT ISN\u2019T YOURS",
+        "text": "Ares had your entry window and team profile before you crossed Gate 6. Hale saw the packet arrive through an internal dead channel. He never saw who sent it.",
         "conditions": [
           {
             "type": "flag",
@@ -2295,8 +2483,8 @@
       {
         "id": "officer_erase_result",
         "type": "narration",
-        "title": "BLANK INTERVAL",
-        "text": "The last hour loosens and collapses. Hale retains his name and training, but the team and the artifact are gone from recent memory.",
+        "title": "THE LAST HOUR UNRAVELS",
+        "text": "Recent memory comes apart under your attention. His name remains. The vault, your faces, and the artifact do not.",
         "conditions": [
           {
             "type": "flag",
@@ -2316,7 +2504,7 @@
         "id": "officer_sleep_result",
         "type": "narration",
         "title": "QUIET",
-        "text": "His resistance softens. Breath steadies, muscles release, and the officer falls safely unconscious.",
+        "text": "You press against wakefulness until it gives way. Hale\u2019s breathing steadies; the fear goes dark.",
         "conditions": [
           {
             "type": "flag",
@@ -2335,8 +2523,8 @@
       {
         "id": "officer_kill_result",
         "type": "narration",
-        "title": "NO WITNESS",
-        "text": "The lieutenant dies before the response network can reconnect to his armor.",
+        "title": "NO SIGNAL",
+        "text": "The lieutenant dies before his armor reconnects to the response net.",
         "conditions": [
           {
             "type": "flag",
@@ -2355,8 +2543,8 @@
       {
         "id": "officer_control_result",
         "type": "narration",
-        "title": "CONTROL SLIPS",
-        "text": "You can force a word and interrupt an impulse, but sustained domination fractures immediately. The connection is not yet stable enough to hold another will.",
+        "title": "A COMMAND, NOT CONTROL",
+        "text": "You stop one impulse and force one word. Trying to hold more makes both minds buckle. Whatever this is, domination is beyond you.",
         "conditions": [
           {
             "type": "flag",
@@ -2401,8 +2589,8 @@
       {
         "id": "escape_alarms",
         "type": "image",
-        "title": "FACILITY COLLAPSE",
-        "text": "Alarms overlap with rupturing conduits. Damaged drones fire blindly through smoke while containment shutters grind closed.",
+        "title": "FACILITY FAILURE",
+        "text": "Shutters grind through smoke. Damaged drones fire at movement while containment alarms contradict one another.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2410,8 +2598,72 @@
       {
         "id": "escape_run",
         "type": "narration",
-        "text": "You and Rhea cross the research annex through falling glass and dead emergency lights. Every pursuing mind burns as a brief pressure behind your eyes.",
+        "text": "You and Rhea cross the Annex under dead lights. Pursuing minds flare behind you like matches struck in another room.",
         "conditions": [],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "escape_read_consequence",
+        "type": "narration",
+        "title": "THE LEAK",
+        "text": "Hale\u2019s stolen memory follows you through the smoke: Ares knew the team was coming.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.read_mind",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "escape_erase_consequence",
+        "type": "narration",
+        "title": "A CLEAN GAP",
+        "text": "Behind you, Hale wakes without the last hour\u2014and without a face to give Ares.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.memory_erased",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "escape_sleep_consequence",
+        "type": "narration",
+        "title": "ONE LIFE LEFT BEHIND",
+        "text": "Hale remains unconscious beneath the barrier, alive when you last feel his mind fade from range.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.forced_sleep",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "escape_control_consequence",
+        "type": "narration",
+        "title": "THE LIMIT",
+        "text": "The failed command leaves a pressure behind your eyes and the certainty that forcing harder would have broken someone.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.control_attempted",
+            "operator": "==",
+            "value": true
+          }
+        ],
         "effects": [],
         "choices": []
       },
@@ -2423,7 +2675,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "They are tracking both signatures. We split at the service trench. I will reach the safehouse after I shake them.",
+        "text": "\u201cThey have both signatures. We split at the runoff trench.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2436,7 +2688,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "Do not wait outside. I will come back.",
+        "text": "\u201cGo inside when you reach Glassline. I\u2019ll be there.\u201d",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2444,8 +2696,8 @@
       {
         "id": "escape_separation",
         "type": "transition",
-        "title": "SEPARATE ROUTES",
-        "text": "Rhea vanishes into the eastern runoff tunnels. You take the artifact connection west toward Glassline.",
+        "title": "TWO ROUTES OUT",
+        "text": "Rhea disappears east into the runoff tunnels. You carry Dax\u2019s silence west.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2518,8 +2770,8 @@
       {
         "id": "inspect_resonance",
         "type": "narration",
-        "title": "NO OBJECT TO SET DOWN",
-        "text": "The recovered resonance is not lodged in your gear. It answers from somewhere behind thought, where your own memories should be silent.",
+        "title": "NOTHING TO PUT DOWN",
+        "text": "The artifact is not in your pack. The resonance answers from behind your own memories, where thought should be private.",
         "conditions": [],
         "effects": [
           {
@@ -2563,7 +2815,7 @@
         "id": "ending_wait",
         "type": "narration",
         "title": "SAFEHOUSE // 06:10",
-        "text": "The door remains closed. The receiver cycles through Rhea\u2019s channel and finds only rain-static.",
+        "text": "Rain ticks against the shielded windows. Rhea\u2019s channel remains open. The door remains closed.",
         "conditions": [],
         "effects": [
           {
@@ -2582,8 +2834,8 @@
       {
         "id": "ending_no_message",
         "type": "narration",
-        "title": "CONNECTION FAILED",
-        "text": "No message arrives. Her courier signature never reaches the district relays.",
+        "title": "NO HANDSHAKE",
+        "text": "No courier signature reaches Glassline. No emergency burst. Each connection attempt returns the same empty carrier.",
         "conditions": [],
         "effects": [
           {
@@ -2604,10 +2856,58 @@
         "choices": []
       },
       {
+        "id": "ending_checked_channels",
+        "type": "narration",
+        "title": "EVERY CHANNEL",
+        "text": "You already checked the courier bands twice. Waiting does not change the answer.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.messages_checked",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "ending_artifact_attention",
+        "type": "narration",
+        "title": "ATTENTION",
+        "text": "When you focus on the bound resonance, something seems to focus back.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.safehouse.artifact_inspected",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
+        "id": "ending_read_mind_hook",
+        "type": "narration",
+        "title": "THE DEAD CHANNEL",
+        "text": "The stolen memory remains intact: timing, profiles, an internal route\u2014and no sender.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.officer.read_mind",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "effects": [],
+        "choices": []
+      },
+      {
         "id": "ending_whisper",
         "type": "narration",
-        "title": "A THOUGHT THAT IS NOT YOURS",
-        "text": "Just before sleep, a voice shaped like your own thinks: she is not the only mind that knows where you are.",
+        "title": "A THOUGHT THAT ISN\u2019T YOURS",
+        "text": "As sleep takes you, your own inner voice says: she is not the only mind that knows where you are.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2616,7 +2916,7 @@
         "id": "ending_complete",
         "type": "transition",
         "title": "PROLOGUE COMPLETE",
-        "text": "The Ares job is over. Its consequences are not.",
+        "text": "The Ares job is over. Dax is dead. Rhea is missing. Something came home with you.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2625,7 +2925,7 @@
         "id": "ending_three_days",
         "type": "image",
         "title": "3 DAYS LATER // MEGACITY-9",
-        "text": "Rain moves across the towers. The city continues without explanation.",
+        "text": "Rain moves across the towers. Somewhere in the city, a stranger dreams in a voice you recognize.",
         "conditions": [],
         "effects": [],
         "choices": []

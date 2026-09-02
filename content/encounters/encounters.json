@@ -271,8 +271,8 @@
   },
   {
     "id": "enc_prologue_ares_freight_checkpoint",
-    "name": "Freight Checkpoint Lockdown",
-    "description": "Two Ares security officers and a sentry drone seal the freight route behind the infiltration team.",
+    "name": "Lock 3 Interception",
+    "description": "Ares closes the freight lock and deploys two officers with a cradle-mounted sentry drone.",
     "tags": [
       "Prologue",
       "Ares",
@@ -301,7 +301,7 @@
     "environment": {
       "ambientEtherLevel": 12,
       "lighting": "Strobe",
-      "hazardDescription": "The freight lock seals behind the party while warning strobes cut across the loading lane.",
+      "hazardDescription": "Lock 3 seals behind the team. Red work-lights strobe across cargo lanes with nowhere to retreat.",
       "inheritWorldEnvironment": false,
       "environmentTags": [
         "indoor",
@@ -402,8 +402,8 @@
   },
   {
     "id": "enc_prologue_ares_vault_response",
-    "name": "Vault Response Wave",
-    "description": "Ares response personnel and a security drone converge on the damaged containment access.",
+    "name": "Containment Response",
+    "description": "Three shaken Ares officers push through the breach behind a drone that has no mind for the artifact to touch.",
     "tags": [
       "Prologue",
       "Ares",
@@ -433,7 +433,7 @@
     "environment": {
       "ambientEtherLevel": 65,
       "lighting": "Strobe",
-      "hazardDescription": "Containment arcs cut across the damaged vault access while alarms distort tactical sensors.",
+      "hazardDescription": "Containment arcs crawl over the floor while alarms and half-heard human intent compete for attention.",
       "inheritWorldEnvironment": false,
       "environmentTags": [
         "indoor",

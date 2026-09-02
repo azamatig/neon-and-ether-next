@@ -174,8 +174,8 @@
       },
       {
         "id": "act_prologue_safehouse_rest",
-        "label": "Rest",
-        "description": "Treat your injuries and listen for the safehouse door.",
+        "label": "Rest by the receiver",
+        "description": "Treat the worst injuries without closing Rhea\u2019s channel.",
         "icon": "Bed",
         "actionType": "Rest",
         "conditions": [
@@ -233,8 +233,8 @@
       },
       {
         "id": "act_prologue_safehouse_messages",
-        "label": "Check Messages",
-        "description": "Search every courier and emergency channel for Rhea.",
+        "label": "Check every channel",
+        "description": "Search courier relays and emergency frequencies for Rhea.",
         "icon": "MessageSquareOff",
         "actionType": "Interact",
         "conditions": [
@@ -275,8 +275,8 @@
       },
       {
         "id": "act_prologue_safehouse_inspect_artifact",
-        "label": "Inspect the Artifact Connection",
-        "description": "Focus on the resonance that followed you out of Ares.",
+        "label": "Listen to the resonance",
+        "description": "Focus on what followed you out of Ares.",
         "icon": "Brain",
         "actionType": "Event",
         "conditions": [
@@ -309,8 +309,8 @@
       },
       {
         "id": "act_prologue_safehouse_wait",
-        "label": "Wait for Rhea",
-        "description": "Keep the receiver open and wait until morning.",
+        "label": "Wait until morning",
+        "description": "Leave the receiver open and watch the door.",
         "icon": "Clock",
         "actionType": "Event",
         "conditions": [
@@ -943,8 +943,8 @@
     "ambientEtherLevel": 10,
     "controllingFactionId": "fac_ares_industries",
     "id": "poi_prologue_service_entrance",
-    "name": "Service Entrance",
-    "description": "A recessed staff entrance watched by an aging badge reader and a single security camera.",
+    "name": "Service Gate 6",
+    "description": "A staff door sits below the loading decks, its badge reader blinking through rain and camera glare.",
     "mapPosition": {
       "x": 15,
       "y": 72
@@ -965,8 +965,8 @@
     "actions": [
       {
         "id": "act_prologue_bypass_service_security",
-        "label": "Bypass the badge reader",
-        "description": "Loop the entrance sensor before crossing the threshold.",
+        "label": "Loop the badge reader",
+        "description": "Spoof a maintenance cycle before the camera turns.",
         "icon": "CircuitBoard",
         "actionType": "Terminal",
         "conditions": [
@@ -1019,8 +1019,8 @@
       },
       {
         "id": "act_prologue_enter_with_team",
-        "label": "Enter with the team",
-        "description": "Check in with your companions and move into the warehouse.",
+        "label": "Cross the service threshold",
+        "description": "Confirm the route with Rhea and Dax, then enter.",
         "icon": "Users",
         "actionType": "Event",
         "conditions": [],
@@ -1050,8 +1050,8 @@
     "ambientEtherLevel": 10,
     "controllingFactionId": "fac_ares_industries",
     "id": "poi_prologue_warehouse",
-    "name": "Warehouse",
-    "description": "Automated racks stand in dark aisles between dormant freight lifters.",
+    "name": "Cold-Storage Warehouse",
+    "description": "Freight lifters sleep between black storage aisles. Somewhere overhead, an inspection drone rolls along its rail.",
     "mapPosition": {
       "x": 39,
       "y": 47
@@ -1079,8 +1079,8 @@
     "actions": [
       {
         "id": "act_prologue_search_lockers",
-        "label": "Search the staff lockers",
-        "description": "Look for supplies the evacuation crews left behind.",
+        "label": "Sweep the staff lockers",
+        "description": "Take only what the team can carry quietly.",
         "icon": "Search",
         "actionType": "Explore",
         "conditions": [
@@ -1124,8 +1124,8 @@
       },
       {
         "id": "act_prologue_warehouse_companion",
-        "label": "Check on the team",
-        "description": "Take a moment before approaching the secured freight lanes.",
+        "label": "Check the team",
+        "description": "Pause beneath the lifter noise before moving deeper.",
         "icon": "MessageSquare",
         "actionType": "Talk",
         "conditions": [
@@ -1162,8 +1162,8 @@
     "ambientEtherLevel": 10,
     "controllingFactionId": "fac_ares_industries",
     "id": "poi_prologue_maintenance_office",
-    "name": "Maintenance Office",
-    "description": "A glass-walled control room overlooks the freight conveyors and internal security routes.",
+    "name": "Maintenance Control",
+    "description": "A glass control booth overlooks the conveyors. Its terminal still trusts the night-shift network.",
     "mapPosition": {
       "x": 65,
       "y": 28
@@ -1186,8 +1186,8 @@
     "actions": [
       {
         "id": "act_prologue_breach_maintenance_node",
-        "label": "Breach the maintenance node",
-        "description": "Extract whichever payloads you can before the trace closes.",
+        "label": "Breach the shift network",
+        "description": "Pull selected payloads before the local trace closes.",
         "icon": "Binary",
         "actionType": "Terminal",
         "conditions": [
@@ -1214,8 +1214,8 @@
       },
       {
         "id": "act_prologue_search_maintenance_office",
-        "label": "Inspect the shift desk",
-        "description": "Search the abandoned desk for a physical route note.",
+        "label": "Search the abandoned desk",
+        "description": "Check the night supervisor\u2019s station for a physical route note.",
         "icon": "FileSearch",
         "actionType": "Explore",
         "conditions": [
@@ -1260,8 +1260,8 @@
     "ambientEtherLevel": 10,
     "controllingFactionId": "fac_ares_industries",
     "id": "poi_prologue_freight_access",
-    "name": "Freight Access",
-    "description": "A pressure-rated freight gate separates the warehouse perimeter from the deeper Ares facility.",
+    "name": "Freight Lock 3",
+    "description": "A pressure gate divides the public logistics ring from the classified levels below.",
     "mapPosition": {
       "x": 84,
       "y": 61
@@ -1289,8 +1289,8 @@
     "actions": [
       {
         "id": "act_prologue_review_security_route",
-        "label": "Review the security route",
-        "description": "Use the stolen route data to mark a safer approach.",
+        "label": "Mark the blind approach",
+        "description": "Use the stolen route map to avoid the checkpoint\u2019s main firing line.",
         "icon": "Route",
         "actionType": "Interact",
         "conditions": [
@@ -1330,8 +1330,8 @@
       },
       {
         "id": "act_prologue_enter_deeper_facility",
-        "label": "Enter the deeper facility",
-        "description": "Make final preparations and open the freight gate.",
+        "label": "Cycle Freight Lock 3",
+        "description": "Commit the team to the classified levels below.",
         "icon": "ArrowRight",
         "actionType": "Event",
         "conditions": [],
@@ -1363,8 +1363,8 @@
     "controllingFactionId": "fac_ares_industries",
     "environmentalExposure": "indoor",
     "id": "poi_prologue_decontamination_hall",
-    "name": "Decontamination Hall",
-    "description": "A breached cleansing corridor littered with dead personnel and disabled security drones.",
+    "name": "Decontamination Hall C",
+    "description": "Cleansing mist drifts over dead guards and broken drones. The guards\u2019 armor is almost untouched.",
     "mapPosition": {
       "x": 16,
       "y": 70
@@ -1391,8 +1391,8 @@
     "actions": [
       {
         "id": "act_prologue_investigate_decontamination",
-        "label": "Examine the dead",
-        "description": "Determine what killed the personnel without leaving obvious trauma.",
+        "label": "Examine the casualties",
+        "description": "Find what killed the guards without damaging their armor.",
         "icon": "ScanSearch",
         "actionType": "Explore",
         "conditions": [
@@ -1413,8 +1413,8 @@
       },
       {
         "id": "act_prologue_search_decon_guards",
-        "label": "Search the fallen guards",
-        "description": "Recover supplies from the security detail.",
+        "label": "Search the security detail",
+        "description": "Recover field supplies without disturbing the scene further.",
         "icon": "Search",
         "actionType": "Explore",
         "conditions": [
@@ -1476,8 +1476,8 @@
     "controllingFactionId": "fac_ares_industries",
     "environmentalExposure": "indoor",
     "id": "poi_prologue_research_annex",
-    "name": "Research Annex",
-    "description": "A restricted cognitive-research wing whose terminals still pulse behind cracked observation glass.",
+    "name": "Palimpsest Research Annex",
+    "description": "Cracked observation glass surrounds terminals labelled for cognitive-interface trials.",
     "mapPosition": {
       "x": 40,
       "y": 38
@@ -1504,8 +1504,8 @@
     "actions": [
       {
         "id": "act_prologue_review_cognitive_project",
-        "label": "Review the cognitive project files",
-        "description": "Reconstruct what Ares learned from previous contact trials.",
+        "label": "Reconstruct Project Palimpsest",
+        "description": "Recover the surviving fragments of Ares\u2019s contact trials.",
         "icon": "FileSearch",
         "actionType": "Explore",
         "conditions": [
@@ -1526,8 +1526,8 @@
       },
       {
         "id": "act_prologue_recover_cognitive_filter",
-        "label": "Open the neural equipment case",
-        "description": "Bypass the case seal and recover its technical prototype.",
+        "label": "Open the neural case",
+        "description": "Bypass the purge seal around an intact research prototype.",
         "icon": "BrainCircuit",
         "actionType": "Interact",
         "conditions": [
@@ -1597,8 +1597,8 @@
     "controllingFactionId": "fac_ares_industries",
     "environmentalExposure": "indoor",
     "id": "poi_prologue_security_nexus",
-    "name": "Security Nexus",
-    "description": "A hardened command station controls the vault alarms, response shutters, and a compact armory.",
+    "name": "Vault Security Nexus",
+    "description": "The last active command station controls response shutters, the armory, and Central Vault access.",
     "mapPosition": {
       "x": 67,
       "y": 56
@@ -1625,8 +1625,8 @@
     "actions": [
       {
         "id": "act_prologue_disable_vault_security",
-        "label": "Disable the vault response grid",
-        "description": "Suppress automated security before approaching containment.",
+        "label": "Blind the response grid",
+        "description": "Suppress automated security before opening the vault route.",
         "icon": "ShieldOff",
         "actionType": "Terminal",
         "conditions": [
@@ -1684,8 +1684,8 @@
       },
       {
         "id": "act_prologue_open_nexus_armory_keycard",
-        "label": "Open the emergency armory",
-        "description": "Use the recovered Ares security keycard.",
+        "label": "Use the keycard on the armory",
+        "description": "Open the emergency stock with the checkpoint credential.",
         "icon": "KeyRound",
         "actionType": "Interact",
         "conditions": [
@@ -1729,8 +1729,8 @@
       },
       {
         "id": "act_prologue_force_nexus_armory",
-        "label": "Force the emergency armory",
-        "description": "Break the warped secondary lock without a valid keycard.",
+        "label": "Force the armory lock",
+        "description": "Break the warped secondary latch without a valid credential.",
         "icon": "Wrench",
         "actionType": "Interact",
         "conditions": [
@@ -1801,8 +1801,8 @@
       },
       {
         "id": "act_prologue_final_vault_briefing",
-        "label": "Regroup before the vault",
-        "description": "Speak with Rhea and Dax before opening containment access.",
+        "label": "Regroup at the vault seal",
+        "description": "Give Rhea and Dax one last chance to call the operation.",
         "icon": "Users",
         "actionType": "Talk",
         "conditions": [
@@ -1841,8 +1841,8 @@
     "controllingFactionId": "fac_ares_industries",
     "environmentalExposure": "indoor",
     "id": "poi_prologue_central_vault",
-    "name": "Central Vault",
-    "description": "A layered containment chamber surrounds an object that registers as machinery and impossible ether resonance at once.",
+    "name": "Central Containment Vault",
+    "description": "Magnetic frames surround something built like a machine and felt like a presence.",
     "mapPosition": {
       "x": 87,
       "y": 25
@@ -1869,8 +1869,8 @@
     "actions": [
       {
         "id": "act_prologue_enter_central_vault",
-        "label": "Enter containment",
-        "description": "Approach the artifact with Rhea and Dax.",
+        "label": "Open containment access",
+        "description": "Enter the chamber together. There is no clean reading from inside.",
         "icon": "Orbit",
         "actionType": "Event",
         "conditions": [

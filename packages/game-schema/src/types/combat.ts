@@ -28,6 +28,7 @@ export const StatusEffectDefinitionSchema = BaseEntitySchema.extend({
   damagePerTick: z.number().int().min(0).default(0),
   healingPerTick: z.number().int().min(0).default(0),
   armorModifier: z.number().int().default(0),
+  preventsTurn: z.boolean().default(false),
   icon: z.string().default('Activity'),
 });
 export type StatusEffectDefinition = z.infer<typeof StatusEffectDefinitionSchema>;
@@ -81,6 +82,7 @@ export const CombatantSchema = z.object({
   aiProfileId: z.string().optional(),
   statuses: z.array(CombatantStatusSchema).default([]),
   isDefeated: z.boolean().default(false),
+  isIncapacitated: z.boolean().default(false),
   position: CombatGridPositionSchema.default({ x: 0, y: 0 }),
   movementRange: z.number().int().min(1).default(3),
   movementRemaining: z.number().int().min(0).default(3),

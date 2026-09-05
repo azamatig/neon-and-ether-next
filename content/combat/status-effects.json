@@ -82,6 +82,7 @@
     "damagePerTick": 0,
     "healingPerTick": 0,
     "armorModifier": -3,
+    "preventsTurn": true,
     "icon": "Moon"
   }
 ]

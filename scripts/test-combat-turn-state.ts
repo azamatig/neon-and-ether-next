@@ -20,17 +20,25 @@ const skippedId = state.turnOrder.find((id) => id !== state.activeCombatantId);
 if (!skippedId) throw new Error('Fixture requires a second combatant.');
 state.combatants[skippedId].isDefeated = true;
 state.combatants[skippedId].currentHp = 0;
+const incapacitatedId = state.turnOrder.find((id) => id !== state.activeCombatantId && id !== skippedId);
+if (!incapacitatedId) throw new Error('Fixture requires an incapacitated combatant.');
+state.combatants[incapacitatedId].statuses = [{ statusEffectId: 'status_mental_suppression', remainingTurns: 2 }];
+state.combatants[incapacitatedId].isIncapacitated = true;
 
 const targetRound = state.roundNumber + 10;
 let transitions = 0;
+let recoveredActorReceivedTurn = false;
 while (state.roundNumber < targetRound) {
   assertActiveInvariant();
+  if (state.activeCombatantId === incapacitatedId) recoveredActorReceivedTurn = true;
   const result = engine.execute(state, { type: 'EndTurn', actorId: state.activeCombatantId! });
   if (!result.success) throw new Error(result.reason ?? 'EndTurn failed.');
   state = result.state;
   if (state.phase === 'ACTIVE' && state.activeCombatantId === skippedId) throw new Error('Defeated actor was selected.');
+  if (state.phase === 'ACTIVE' && state.activeCombatantId === incapacitatedId && state.combatants[incapacitatedId].isIncapacitated) throw new Error('Incapacitated actor was selected.');
   transitions += 1;
   if (transitions > 200) throw new Error('Infinite turn loop guard exceeded.');
 }
 assertActiveInvariant();
+if (!recoveredActorReceivedTurn) throw new Error('Recovered combatant never returned to turn order.');
 console.log('Combat turn state remained valid for 10 consecutive rounds.');

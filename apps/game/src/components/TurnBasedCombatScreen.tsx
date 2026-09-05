@@ -44,14 +44,14 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
       <div><p>COMBAT GRID</p><h2>{state.encounterId?.replaceAll('_', ' ')}</h2></div>
       <span>ROUND {state.roundNumber} · TURN {state.activeTurnIndex + 1}/{state.turnOrder.length}</span>
     </header>
-    <div className="combat-turn-order"><strong>TURN ORDER</strong>{state.turnOrder.map((id) => { const unit=state.combatants[id]; return <span key={id} className={`${id===activeId?'is-active':''} ${unit?.team==='Enemy'?'is-enemy':''}`}>{unit?.name}{unit?.isDefeated?' · DOWN':''}</span>; })}</div>
+    <div className="combat-turn-order"><strong>TURN ORDER</strong>{state.turnOrder.map((id) => { const unit=state.combatants[id]; return <span key={id} className={`${id===activeId?'is-active':''} ${unit?.team==='Enemy'?'is-enemy':''} ${unit?.isDefeated?'is-defeated':''} ${unit?.isIncapacitated?'is-incapacitated':''}`}>{unit?.name}{unit?.isDefeated?' · DEAD':unit?.isIncapacitated?' · INCAPACITATED':''}</span>; })}</div>
     <div className="combat-grid-layout">
       <div className="combat-board" style={{ gridTemplateColumns: `repeat(${state.grid.width}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${state.grid.height}, minmax(58px, 1fr))` }}>
         {Array.from({ length: state.grid.width * state.grid.height }, (_, index) => {
           const x=index%state.grid.width; const y=Math.floor(index/state.grid.width); const key=`${x}:${y}`; const unit=occupants.get(key); const tile=tiles.get(key);
           const legalMove=selected.type==='Move'&&moveKeys.has(key); const legalTarget=Boolean(unit&&targetSet.has(unit.id));
           return <button key={key} type="button" className={`combat-cell tile-${tile?.type?.toLowerCase()??'floor'} ${blockingCells.has(key)?'is-blocking':''} ${legalMove?'is-move':''} ${legalTarget?'is-target':''} ${unit?.team==='Player'?'has-player':''} ${unit?.team==='Enemy'?'has-enemy':''}`} onClick={()=>selectCell(x,y)} disabled={!legalMove&&!legalTarget} aria-label={unit ? `${unit.name}, ${unit.currentHp} HP` : `${tile?.description ?? tile?.type ?? 'Floor'}, grid ${x + 1}, ${y + 1}`}>
-            <small>{tile?.type==='Console'||tile?.type==='Door'?tile.type.toUpperCase():`${x+1},${y+1}`}</small>{unit&&<div className={`combat-unit ${unit.isDefeated?'is-defeated':''}`} title={`${unit.name} · ${unit.abilityIds.map((id)=>abilityMap.get(id)?.name??id).join(', ')}`}>
+            <small>{tile?.type==='Console'||tile?.type==='Door'?tile.type.toUpperCase():`${x+1},${y+1}`}</small>{unit&&<div className={`combat-unit ${unit.isDefeated?'is-defeated':''} ${unit.isIncapacitated?'is-incapacitated':''}`} title={`${unit.name} · ${unit.abilityIds.map((id)=>abilityMap.get(id)?.name??id).join(', ')}`}>
               <div className="combat-unit-icon">{unit.bodyImage?<img src={unit.bodyImage} alt=""/>:unit.team==='Player'?<Shield/>:<Crosshair/>}</div><strong>{unit.name}</strong>
               <span>{unit.currentHp}/{unit.maxHp} HP · {unit.currentAp} AP · {unit.currentEther} ETH</span>
               <span>{unit.weaponId?itemMap.get(unit.weaponId)?.name??'Equipped weapon':'Unarmed'}{unit.armorItemIds.length?` · ARMOR ${unit.armorItemIds.length}`:''}</span>

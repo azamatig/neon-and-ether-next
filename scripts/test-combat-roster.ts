@@ -15,6 +15,9 @@ const tacticalRoster = Object.values(session.getState().combat.combatants).map((
 if (JSON.stringify(previewRoster) !== JSON.stringify(tacticalRoster)) {
   throw new Error(`Resolved roster changed between preview and combat.\nPreview: ${previewRoster}\nCombat: ${tacticalRoster}`);
 }
+const initiativeOrder = Object.values(session.getState().combat.combatants).sort((left, right) => right.initiative - left.initiative || left.id.localeCompare(right.id)).map((unit) => unit.id);
+if (JSON.stringify(initiativeOrder) !== JSON.stringify(session.getState().combat.turnOrder)) throw new Error('Turn order does not match runtime initiative.');
+if (session.getState().combat.activeCombatantId !== session.getState().combat.turnOrder[session.getState().combat.activeTurnIndex]) throw new Error('Current combatant is not aligned with turn order.');
 if (!tacticalRoster.some((unit) => unit.startsWith('npc_prologue_companion_female:')) || !tacticalRoster.some((unit) => unit.startsWith('npc_prologue_companion_male:'))) throw new Error('Companions were not deployed.');
 for (const companionId of ['npc_prologue_companion_female', 'npc_prologue_companion_male']) {
   const companion = session.getState().combat.combatants[companionId];

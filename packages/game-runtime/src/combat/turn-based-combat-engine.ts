@@ -90,6 +90,7 @@ export class TurnBasedCombatEngine {
             .map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })),
         ],
         isDefeated: false,
+        isIncapacitated: false,
         position: claimDeployment('Player', 0),
         movementRange: 3,
         movementRemaining: 3,
@@ -115,7 +116,7 @@ export class TurnBasedCombatEngine {
         initiative: effective.derivedStats.initiative, armor: effective.derivedStats.armorRating,
         weaponId: equipped.find((item) => item.category === 'weapon')?.id,
         armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
-        abilityIds: [...abilities], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false,
+        abilityIds: [...abilities], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false,
         position: claimDeployment('Player', index + 1), movementRange: 3, movementRemaining: 3,
       };
     });
@@ -138,7 +139,7 @@ export class TurnBasedCombatEngine {
           currentAp: effectiveEnemy.derivedStats.actionPointsMax, maxAp: effectiveEnemy.derivedStats.actionPointsMax,
           initiative: effectiveEnemy.derivedStats.initiative, armor: effectiveEnemy.derivedStats.armorRating,
           weaponId: enemy.equippedWeaponId, armorItemIds: [], abilityIds: enemy.abilityIds,
-          aiProfileId: enemy.combatAIProfileId, statuses: enemy.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false,
+          aiProfileId: enemy.combatAIProfileId, statuses: enemy.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false,
           position: deployment, movementRange: 3, movementRemaining: 3,
         };
       }
@@ -161,7 +162,7 @@ export class TurnBasedCombatEngine {
     this.repairTurnState(state);
     const actorId = state.activeCombatantId ?? undefined;
     const actor = actorId ? state.combatants[actorId] : undefined;
-    if (!actor || actor.isDefeated || !state.isActive) {
+    if (!actor || actor.isDefeated || actor.isIncapacitated || !state.isActive) {
       return { actorId, legalMoves: [], attackTargetIds: [], abilityTargetIds: {} };
     }
     const occupied = new Set(Object.values(state.combatants).filter((unit) => !unit.isDefeated).map((unit) => `${unit.position.x}:${unit.position.y}`));
@@ -197,7 +198,7 @@ export class TurnBasedCombatEngine {
     this.repairTurnState(state);
     if (state.phase !== 'ACTIVE' || !state.isActive) return { success: false, state, reason: 'Combat is not active.' };
     const actor = state.combatants[action.actorId];
-    if (!actor || actor.isDefeated) return { success: false, state, reason: 'Actor is unavailable.' };
+    if (!actor || actor.isDefeated || actor.isIncapacitated) return { success: false, state, reason: 'Actor is unavailable.' };
     if (state.activeCombatantId !== actor.id) return { success: false, state, reason: 'It is not this combatant’s turn.' };
 
     if (action.type === 'EndTurn') {
@@ -246,12 +247,13 @@ export class TurnBasedCombatEngine {
         }
         if (effect.type === 'ApplyStatus' && effect.statusEffectId) {
           target.statuses.push({ statusEffectId: effect.statusEffectId, remainingTurns: effect.durationTurns ?? 1, sourceCombatantId: actor.id });
+          this.refreshIncapacitation(target);
           this.log(state, `${target.name} gains ${this.content.getStatusEffect(effect.statusEffectId)?.name ?? effect.statusEffectId}.`);
         }
       }
     }
     this.updateOutcome(state);
-    if (state.isActive && actor.currentAp === 0) this.advanceTurn(state);
+    if (state.isActive && (actor.currentAp === 0 || actor.isIncapacitated)) this.advanceTurn(state);
     return { success: true, state };
   }
 
@@ -260,7 +262,7 @@ export class TurnBasedCombatEngine {
     const actorId = state.activeCombatantId;
     if (!actorId) return undefined;
     const actor = state.combatants[actorId];
-    if (!actor || actor.team !== 'Enemy' || actor.isDefeated) return undefined;
+    if (!actor || actor.team !== 'Enemy' || actor.isDefeated || actor.isIncapacitated) return undefined;
     const profile = actor.aiProfileId ? this.content.getCombatAIProfile(actor.aiProfileId) : undefined;
     const commands = this.getResolvedCommands(state);
     const targets = Object.values(state.combatants).filter((target) => commands.attackTargetIds.includes(target.id));
@@ -362,6 +364,13 @@ export class TurnBasedCombatEngine {
       this.updateOutcome(state);
       if (!state.isActive) return;
       if (next.isDefeated) continue;
+      if (next.isIncapacitated) {
+        this.log(state, `${next.name} is incapacitated and loses the turn.`);
+        this.tickStatuses(state, next, 'TurnEnd');
+        this.updateOutcome(state);
+        if (!state.isActive) return;
+        continue;
+      }
       state.activeCombatantId = next.id;
       return;
     }
@@ -380,6 +389,7 @@ export class TurnBasedCombatEngine {
       this.log(state, `${definition.name} affects ${combatant.name}.`);
     }
     combatant.statuses = combatant.statuses.filter((active) => active.remainingTurns > 0);
+    this.refreshIncapacitation(combatant);
   }
 
   private updateOutcome(state: CombatState): void {
@@ -400,15 +410,16 @@ export class TurnBasedCombatEngine {
   /** Repairs migrated/malformed snapshots and enforces ACTIVE => valid activeCombatantId. */
   private repairTurnState(state: CombatState): void {
     if (state.phase === 'PREPARING' && !state.isActive) return;
+    Object.values(state.combatants).forEach((combatant) => this.refreshIncapacitation(combatant));
     this.updateOutcome(state);
     if (!state.isActive) return;
     this.rebuildTurnOrder(state);
     const current = state.activeCombatantId ? state.combatants[state.activeCombatantId] : undefined;
-    if (current && !current.isDefeated && state.turnOrder.includes(current.id)) {
+    if (current && !current.isDefeated && !current.isIncapacitated && state.turnOrder.includes(current.id)) {
       state.activeTurnIndex = state.turnOrder.indexOf(current.id);
       return;
     }
-    const nextIndex = state.turnOrder.findIndex((id) => !state.combatants[id]?.isDefeated);
+    const nextIndex = state.turnOrder.findIndex((id) => !state.combatants[id]?.isDefeated && !state.combatants[id]?.isIncapacitated);
     if (nextIndex >= 0) {
       state.activeTurnIndex = nextIndex;
       state.activeCombatantId = state.turnOrder[nextIndex];
@@ -418,6 +429,10 @@ export class TurnBasedCombatEngine {
     state.isActive = false;
     state.phase = state.outcome === 'Victory' ? 'VICTORY' : 'DEFEAT';
     state.activeCombatantId = null;
+  }
+
+  private refreshIncapacitation(combatant: Combatant): void {
+    combatant.isIncapacitated = combatant.statuses.some((status) => this.content.getStatusEffect(status.statusEffectId)?.preventsTurn === true);
   }
 
   private log(state: CombatState, message: string): void {

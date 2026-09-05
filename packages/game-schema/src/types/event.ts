@@ -115,6 +115,7 @@ export const GameEventSchema = BaseEntitySchema.extend({
   entryEffects: z.array(EffectSchema).default([]),
   completionEffects: z.array(EffectSchema).default([]),
   completionOutcome: z.custom<GameplayOutcome>().optional(),
+  skipOutcome: z.custom<GameplayOutcome>().optional(),
   isOneShot: z.boolean().default(false),
 });
 

@@ -1,0 +1,145 @@
+[
+  {
+    "id": "minigame_prologue_ares_logistics_breach",
+    "name": "Ares Logistics Breach",
+    "description": "Extract selected maintenance payloads before the local trace closes.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Hacking"
+    ],
+    "module": "matchValues",
+    "difficulty": "easy",
+    "matrixSize": 5,
+    "bufferSize": 6,
+    "possibleValues": [
+      "1C",
+      "45",
+      "6A",
+      "93",
+      "D0",
+      "E9"
+    ],
+    "startingRow": 0,
+    "attempts": 2,
+    "timeLimitSeconds": 105,
+    "modifiers": [
+      {
+        "source": "attribute",
+        "key": "etherTech",
+        "perPoints": 10,
+        "bufferSlots": 1,
+        "attempts": 0,
+        "timeSeconds": 5,
+        "hints": 1
+      },
+      {
+        "source": "skill",
+        "key": "intrusion",
+        "perPoints": 2,
+        "bufferSlots": 0,
+        "attempts": 1,
+        "timeSeconds": 5,
+        "hints": 1
+      }
+    ],
+    "targets": [
+      {
+        "id": "payload_data_cache",
+        "name": "DATA CACHE",
+        "values": [
+          "6A",
+          "93",
+          "45"
+        ],
+        "important": false,
+        "effects": [
+          {
+            "type": "changeMoney",
+            "amount": 90,
+            "mode": "add"
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.maintenance.data_cache",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "payload_security_route",
+        "name": "SECURITY ROUTE",
+        "values": [
+          "93",
+          "D0",
+          "45"
+        ],
+        "important": true,
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.security_route_discovered",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "payload_access_advantage",
+        "name": "ACCESS ADVANTAGE",
+        "values": [
+          "6A",
+          "93",
+          "45",
+          "6A"
+        ],
+        "important": false,
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.access_advantage",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "failureEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.maintenance.breach_completed",
+        "value": true
+      }
+    ],
+    "failureOutcome": {
+      "type": "showResult",
+      "title": "Trace Closed",
+      "resultText": "No payload survived the trace. The freight route remains usable.",
+      "status": "Failure"
+    },
+    "partialEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.maintenance.breach_completed",
+        "value": true
+      }
+    ],
+    "partialOutcome": {
+      "type": "showResult",
+      "title": "Partial Extraction",
+      "resultText": "Only the matched payloads were recovered.",
+      "status": "PartialSuccess"
+    },
+    "successEffects": [
+      {
+        "type": "setFlag",
+        "flag": "prologue.maintenance.breach_completed",
+        "value": true
+      }
+    ],
+    "successOutcome": {
+      "type": "showResult",
+      "title": "Breach Complete",
+      "resultText": "Every primary maintenance payload was extracted.",
+      "status": "Success"
+    }
+  }
+]

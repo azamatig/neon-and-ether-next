@@ -5,6 +5,7 @@ export type ValidationCategory =
   | 'Ability' | 'StatusEffect' | 'CombatAI' | 'CharacterManagementRule' | 'BaseJob'
   | 'PartySlot' | 'PlayerBase' | 'BaseUpgrade' | 'Map' | 'Recipe' | 'Room'
   | 'ProgressionDefinition'
+  | 'Background' | 'Perk' | 'NewGameDefinition'
   | 'Shop'
   | 'Faction' | 'Dialogue' | 'Asset' | 'Integrity';
 

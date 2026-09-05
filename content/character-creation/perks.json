@@ -1,0 +1,5 @@
+[
+  {"id":"perk_quick_study","name":"Quick Study","description":"You absorb practical instruction faster than most.","tags":["progression"],"requirements":[],"excludedPerkIds":[],"requiredBackgroundIds":[],"modifiers":[],"startingEffects":[]},
+  {"id":"perk_hard_to_kill","name":"Hard to Kill","description":"Pain is information, not a verdict.","tags":["survival"],"requirements":[{"type":"playerStat","stat":"body","operator":">=","value":10}],"excludedPerkIds":[],"requiredBackgroundIds":[],"modifiers":[{"id":"perk_hard_to_kill_hp","target":"maxHp","value":5,"operation":"add"}],"startingEffects":[]},
+  {"id":"perk_ghost_protocol","name":"Ghost Protocol","description":"Corporate habits make intrusion systems easier to anticipate.","tags":["intrusion"],"requirements":[],"excludedPerkIds":[],"requiredBackgroundIds":["background_corporate_exile"],"modifiers":[],"startingEffects":[]}
+]

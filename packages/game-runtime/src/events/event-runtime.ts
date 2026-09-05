@@ -109,7 +109,9 @@ export class EventRuntime {
     }
 
     state.world.activeEventId = eventId;
-    state.world.activeEventStepId = event.steps[0]?.id ?? 'step_01';
+    const firstStep = this.findAvailableStep(event, 0, state, contentRegistry);
+    if (!firstStep) return false;
+    state.world.activeEventStepId = firstStep.id;
     state.world.mode = 'Event';
 
     // Execute entry effects
@@ -244,13 +246,16 @@ export class EventRuntime {
 
     // If step has an explicit nextStepId
     if (currentStep?.nextStepId) {
-      state.world.activeEventStepId = currentStep.nextStepId;
-      return true;
+      const targetIndex = event.steps.findIndex((step) => step.id === currentStep.nextStepId);
+      const nextStep = this.findAvailableStep(event, Math.max(0, targetIndex), state, contentRegistry);
+      if (nextStep) { state.world.activeEventStepId = nextStep.id; return true; }
+      return this.completeEvent(event, state, contentRegistry, logJournal);
     }
 
     // Check if next step in array exists
     if (currentIndex >= 0 && currentIndex + 1 < event.steps.length) {
-      const nextStep = event.steps[currentIndex + 1];
+      const nextStep = this.findAvailableStep(event, currentIndex + 1, state, contentRegistry);
+      if (!nextStep) return this.completeEvent(event, state, contentRegistry, logJournal);
       state.world.activeEventStepId = nextStep.id;
       return true;
     }
@@ -317,8 +322,10 @@ export class EventRuntime {
     }
 
     if (nextStepId) {
-      state.world.activeEventStepId = nextStepId;
-      return true;
+      const targetIndex = resolved.event.steps.findIndex((step) => step.id === nextStepId);
+      const nextStep = this.findAvailableStep(resolved.event, Math.max(0, targetIndex), state, contentRegistry);
+      if (nextStep) { state.world.activeEventStepId = nextStep.id; return true; }
+      return this.completeEvent(resolved.event, state, contentRegistry, logJournal);
     }
 
     // If no explicit outcome or next step, advance or complete
@@ -352,6 +359,21 @@ export class EventRuntime {
     }
 
     return true;
+  }
+
+  /** Skips only events with an explicitly authored safe outcome. */
+  public skipEvent(event: GameEvent, state: GameState, contentRegistry: ContentRegistry, logJournal?: (category: any, text: string) => void): boolean {
+    if (!event.skipOutcome) return false;
+    if (event.completionEffects?.length) this.effectExecutor.executeBatch(event.completionEffects, { state, contentRegistry, logJournal, random:this.diceRoller });
+    state.world.activeEventId = null;
+    state.world.activeEventStepId = null;
+    this.outcomeEngine.resolveOutcome(event.skipOutcome, state, contentRegistry);
+    if (logJournal) logJournal('World', `Event skipped: ${event.name}.`);
+    return true;
+  }
+
+  private findAvailableStep(event: GameEvent, startIndex: number, state: GameState, contentRegistry: ContentRegistry): EventStep | undefined {
+    return event.steps.slice(startIndex).find((step) => evaluateConditions(step.conditions ?? [], { state, contentRegistry, rollRandom:(min,max)=>this.diceRoller.integer(min,max) }, this.conditionRegistry).allMet);
   }
 }
 

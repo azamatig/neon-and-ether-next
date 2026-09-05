@@ -13,6 +13,7 @@ import {
 } from '@neon-ether/game-schema';
 import { GameState } from '../state/game-state.ts';
 import { ContentRegistry } from '../content/content-registry.ts';
+import{MatchValuesRuntime}from'../minigames/match-values-runtime.ts';
 
 export interface OutcomeExecutionResult {
   applied: boolean;
@@ -78,7 +79,7 @@ export class GameplayOutcomeEngine {
   }
 
   private isBlocking(mode: GameState['world']['mode']): boolean {
-    return ['ActionResult', 'Event', 'CombatPreview', 'TacticalCombat', 'CombatResult', 'Loot', 'PostCombat'].includes(mode);
+    return ['ActionResult','Event','CombatPreview','TacticalCombat','CombatResult','Loot','PostCombat','Minigame'].includes(mode);
   }
 
   /**
@@ -103,6 +104,7 @@ export class GameplayOutcomeEngine {
     }
 
     switch (outcome.type) {
+      case'minigame':{const definition=contentRegistry.minigames.get(outcome.minigameId);if(!definition)return{applied:false,nextMode:state.world.mode,message:`Minigame '${outcome.minigameId}' not found`};if(outcome.originContext)state.world.activeOriginContext=outcome.originContext;state.world.activeMinigame=new MatchValuesRuntime().create(definition,state.player,state.rng.state,state.world.activeOriginContext);state.world.mode='Minigame';return{applied:true,nextMode:'Minigame',originContext:state.world.activeOriginContext}}
       case 'showResult': {
         state.world.mode = 'ActionResult';
         if (outcome.resultText || outcome.title) {

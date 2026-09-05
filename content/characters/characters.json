@@ -378,5 +378,215 @@
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
     "availabilityConditions": []
+  },
+  {
+    "id": "npc_prologue_companion_female",
+    "name": "Rhea Voss",
+    "description": "Infiltration Specialist assigned to the Ares infiltration team.",
+    "tags": [
+      "Companion",
+      "Prologue",
+      "AresInfiltration"
+    ],
+    "title": "Infiltration Specialist",
+    "factionId": "fac_undercity_drifters",
+    "factionIds": [],
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": true,
+    "level": 1,
+    "progressionDefinitionId": "progression_companion",
+    "attributes": {
+      "body": 10,
+      "reflexes": 14,
+      "mind": 12,
+      "etherTech": 11,
+      "presence": 13
+    },
+    "vitals": {
+      "maxHp": 34,
+      "currentHp": 34,
+      "maxEther": 10,
+      "currentEther": 10,
+      "actionPointsMax": 6,
+      "actionPointsCurrent": 6,
+      "initiative": 14,
+      "armorRating": 2,
+      "etherResistance": 5
+    },
+    "skills": {
+      "stealth": 2,
+      "firearms": 1
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "position": {
+      "x": 0,
+      "y": 0
+    },
+    "facing": "East",
+    "inventory": [
+      {
+        "itemId": "wpn_thermal_pistol",
+        "quantity": 1,
+        "isEquipped": true
+      }
+    ],
+    "portraitIcon": "Crosshair",
+    "defaultBehavior": "Idle",
+    "abilityIds": [
+      "ability_thermal_burst"
+    ],
+    "traits": [
+      "Reliable"
+    ],
+    "initialRelationship": {
+      "status": "companion",
+      "affinity": 10,
+      "trust": 10,
+      "fear": 0,
+      "loyalty": 10
+    },
+    "availabilityConditions": [],
+    "combatImage": "/assets/characters/rhea-voss.svg"
+  },
+  {
+    "id": "npc_prologue_companion_male",
+    "name": "Dax Mercer",
+    "description": "Security Breacher assigned to the Ares infiltration team.",
+    "tags": [
+      "Companion",
+      "Prologue",
+      "AresInfiltration"
+    ],
+    "title": "Security Breacher",
+    "factionId": "fac_undercity_drifters",
+    "factionIds": [],
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": true,
+    "level": 1,
+    "progressionDefinitionId": "progression_companion",
+    "attributes": {
+      "body": 14,
+      "reflexes": 11,
+      "mind": 10,
+      "etherTech": 12,
+      "presence": 11
+    },
+    "vitals": {
+      "maxHp": 34,
+      "currentHp": 34,
+      "maxEther": 10,
+      "currentEther": 10,
+      "actionPointsMax": 6,
+      "actionPointsCurrent": 6,
+      "initiative": 11,
+      "armorRating": 2,
+      "etherResistance": 5
+    },
+    "skills": {
+      "intrusion": 1,
+      "melee": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "position": {
+      "x": 0,
+      "y": 0
+    },
+    "facing": "East",
+    "inventory": [
+      {
+        "itemId": "wpn_ether_baton",
+        "quantity": 1,
+        "isEquipped": true
+      }
+    ],
+    "portraitIcon": "Shield",
+    "defaultBehavior": "Idle",
+    "abilityIds": [
+      "ability_arc_strike"
+    ],
+    "traits": [
+      "Reliable"
+    ],
+    "initialRelationship": {
+      "status": "companion",
+      "affinity": 10,
+      "trust": 10,
+      "fear": 0,
+      "loyalty": 10
+    },
+    "availabilityConditions": [],
+    "combatImage": "/assets/characters/dax-mercer.svg"
+  },
+  {
+    "id": "npc_prologue_ares_wounded_officer",
+    "name": "Lieutenant Orin Hale",
+    "description": "An Ares response officer left wounded after the containment escape fight.",
+    "tags": [
+      "Ares",
+      "Security",
+      "Sentient",
+      "Prologue"
+    ],
+    "title": "Ares Response Lieutenant",
+    "factionId": "fac_ares_industries",
+    "factionIds": [],
+    "isPlayer": false,
+    "isMerchant": false,
+    "isCompanion": false,
+    "level": 2,
+    "progressionDefinitionId": "progression_companion",
+    "attributes": {
+      "body": 12,
+      "reflexes": 11,
+      "mind": 12,
+      "etherTech": 9,
+      "presence": 12
+    },
+    "vitals": {
+      "maxHp": 34,
+      "currentHp": 8,
+      "maxEther": 0,
+      "currentEther": 0,
+      "actionPointsMax": 5,
+      "actionPointsCurrent": 2,
+      "initiative": 10,
+      "armorRating": 2,
+      "etherResistance": 4
+    },
+    "skills": {
+      "combat": 2
+    },
+    "perks": [],
+    "temporaryModifiers": [],
+    "statusEffects": [],
+    "position": {
+      "x": 0,
+      "y": 0
+    },
+    "facing": "South",
+    "inventory": [],
+    "portraitIcon": "ShieldAlert",
+    "defaultBehavior": "Idle",
+    "abilityIds": [
+      "ability_thermal_burst"
+    ],
+    "traits": [
+      "Sentient",
+      "Disciplined"
+    ],
+    "initialRelationship": {
+      "status": "independent",
+      "affinity": -20,
+      "trust": -20,
+      "fear": 15,
+      "loyalty": 0
+    },
+    "availabilityConditions": []
   }
 ]

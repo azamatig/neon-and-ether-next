@@ -52,6 +52,8 @@ export const ItemSchema = BaseEntitySchema.extend({
   grantedAbilityIds: z.array(z.string()).default([]),
   apUseCost: z.number().int().min(0).optional(), etherCost: z.number().int().min(0).optional(),
   damageRange: z.tuple([z.number().int().min(0),z.number().int().min(0)]).optional(), rangeTiles: z.number().int().min(0).optional(),
+  combatAttackType: z.enum(['Ranged', 'Melee']).optional(),
+  combatDefeatType: z.enum(['Lethal', 'NonLethal']).default('Lethal'),
   icon: z.string().default('Box'),
 });
 export type Item = z.infer<typeof ItemSchema>;

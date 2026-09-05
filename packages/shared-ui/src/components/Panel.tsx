@@ -11,7 +11,7 @@ export interface PanelProps {
   headerRight?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
-  glow?: 'cyan' | 'purple' | 'none';
+  glow?: 'cyan' | 'purple' | 'rose' | 'amber' | 'none';
 }
 
 export const Panel: React.FC<PanelProps> = ({
@@ -25,6 +25,8 @@ export const Panel: React.FC<PanelProps> = ({
   const glowStyles = {
     cyan: 'border-[#00f2ff]/30 shadow-[0_0_20px_rgba(0,242,255,0.06)]',
     purple: 'border-[#bc13fe]/30 shadow-[0_0_20px_rgba(188,19,254,0.06)]',
+    rose: 'border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.07)]',
+    amber: 'border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.07)]',
     none: 'border-white/10',
   }[glow];
 

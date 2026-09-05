@@ -92,6 +92,10 @@ export function validateDuplicateIds(content: GameContent): ValidationIssue[] {
   checkCollection(content.baseUpgrades ?? [], 'BaseUpgrade');
   checkCollection(content.progressionDefinitions ?? [], 'ProgressionDefinition');
   checkCollection(content.shops ?? [], 'Shop');
+  checkCollection(content.backgrounds ?? [], 'Background');
+  checkCollection(content.perks ?? [], 'Perk');
+  checkCollection(content.newGameDefinitions ?? [], 'NewGameDefinition');
+  checkCollection(content.minigames??[],'Integrity');
 
   return issues;
 }
@@ -117,6 +121,23 @@ export function validateMissingReferentialIds(content: GameContent): ValidationI
   const roomIds = new Set((content.rooms ?? []).map((room) => room.id));
   const eventIds = new Set((content.events ?? []).map((event) => event.id));
   const encounterIds = new Set((content.encounters ?? []).map((encounter) => encounter.id));
+  const backgroundIds = new Set((content.backgrounds ?? []).map((background) => background.id));
+  const perkIds = new Set((content.perks ?? []).map((perk) => perk.id));
+
+  for (const background of content.backgrounds ?? []) {
+    for (const item of background.startingItems) if (!itemIds.has(item.itemId)) issues.push({ severity:'error', category:'Background', targetId:background.id, field:'startingItems', message:`Background '${background.name}' references missing itemId '${item.itemId}'` });
+    for (const factionId of Object.keys(background.startingFactionReputation)) if (!factionIds.has(factionId)) issues.push({ severity:'error', category:'Background', targetId:background.id, field:'startingFactionReputation', message:`Background '${background.name}' references missing factionId '${factionId}'` });
+  }
+  for (const perk of content.perks ?? []) {
+    for (const backgroundId of perk.requiredBackgroundIds) if (!backgroundIds.has(backgroundId)) issues.push({ severity:'error', category:'Perk', targetId:perk.id, field:'requiredBackgroundIds', message:`Perk '${perk.name}' references missing backgroundId '${backgroundId}'` });
+    for (const perkId of perk.excludedPerkIds) if (!perkIds.has(perkId)) issues.push({ severity:'error', category:'Perk', targetId:perk.id, field:'excludedPerkIds', message:`Perk '${perk.name}' references missing perkId '${perkId}'` });
+  }
+  for (const definition of content.newGameDefinitions ?? []) {
+    if (!mapIds.has(definition.startingMapId)) issues.push({ severity:'error', category:'NewGameDefinition', targetId:definition.id, field:'startingMapId', message:`New game definition references missing mapId '${definition.startingMapId}'` });
+    if (definition.startingPoiId && !poiIds.has(definition.startingPoiId)) issues.push({ severity:'error', category:'NewGameDefinition', targetId:definition.id, field:'startingPoiId', message:`New game definition references missing poiId '${definition.startingPoiId}'` });
+    if (definition.startingEventId && !eventIds.has(definition.startingEventId)) issues.push({ severity:'error', category:'NewGameDefinition', targetId:definition.id, field:'startingEventId', message:`New game definition references missing eventId '${definition.startingEventId}'` });
+    for (const questId of definition.startingQuestIds) if (!questIds.has(questId)) issues.push({ severity:'error', category:'NewGameDefinition', targetId:definition.id, field:'startingQuestIds', message:`New game definition references missing questId '${questId}'` });
+  }
 
   // 1. Validate NPC references
   for (const npc of npcList) {

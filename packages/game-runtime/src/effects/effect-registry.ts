@@ -21,6 +21,7 @@ import { handleChangePoiStateEffect, handleTravelPoiEffect } from './handlers/po
 import { handleGrantRewardsEffect } from './handlers/reward-effect.ts';
 import { handleWeatherEffect } from './handlers/weather-effect.ts';
 import { handleApplyStatusEffect } from './handlers/status-effect.ts';
+import {handleSetAbilityUnlocked} from './handlers/ability-effect.ts';
 
 export class EffectRegistry {
   private handlers = new Map<string, EffectHandler<any>>();
@@ -55,6 +56,7 @@ export class EffectRegistry {
     this.registerHandler('setWeather', handleWeatherEffect);
     this.registerHandler('changeWeather', handleWeatherEffect);
     this.registerHandler('applyStatusEffect', handleApplyStatusEffect);
+    this.registerHandler('setAbilityUnlocked',handleSetAbilityUnlocked);
   }
 
   /**

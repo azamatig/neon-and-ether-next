@@ -8,6 +8,7 @@ import {
   CombatEncounter,
   CombatIncapacitatedEnemy,
   CombatResolution,
+  CombatState,
   Enemy,
   EscapeRules,
   GameplayOutcome,
@@ -98,64 +99,21 @@ export class CombatEncounterEngine {
   public getEncounterPreview(
     encounterId: string,
     state: GameState,
-    contentRegistry: ContentRegistry
+    contentRegistry: ContentRegistry,
+    resolvedCombat?: CombatState,
   ): ResolvedCombatPreview | undefined {
     const encounter = contentRegistry.getEncounter(encounterId);
     if (!encounter) return undefined;
 
-    // Build Player Side
-    const p = state.player;
-    const playerPartyMember: PreCombatPartyMember = {
-      id: p.characterId,
-      name: p.name,
-      title: p.title,
-      portrait: 'User',
-      currentHp: p.vitals.currentHp,
-      maxHp: p.vitals.maxHp,
-      currentEther: p.vitals.currentEther,
-      maxEther: p.vitals.maxEther,
-      actionPoints: p.vitals.actionPointsCurrent,
-      statusEffects: p.activeStatusEffects.map((s) => s.name),
-      injuries: p.vitals.currentHp < p.vitals.maxHp * 0.4 ? ['Light Concussion', 'Fractured Plating'] : [],
-    };
-
-    const party: PreCombatPartyMember[] = [playerPartyMember];
-
-    // Build active companions
-    for (const compId of state.companions ?? []) {
-      const compNpc = contentRegistry.getNPC(compId);
-      const runtime = state.npcs[compId];
-      if (compNpc) {
-        party.push({
-          id: compId,
-          name: compNpc.name,
-          title: compNpc.title ?? 'Companion',
-          portrait: compNpc.portraitIcon ?? 'Users',
-          currentHp: runtime?.currentHp ?? 28,
-          maxHp: runtime?.maxHp ?? 28,
-          currentEther: runtime?.currentEther ?? 20,
-          maxEther: 20,
-          actionPoints: 6,
-          statusEffects: [],
-          injuries: [],
-        });
-      }
-    }
-
-    // Build Enemy Side
-    const enemies: PreCombatEnemyUnit[] = encounter.enemyGroups.map((group, idx) => {
-      const enemyDef = contentRegistry.getEnemy(group.enemyId);
-      return {
-        id: `eg_${idx}_${group.enemyId}`,
-        enemyId: group.enemyId,
-        name: group.isUnknown ? 'Unknown Threat' : group.nameOverride ?? enemyDef?.name ?? 'Hostile Unit',
-        count: group.count,
-        threatTier: group.threatTier,
-        isBoss: group.isBoss,
-        isUnknown: group.isUnknown,
-        portrait: group.portraitOverride ?? enemyDef?.portraitIcon ?? 'Bot',
-        estimatedHp: group.customHp ?? enemyDef?.vitals.maxHp ?? 25,
-      };
+    const roster = Object.values(resolvedCombat?.combatants ?? {});
+    const party: PreCombatPartyMember[] = roster.filter((unit) => unit.team === 'Player').map((unit) => {
+      const npc = contentRegistry.getNPC(unit.sourceId);
+      return { id: unit.id, name: unit.name, title: unit.sourceId === state.player.characterId ? state.player.title : npc?.title ?? 'Companion', portrait: npc?.portraitIcon ?? 'User', currentHp: unit.currentHp, maxHp: unit.maxHp, currentEther: unit.currentEther, maxEther: unit.maxEther, actionPoints: unit.currentAp, statusEffects: unit.statuses.map((status) => contentRegistry.getStatusEffect(status.statusEffectId)?.name ?? status.statusEffectId), injuries: [] };
+    });
+    const enemies: PreCombatEnemyUnit[] = roster.filter((unit) => unit.team === 'Enemy').map((unit) => {
+      const definition = contentRegistry.getEnemy(unit.sourceId);
+      const group = encounter.enemyGroups.find((entry) => entry.enemyId === unit.sourceId);
+      return { id: unit.id, enemyId: unit.sourceId, name: group?.isUnknown ? 'Unknown Threat' : unit.name, count: 1, threatTier: group?.threatTier ?? 'Standard', isBoss: group?.isBoss ?? false, isUnknown: group?.isUnknown ?? false, portrait: group?.portraitOverride ?? definition?.portraitIcon ?? 'Bot', estimatedHp: unit.maxHp };
     });
 
     // Evaluate Escape Rules
@@ -205,7 +163,7 @@ export class CombatEncounterEngine {
     contentRegistry: ContentRegistry,
     logJournal?: (category: any, text: string) => void
   ): { success: boolean; reason?: string; statCheck?: StatCheckResolution } {
-    const preview = this.getEncounterPreview(encounterId, state, contentRegistry);
+    const preview = this.getEncounterPreview(encounterId, state, contentRegistry, state.combat.encounterId === encounterId ? state.combat : undefined);
     if (!preview) return { success: false, reason: 'Encounter not found' };
 
     if (!preview.escape.allowed) {

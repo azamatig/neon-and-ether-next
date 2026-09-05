@@ -247,6 +247,7 @@ export class SaveMigrationRegistry {
             combatants: {},
             log: [],
             outcome: null,
+            grid: { width: 8, height: 6 },
           },
           journal: Array.isArray(oldState.journal) ? oldState.journal : [],
         };

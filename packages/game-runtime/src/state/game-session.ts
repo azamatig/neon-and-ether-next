@@ -883,7 +883,12 @@ export class GameSession {
   public getCombatPreview(encounterId?: string): ResolvedCombatPreview | undefined {
     const id = encounterId ?? this.state.world.activeEncounterId;
     if (!id) return undefined;
-    return this.combatEncounterEngine.getEncounterPreview(id, this.state, this.contentRegistry);
+    if (this.state.combat.encounterId !== id || Object.keys(this.state.combat.combatants).length === 0) {
+      const prepared = this.turnBasedCombatEngine.createEncounter(id, this.state, false);
+      if (!prepared) return undefined;
+      this.state.combat = prepared;
+    }
+    return this.combatEncounterEngine.getEncounterPreview(id, this.state, this.contentRegistry, this.state.combat);
   }
 
   public attemptCombatEscape(encounterId?: string): { success: boolean; reason?: string } {
@@ -904,9 +909,13 @@ export class GameSession {
     for (const modifier of definition.modifiers) {
       if (this.evaluateConditions(modifier.conditions).allMet) this.executeEffects(modifier.effects);
     }
-    const combat = this.turnBasedCombatEngine.createEncounter(id, this.state);
+    const combat = this.state.combat.encounterId === id && Object.keys(this.state.combat.combatants).length > 0
+      ? structuredClone(this.state.combat)
+      : this.turnBasedCombatEngine.createEncounter(id, this.state);
     const ok = combat !== undefined;
     if (combat) {
+      combat.isActive = true;
+      this.turnBasedCombatEngine.synchronizePlayer(combat, this.state);
       this.state.world.activeEncounterId = id;
       this.state.world.mode = 'TacticalCombat';
       this.state.combat = combat;
@@ -940,6 +949,10 @@ export class GameSession {
     this.events.emit('COMBAT_STATE_CHANGED', undefined);
     this.events.emit('STATE_CHANGED', this.state);
     return result;
+  }
+
+  public getResolvedCombatCommands() {
+    return this.turnBasedCombatEngine.getResolvedCommands(this.state.combat);
   }
 
   private resolvePendingAiTurns(): void {

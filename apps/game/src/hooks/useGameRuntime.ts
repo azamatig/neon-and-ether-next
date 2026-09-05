@@ -101,6 +101,7 @@ export function useGameRuntime() {
     return session.getActiveCombatResolution();
   }, [session, gameState.world.mode]);
   const combatAbilities = useMemo(() => session.getContentRegistry().abilities.getAll(), [session]);
+  const combatCommands = useMemo(() => session.getResolvedCombatCommands(), [session, gameState.combat]);
   const activeGameplayTargetId = useMemo(() => {
     if (gameState.world.mode !== 'Screen' || !gameState.world.activeScreen || !selectedPoi) return undefined;
     return selectedPoi.actions.find((action) => action.outcome?.type === 'gameplayScreen' && action.outcome.screen === gameState.world.activeScreen)?.outcome?.targetId;
@@ -182,6 +183,7 @@ export function useGameRuntime() {
     activeCombatPreview,
     activeCombatResolution,
     combatAbilities,
+    combatCommands,
     activeShop,
     recipes,
     availableRecipeIds,

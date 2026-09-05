@@ -277,6 +277,7 @@ export function createInitialGameState(overrides: Partial<GameState> = {}): Game
       combatants: {},
       log: [],
       outcome: null,
+      grid: { width: 8, height: 6 },
     },
     journal: overrides.journal ?? [
       {

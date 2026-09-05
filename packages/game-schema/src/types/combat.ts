@@ -43,6 +43,16 @@ export const CombatantStatusSchema = z.object({
   sourceCombatantId: z.string().optional(),
 });
 
+export const CombatGridPositionSchema = z.object({
+  x: z.number().int().min(0),
+  y: z.number().int().min(0),
+});
+
+export const CombatGridSchema = z.object({
+  width: z.number().int().min(4).default(8),
+  height: z.number().int().min(3).default(6),
+});
+
 export const CombatantSchema = z.object({
   id: z.string(),
   sourceId: z.string(),
@@ -62,12 +72,15 @@ export const CombatantSchema = z.object({
   aiProfileId: z.string().optional(),
   statuses: z.array(CombatantStatusSchema).default([]),
   isDefeated: z.boolean().default(false),
+  position: CombatGridPositionSchema.default({ x: 0, y: 0 }),
+  movementRange: z.number().int().min(1).default(3),
 });
 export type Combatant = z.infer<typeof CombatantSchema>;
 
 export const CombatActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('Attack'), actorId: z.string(), targetId: z.string() }),
   z.object({ type: z.literal('Ability'), actorId: z.string(), targetId: z.string(), abilityId: z.string() }),
+  z.object({ type: z.literal('Move'), actorId: z.string(), position: CombatGridPositionSchema }),
   z.object({ type: z.literal('EndTurn'), actorId: z.string() }),
 ]);
 export type CombatAction = z.infer<typeof CombatActionSchema>;
@@ -86,5 +99,6 @@ export const CombatStateSchema = z.object({
   combatants: z.record(z.string(), CombatantSchema).default({}),
   log: z.array(CombatLogEntrySchema).default([]),
   outcome: z.enum(['Victory', 'Defeat']).nullable().default(null),
+  grid: CombatGridSchema.default({ width: 8, height: 6 }),
 });
 export type CombatState = z.infer<typeof CombatStateSchema>;

@@ -22,7 +22,8 @@
     "test:prologue-region1": "bun scripts/test-prologue-region1.ts",
     "test:prologue-transition": "bun scripts/test-prologue-transition.ts",
     "test:prologue-region2": "bun scripts/test-prologue-region2.ts",
-    "test:prologue-completion": "bun scripts/test-prologue-completion.ts"
+    "test:prologue-completion": "bun scripts/test-prologue-completion.ts",
+    "test:combat-roster": "bun scripts/test-combat-roster.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

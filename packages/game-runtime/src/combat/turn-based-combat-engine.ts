@@ -10,6 +10,13 @@ export interface CombatCommandResult {
   reason?: string;
 }
 
+export interface ResolvedCombatCommands {
+  actorId?: string;
+  legalMoves: Array<{ x: number; y: number }>;
+  attackTargetIds: string[];
+  abilityTargetIds: Record<string, string[]>;
+}
+
 /** Framework-agnostic turn-based combat simulation. */
 export class TurnBasedCombatEngine {
   constructor(
@@ -17,7 +24,7 @@ export class TurnBasedCombatEngine {
     private readonly dice: RandomSource = new DiceRoller(1337),
   ) {}
 
-  public createEncounter(encounterId: string, gameState: GameState): CombatState | undefined {
+  public createEncounter(encounterId: string, gameState: GameState, active = true): CombatState | undefined {
     const encounter = this.content.getEncounter(encounterId);
     if (!encounter) return undefined;
     const playerDefinition = this.content.getCharacter(gameState.player.characterId);
@@ -52,15 +59,42 @@ export class TurnBasedCombatEngine {
         abilityIds: [...playerAbilities],
         statuses: [],
         isDefeated: false,
+        position: { x: 0, y: 2 },
+        movementRange: 3,
       },
     };
 
+    const partyDeployment = [{ x: 0, y: 1 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 1, y: 0 }, { x: 1, y: 5 }];
+    gameState.companions.slice(0, partyDeployment.length).forEach((npcId, index) => {
+      const npc = this.content.getNPC(npcId);
+      const runtime = gameState.npcs[npcId];
+      if (!npc || runtime?.isAlive === false) return;
+      const effective = new CharacterStatsSystem().resolve(npc);
+      const equipped = npc.inventory.map((slot) => this.content.getItem(slot.itemId)).filter((item) => item !== undefined);
+      combatants[npcId] = {
+        id: npcId, sourceId: npcId, name: npc.name, team: 'Player',
+        currentHp: runtime?.currentHp ?? effective.derivedStats.currentHp,
+        maxHp: runtime?.maxHp ?? effective.derivedStats.maxHp,
+        currentEther: runtime?.currentEther ?? effective.derivedStats.currentEther,
+        maxEther: effective.derivedStats.maxEther,
+        currentAp: effective.derivedStats.actionPointsMax, maxAp: effective.derivedStats.actionPointsMax,
+        initiative: effective.derivedStats.initiative, armor: effective.derivedStats.armorRating,
+        weaponId: equipped.find((item) => item.category === 'weapon')?.id,
+        armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
+        abilityIds: npc.abilityIds, statuses: [], isDefeated: false,
+        position: partyDeployment[index], movementRange: 3,
+      };
+    });
+
+    let enemyDeploymentIndex = 0;
     encounter.enemyGroups.forEach((group, groupIndex) => {
       const enemy = this.content.getEnemy(group.enemyId);
       if (!enemy) return;
       const effectiveEnemy = new CharacterStatsSystem().resolve(enemy);
       for (let index = 0; index < group.count; index += 1) {
         const id = `enemy_${groupIndex}_${index}`;
+        const deployment = { x: 7 - Math.floor(enemyDeploymentIndex / 6), y: enemyDeploymentIndex % 6 };
+        enemyDeploymentIndex += 1;
         combatants[id] = {
           id, sourceId: enemy.id, name: group.nameOverride ?? enemy.name, team: 'Enemy',
           currentHp: group.customHp ?? effectiveEnemy.derivedStats.currentHp,
@@ -70,6 +104,7 @@ export class TurnBasedCombatEngine {
           initiative: effectiveEnemy.derivedStats.initiative, armor: effectiveEnemy.derivedStats.armorRating,
           weaponId: enemy.equippedWeaponId, armorItemIds: [], abilityIds: enemy.abilityIds,
           aiProfileId: enemy.combatAIProfileId, statuses: [], isDefeated: false,
+          position: deployment, movementRange: 3,
         };
       }
     });
@@ -77,9 +112,46 @@ export class TurnBasedCombatEngine {
       .sort((left, right) => right.initiative - left.initiative || left.id.localeCompare(right.id))
       .map((combatant) => combatant.id);
     return {
-      encounterId, isActive: true, roundNumber: 1, turnOrder, activeTurnIndex: 0,
+      encounterId, isActive: active, roundNumber: 1, turnOrder, activeTurnIndex: 0,
       combatants, log: [{ id: 'combat_start', round: 1, message: `${encounter.name} engaged.` }], outcome: null,
+      grid: { width: 8, height: 6 },
     };
+  }
+
+  public getResolvedCommands(state: CombatState): ResolvedCombatCommands {
+    const actorId = state.turnOrder[state.activeTurnIndex];
+    const actor = actorId ? state.combatants[actorId] : undefined;
+    if (!actor || actor.team !== 'Player' || actor.isDefeated || !state.isActive) {
+      return { actorId, legalMoves: [], attackTargetIds: [], abilityTargetIds: {} };
+    }
+    const occupied = new Set(Object.values(state.combatants).filter((unit) => !unit.isDefeated).map((unit) => `${unit.position.x}:${unit.position.y}`));
+    const legalMoves: Array<{ x: number; y: number }> = [];
+    if (actor.currentAp > 0) {
+      for (let y = 0; y < state.grid.height; y += 1) for (let x = 0; x < state.grid.width; x += 1) {
+        const distance = Math.abs(actor.position.x - x) + Math.abs(actor.position.y - y);
+        if (distance > 0 && distance <= actor.movementRange && !occupied.has(`${x}:${y}`)) legalMoves.push({ x, y });
+      }
+    }
+    const living = Object.values(state.combatants).filter((unit) => !unit.isDefeated);
+    const attackTargetIds = living.filter((unit) => unit.team !== actor.team).map((unit) => unit.id);
+    const abilityTargetIds: Record<string, string[]> = {};
+    for (const abilityId of actor.abilityIds) {
+      const ability = this.content.getAbility(abilityId);
+      if (!ability || actor.currentAp < ability.apCost || actor.currentEther < ability.etherCost) continue;
+      abilityTargetIds[abilityId] = living.filter((target) => !this.validateAbilityTarget(actor, target, ability)).map((target) => target.id);
+    }
+    return { actorId, legalMoves, attackTargetIds, abilityTargetIds };
+  }
+
+  /** Refreshes mutable player stats without rebuilding the already resolved roster. */
+  public synchronizePlayer(combat: CombatState, gameState: GameState): void {
+    const player = combat.combatants[gameState.player.characterId];
+    if (!player) return;
+    const effective = new CharacterStatsSystem().resolve(gameState.player).derivedStats;
+    player.initiative = effective.initiative;
+    player.maxAp = effective.actionPointsMax;
+    player.currentAp = Math.min(player.currentAp, player.maxAp);
+    player.armor = effective.armorRating;
   }
 
   public execute(source: CombatState, action: CombatAction): CombatCommandResult {
@@ -91,6 +163,15 @@ export class TurnBasedCombatEngine {
 
     if (action.type === 'EndTurn') {
       this.advanceTurn(state);
+      return { success: true, state };
+    }
+    if (action.type === 'Move') {
+      const legal = this.getResolvedCommands(state).legalMoves.some((position) => position.x === action.position.x && position.y === action.position.y);
+      if (!legal) return { success: false, state, reason: 'Destination is unavailable.' };
+      actor.position = action.position;
+      actor.currentAp -= 1;
+      this.log(state, `${actor.name} repositions.`);
+      if (actor.currentAp === 0) this.advanceTurn(state);
       return { success: true, state };
     }
     const target = state.combatants[action.targetId];

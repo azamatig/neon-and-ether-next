@@ -38,6 +38,7 @@ export interface CombatResultContainerProps {
     actionId: 'Search' | 'Restrain' | 'Capture' | 'Interrogate' | 'Release' | 'FinishOff'
   ) => void;
   onDismiss: () => void;
+  resolveItemName: (itemId: string) => string;
 }
 
 export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
@@ -45,6 +46,7 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
   onTakeLoot,
   onExecutePostCombatAction,
   onDismiss,
+  resolveItemName,
 }) => {
   const isVictory = resolution.victoryStatus === 'Victory';
   const [selectedItems, setSelectedItems] = useState<string[]>(
@@ -247,7 +249,7 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
                               onChange={() => {}}
                               className="accent-amber-400 cursor-pointer"
                             />
-                            <div className="text-xs font-bold">{slot.itemId}</div>
+                            <div className="text-xs font-bold">{resolveItemName(slot.itemId)}</div>
                           </div>
 
                           <Badge variant="amber" size="xs">

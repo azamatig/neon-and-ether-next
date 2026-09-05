@@ -15,6 +15,7 @@ import {
 } from '@neon-ether/game-runtime';
 import { GAME_CONTENT_MANIFEST } from '@neon-ether/content';
 import { CharacterDefinition, DialogueChoice, Vector2D } from '@neon-ether/game-schema';
+import { EntityNameResolver } from '../presentation/entity-name-resolver.ts';
 
 export function useGameRuntime() {
   const session = useMemo(() => {
@@ -31,6 +32,7 @@ export function useGameRuntime() {
   const [gameState, setGameState] = useState<GameState>(() => session.getState());
   const [lastCheck, setLastCheck] = useState<StatCheckResolution | null>(null);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const entityNames = useMemo(() => new EntityNameResolver(session.getContentRegistry()), [session]);
 
   useEffect(() => {
     const unsubs = [
@@ -161,12 +163,13 @@ export function useGameRuntime() {
     return result;
   };
 
-  const baseResidents = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[]).filter((npc) => ['companion','employee'].includes(npc.relationship.status)).map((runtime) => ({ runtime, name: session.getContentRegistry().getNPC(runtime.npcId)?.name ?? runtime.npcId }));
+  const baseResidents = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[]).filter((npc) => ['companion','employee'].includes(npc.relationship.status)).map((runtime) => ({ runtime, name: entityNames.npc(runtime.npcId) }));
   const baseJobs = session.getContentRegistry().baseJobs.getAll();
   const activeMinigameSession=gameState.world.activeMinigame;const activeMinigame=activeMinigameSession?session.getContentRegistry().minigames.get(activeMinigameSession.definitionId):undefined;const minigameSequenceStates=session.getMinigameSequenceStates();
 
   return {
     session,
+    entityNames,
     gameState,
     resolvedPlayer,
     activeMap,
@@ -177,6 +180,7 @@ export function useGameRuntime() {
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,
+    activeDialogueTree,
     activeDialogueNode,
     activeActionResolution,
     activeEventState,

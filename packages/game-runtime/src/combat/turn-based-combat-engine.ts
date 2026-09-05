@@ -112,14 +112,19 @@ export class TurnBasedCombatEngine {
       .sort((left, right) => right.initiative - left.initiative || left.id.localeCompare(right.id))
       .map((combatant) => combatant.id);
     return {
-      encounterId, isActive: active, roundNumber: 1, turnOrder, activeTurnIndex: 0,
+      encounterId, isActive: active, phase: active ? 'ACTIVE' : 'PREPARING', roundNumber: 1,
+      turnOrder, activeTurnIndex: 0, activeCombatantId: active ? turnOrder[0] ?? null : null,
       combatants, log: [{ id: 'combat_start', round: 1, message: `${encounter.name} engaged.` }], outcome: null,
       grid: { width: 8, height: 6 },
     };
   }
 
   public getResolvedCommands(state: CombatState): ResolvedCombatCommands {
-    const actorId = state.turnOrder[state.activeTurnIndex];
+    if (state.phase === 'PREPARING' && !state.isActive) {
+      return { actorId: undefined, legalMoves: [], attackTargetIds: [], abilityTargetIds: {} };
+    }
+    this.repairTurnState(state);
+    const actorId = state.activeCombatantId ?? undefined;
     const actor = actorId ? state.combatants[actorId] : undefined;
     if (!actor || actor.team !== 'Player' || actor.isDefeated || !state.isActive) {
       return { actorId, legalMoves: [], attackTargetIds: [], abilityTargetIds: {} };
@@ -156,10 +161,11 @@ export class TurnBasedCombatEngine {
 
   public execute(source: CombatState, action: CombatAction): CombatCommandResult {
     const state = structuredClone(source);
-    if (!state.isActive) return { success: false, state, reason: 'Combat is not active.' };
+    this.repairTurnState(state);
+    if (state.phase !== 'ACTIVE' || !state.isActive) return { success: false, state, reason: 'Combat is not active.' };
     const actor = state.combatants[action.actorId];
     if (!actor || actor.isDefeated) return { success: false, state, reason: 'Actor is unavailable.' };
-    if (state.turnOrder[state.activeTurnIndex] !== actor.id) return { success: false, state, reason: 'It is not this combatant’s turn.' };
+    if (state.activeCombatantId !== actor.id) return { success: false, state, reason: 'It is not this combatant’s turn.' };
 
     if (action.type === 'EndTurn') {
       this.advanceTurn(state);
@@ -214,7 +220,9 @@ export class TurnBasedCombatEngine {
   }
 
   public chooseAIAction(state: CombatState): CombatAction | undefined {
-    const actorId = state.turnOrder[state.activeTurnIndex];
+    this.repairTurnState(state);
+    const actorId = state.activeCombatantId;
+    if (!actorId) return undefined;
     const actor = state.combatants[actorId];
     if (!actor || actor.team !== 'Enemy' || actor.isDefeated) return undefined;
     const profile = actor.aiProfileId ? this.content.getCombatAIProfile(actor.aiProfileId) : undefined;
@@ -251,20 +259,31 @@ export class TurnBasedCombatEngine {
   }
 
   private advanceTurn(state: CombatState): void {
-    const current = state.combatants[state.turnOrder[state.activeTurnIndex]];
+    const current = state.activeCombatantId ? state.combatants[state.activeCombatantId] : undefined;
     if (current) this.tickStatuses(state, current, 'TurnEnd');
     this.updateOutcome(state);
     if (!state.isActive) return;
-    do {
+
+    this.rebuildTurnOrder(state);
+    const maximumTransitions = Math.max(1, state.turnOrder.length * 2);
+    for (let transitions = 0; transitions < maximumTransitions; transitions += 1) {
       state.activeTurnIndex += 1;
       if (state.activeTurnIndex >= state.turnOrder.length) {
         state.activeTurnIndex = 0; state.roundNumber += 1;
         Object.values(state.combatants).forEach((combatant) => { if (!combatant.isDefeated) combatant.currentAp = combatant.maxAp; });
       }
-    } while (state.combatants[state.turnOrder[state.activeTurnIndex]]?.isDefeated);
-    const next = state.combatants[state.turnOrder[state.activeTurnIndex]];
-    if (next) this.tickStatuses(state, next, 'TurnStart');
-    this.updateOutcome(state);
+      const next = state.combatants[state.turnOrder[state.activeTurnIndex]];
+      if (!next || next.isDefeated) continue;
+      this.tickStatuses(state, next, 'TurnStart');
+      this.updateOutcome(state);
+      if (!state.isActive) return;
+      if (next.isDefeated) continue;
+      state.activeCombatantId = next.id;
+      return;
+    }
+
+    // A malformed order must never leave an active combat with no actor.
+    this.repairTurnState(state);
   }
 
   private tickStatuses(state: CombatState, combatant: Combatant, timing: 'TurnStart' | 'TurnEnd'): void {
@@ -284,6 +303,37 @@ export class TurnBasedCombatEngine {
     if (!living.some((combatant) => combatant.team === 'Enemy')) state.outcome = 'Victory';
     if (!living.some((combatant) => combatant.team === 'Player')) state.outcome = 'Defeat';
     state.isActive = state.outcome === null;
+    state.phase = state.outcome === 'Victory' ? 'VICTORY' : state.outcome === 'Defeat' ? 'DEFEAT' : 'ACTIVE';
+    if (!state.isActive) state.activeCombatantId = null;
+  }
+
+  private rebuildTurnOrder(state: CombatState): void {
+    const combatantIds = Object.keys(state.combatants);
+    const known = new Set(combatantIds);
+    state.turnOrder = [...new Set([...state.turnOrder.filter((id) => known.has(id)), ...combatantIds])];
+  }
+
+  /** Repairs migrated/malformed snapshots and enforces ACTIVE => valid activeCombatantId. */
+  private repairTurnState(state: CombatState): void {
+    if (state.phase === 'PREPARING' && !state.isActive) return;
+    this.updateOutcome(state);
+    if (!state.isActive) return;
+    this.rebuildTurnOrder(state);
+    const current = state.activeCombatantId ? state.combatants[state.activeCombatantId] : undefined;
+    if (current && !current.isDefeated && state.turnOrder.includes(current.id)) {
+      state.activeTurnIndex = state.turnOrder.indexOf(current.id);
+      return;
+    }
+    const nextIndex = state.turnOrder.findIndex((id) => !state.combatants[id]?.isDefeated);
+    if (nextIndex >= 0) {
+      state.activeTurnIndex = nextIndex;
+      state.activeCombatantId = state.turnOrder[nextIndex];
+      state.phase = 'ACTIVE';
+      return;
+    }
+    state.isActive = false;
+    state.phase = state.outcome === 'Victory' ? 'VICTORY' : 'DEFEAT';
+    state.activeCombatantId = null;
   }
 
   private log(state: CombatState, message: string): void {

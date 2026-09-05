@@ -93,9 +93,11 @@ export const CombatLogEntrySchema = z.object({
 export const CombatStateSchema = z.object({
   encounterId: z.string().nullable().default(null),
   isActive: z.boolean().default(false),
+  phase: z.enum(['PREPARING', 'ACTIVE', 'VICTORY', 'DEFEAT']).default('PREPARING'),
   roundNumber: z.number().int().min(0).default(0),
   turnOrder: z.array(z.string()).default([]),
   activeTurnIndex: z.number().int().min(0).default(0),
+  activeCombatantId: z.string().nullable().default(null),
   combatants: z.record(z.string(), CombatantSchema).default({}),
   log: z.array(CombatLogEntrySchema).default([]),
   outcome: z.enum(['Victory', 'Defeat']).nullable().default(null),

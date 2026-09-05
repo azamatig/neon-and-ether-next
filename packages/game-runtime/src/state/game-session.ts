@@ -915,6 +915,8 @@ export class GameSession {
     const ok = combat !== undefined;
     if (combat) {
       combat.isActive = true;
+      combat.phase = 'ACTIVE';
+      combat.activeCombatantId = combat.turnOrder[combat.activeTurnIndex] ?? null;
       this.turnBasedCombatEngine.synchronizePlayer(combat, this.state);
       this.state.world.activeEncounterId = id;
       this.state.world.mode = 'TacticalCombat';
@@ -957,8 +959,10 @@ export class GameSession {
 
   private resolvePendingAiTurns(): void {
     let guard = 0;
-    while (this.state.combat.isActive && guard < 50) {
-      const activeId = this.state.combat.turnOrder[this.state.combat.activeTurnIndex];
+    const maximumActions = Math.max(32, this.state.combat.turnOrder.length * 16);
+    while (this.state.combat.isActive && guard < maximumActions) {
+      const activeId = this.state.combat.activeCombatantId;
+      if (!activeId) break;
       if (this.state.combat.combatants[activeId]?.team !== 'Enemy') break;
       const aiAction = this.turnBasedCombatEngine.chooseAIAction(this.state.combat);
       if (!aiAction) break;
@@ -969,6 +973,16 @@ export class GameSession {
       const damageDealt=Object.values(this.state.combat.combatants).filter((unit)=>unit.team==='Player').reduce((sum,unit)=>sum+Math.max(0,(before[unit.id]?.currentHp??unit.currentHp)-unit.currentHp),0);
       this.reportTrace({kind:'CombatAction',message:`Combat AI action: ${aiAction.type}`,details:{encounterId:this.state.combat.encounterId,action:aiAction,round:this.state.combat.roundNumber,damageDealt,damageReceived:0,actorTeam:'Enemy'}});
       guard += 1;
+    }
+    // A broken AI policy may not hold an ACTIVE combat hostage indefinitely.
+    let forcedTransitions = 0;
+    while (this.state.combat.isActive && forcedTransitions < this.state.combat.turnOrder.length) {
+      const activeId = this.state.combat.activeCombatantId;
+      if (!activeId || this.state.combat.combatants[activeId]?.team !== 'Enemy') break;
+      const forced = this.turnBasedCombatEngine.execute(this.state.combat, { type: 'EndTurn', actorId: activeId });
+      if (!forced.success) break;
+      this.state.combat = forced.state;
+      forcedTransitions += 1;
     }
   }
 

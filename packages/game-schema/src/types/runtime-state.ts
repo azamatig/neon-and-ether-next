@@ -432,9 +432,11 @@ export const GameStateSchema = z.object({
   combat: TacticalCombatStateSchema.default({
     encounterId: null,
     isActive: false,
+    phase: 'PREPARING',
     roundNumber: 0,
     turnOrder: [],
     activeTurnIndex: 0,
+    activeCombatantId: null,
     combatants: {},
     log: [],
     outcome: null,

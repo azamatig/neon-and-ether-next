@@ -15,7 +15,7 @@ type SelectedCommand = { type: 'Attack' } | { type: 'Ability'; abilityId: string
 /** Pure tactical presentation: legal cells and targets are resolved by the combat runtime. */
 export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, abilities, onCommand }) => {
   const [selected, setSelected] = useState<SelectedCommand>({ type: 'Attack' });
-  const activeId = state.turnOrder[state.activeTurnIndex];
+  const activeId = state.activeCombatantId ?? state.turnOrder[state.activeTurnIndex];
   const actor = state.combatants[activeId];
   const abilityMap = useMemo(() => new Map(abilities.map((ability) => [ability.id, ability])), [abilities]);
   const moveKeys = useMemo(() => new Set(commands.legalMoves.map((cell) => `${cell.x}:${cell.y}`)), [commands.legalMoves]);

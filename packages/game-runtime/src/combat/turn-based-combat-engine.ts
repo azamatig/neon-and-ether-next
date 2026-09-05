@@ -173,7 +173,10 @@ export class TurnBasedCombatEngine {
     return {
       encounterId, isActive: active, phase: active ? 'ACTIVE' : 'PREPARING', roundNumber: 1,
       turnOrder, activeTurnIndex: 0, activeCombatantId: active ? turnOrder[0] ?? null : null,
-      combatants, log: [{ id: 'combat_start', round: 1, message: `${encounter.name} engaged.` }], outcome: null,
+      combatants, log: [
+        { id: 'combat_start', round: 1, category: 'System', message: `${encounter.name} engaged.` },
+        { id: 'combat_round_1', round: 1, category: 'Round', message: 'Round 1 begins.' },
+      ], outcome: null,
       grid,
     };
   }
@@ -266,7 +269,7 @@ export class TurnBasedCombatEngine {
       actor.position = action.position;
       actor.currentAp -= state.grid.movementApCost;
       actor.movementRemaining -= move.cost;
-      this.log(state, `${actor.name} repositions (${move.cost} movement).`);
+      this.log(state, 'Movement', `${actor.name} moves to ${actor.position.x + 1},${actor.position.y + 1} (${move.cost} movement).`);
       if (actor.currentAp === 0) this.advanceTurn(state);
       return { success: true, state };
     }
@@ -300,12 +303,12 @@ export class TurnBasedCombatEngine {
         if (effect.type === 'Heal') {
           const amount = this.dice.rollRange(effect.min, effect.max);
           target.currentHp = Math.min(target.maxHp, target.currentHp + amount);
-          this.log(state, `${actor.name} uses ${ability.name}; ${target.name} recovers ${amount} HP.`);
+          this.log(state, 'Status', `${actor.name} uses ${ability.name}; ${target.name} recovers ${amount} HP.`);
         }
         if (effect.type === 'ApplyStatus' && effect.statusEffectId) {
           target.statuses.push({ statusEffectId: effect.statusEffectId, remainingTurns: effect.durationTurns ?? 1, sourceCombatantId: actor.id });
           this.refreshIncapacitation(target);
-          this.log(state, `${target.name} gains ${this.content.getStatusEffect(effect.statusEffectId)?.name ?? effect.statusEffectId}.`);
+          this.log(state, 'Status', `${target.name} gains ${this.content.getStatusEffect(effect.statusEffectId)?.name ?? effect.statusEffectId}.`);
         }
       }
     }
@@ -395,6 +398,11 @@ export class TurnBasedCombatEngine {
   }
 
   private dealDamage(state: CombatState, actor: Combatant, target: Combatant, rawDamage: number, label: string, defeatType: 'Lethal' | 'NonLethal' = 'Lethal'): void {
+    this.log(state, 'Attack', `${actor.name} uses ${label} on ${target.name}.`);
+    if (rawDamage <= 0) {
+      this.log(state, 'Miss', `${actor.name} misses ${target.name}.`);
+      return;
+    }
     const statusArmor = target.statuses.reduce((sum, active) => sum + (this.content.getStatusEffect(active.statusEffectId)?.armorModifier ?? 0), 0);
     const damage = Math.max(1, rawDamage - Math.max(0, target.armor + statusArmor));
     target.currentHp = Math.max(0, target.currentHp - damage);
@@ -404,7 +412,8 @@ export class TurnBasedCombatEngine {
       target.resolutionState = this.resolveDefeatState(target, defeatType);
       target.isIncapacitated = target.resolutionState === 'Incapacitated';
     }
-    this.log(state, `${actor.name} uses ${label} on ${target.name} for ${damage} damage.`);
+    this.log(state, 'Damage', `${target.name} takes ${damage} damage.`);
+    if (target.isDefeated) this.log(state, 'Defeat', `${target.name} is ${target.resolutionState.toLowerCase()}.`);
   }
 
   private advanceTurn(state: CombatState): void {
@@ -418,7 +427,9 @@ export class TurnBasedCombatEngine {
     for (let transitions = 0; transitions < maximumTransitions; transitions += 1) {
       state.activeTurnIndex += 1;
       if (state.activeTurnIndex >= state.turnOrder.length) {
+        this.log(state, 'Round', `Round ${state.roundNumber} ends.`);
         state.activeTurnIndex = 0; state.roundNumber += 1;
+        this.log(state, 'Round', `Round ${state.roundNumber} begins.`);
         Object.values(state.combatants).forEach((combatant) => {
           if (!combatant.isDefeated) {
             combatant.currentAp = combatant.maxAp;
@@ -433,7 +444,7 @@ export class TurnBasedCombatEngine {
       if (!state.isActive) return;
       if (next.isDefeated) continue;
       if (next.isIncapacitated) {
-        this.log(state, `${next.name} is incapacitated and loses the turn.`);
+        this.log(state, 'Status', `${next.name} is incapacitated and loses the turn.`);
         this.tickStatuses(state, next, 'TurnEnd');
         this.updateOutcome(state);
         if (!state.isActive) return;
@@ -459,7 +470,7 @@ export class TurnBasedCombatEngine {
         combatant.isIncapacitated = combatant.resolutionState === 'Incapacitated';
       }
       active.remainingTurns -= 1;
-      this.log(state, `${definition.name} affects ${combatant.name}.`);
+      this.log(state, 'Status', `${definition.name} affects ${combatant.name}.`);
     }
     combatant.statuses = combatant.statuses.filter((active) => active.remainingTurns > 0);
     this.refreshIncapacitation(combatant);
@@ -519,7 +530,7 @@ export class TurnBasedCombatEngine {
     return defeatType === 'NonLethal' ? 'Incapacitated' : 'Dead';
   }
 
-  private log(state: CombatState, message: string): void {
-    state.log.push({ id: `combat_log_${state.log.length + 1}`, round: state.roundNumber, message });
+  private log(state: CombatState, category: CombatState['log'][number]['category'], message: string): void {
+    state.log.push({ id: `combat_log_${state.log.length + 1}`, round: state.roundNumber, category, message });
   }
 }

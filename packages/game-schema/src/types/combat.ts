@@ -106,7 +106,10 @@ export type CombatAction = z.infer<typeof CombatActionSchema>;
 export type TurnOrder = string[];
 
 export const CombatLogEntrySchema = z.object({
-  id: z.string(), round: z.number().int(), message: z.string(),
+  id: z.string(),
+  round: z.number().int(),
+  category: z.enum(['System', 'Movement', 'Attack', 'Damage', 'Miss', 'Status', 'Defeat', 'Round']).default('System'),
+  message: z.string(),
 });
 
 export const CombatStateSchema = z.object({

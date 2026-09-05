@@ -131,7 +131,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
           <dl><div><dt>HP</dt><dd>{actor?.currentHp ?? 0}/{actor?.maxHp ?? 0}</dd></div><div><dt>AP</dt><dd>{actor?.currentAp ?? 0}</dd></div><div><dt>MOV</dt><dd>{actor?.movementRemaining ?? 0}</dd></div><div><dt>ETH</dt><dd>{actor?.currentEther ?? 0}</dd></div></dl>
         </section>
 
-        <div className="combat-log"><h3>COMBAT LOG</h3>{state.log.slice(-5).reverse().map((entry) => <p key={entry.id}><span>R{entry.round}</span> {entry.message}</p>)}</div>
+        <details className="combat-log" open><summary>COMBAT LOG <span>{state.log.length}</span></summary><div>{state.log.slice(-8).reverse().map((entry) => <p key={entry.id} className={`log-${entry.category.toLowerCase()}`}><span>R{entry.round} · {entry.category.toUpperCase()}</span> {entry.message}</p>)}</div></details>
       </aside>
     </div>
   </section>;

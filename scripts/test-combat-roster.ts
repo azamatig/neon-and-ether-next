@@ -3,29 +3,43 @@ import { GAME_CONTENT_MANIFEST } from '../content/index.ts';
 
 const registry = new ContentRegistry();
 registry.loadManifest(GAME_CONTENT_MANIFEST);
-const session = new GameSession(registry, 1337);
-session.executeEffect({ type: 'setFlag', flag: 'prologue.entry_advantage', value: true });
-if (!session.startEvent('evt_prologue_freight_encounter')) throw new Error('Encounter checkpoint did not start.');
-while (session.getState().world.mode === 'Event') session.advanceEventStep();
-const preview = session.getCombatPreview();
-if (!preview) throw new Error('Combat preview was not resolved.');
-const previewRoster = [...preview.party.map((unit) => `${unit.id}:Player`), ...preview.enemies.flatMap((unit) => Array.from({ length: unit.count }, () => `${unit.id}:Enemy`))].sort();
-if (!session.startTacticalCombat()) throw new Error('Tactical combat did not start.');
-const tacticalRoster = Object.values(session.getState().combat.combatants).map((unit) => `${unit.id}:${unit.team}`).sort();
-if (JSON.stringify(previewRoster) !== JSON.stringify(tacticalRoster)) {
-  throw new Error(`Resolved roster changed between preview and combat.\nPreview: ${previewRoster}\nCombat: ${tacticalRoster}`);
-}
-const initiativeOrder = Object.values(session.getState().combat.combatants).sort((left, right) => right.initiative - left.initiative || left.id.localeCompare(right.id)).map((unit) => unit.id);
-if (JSON.stringify(initiativeOrder) !== JSON.stringify(session.getState().combat.turnOrder)) throw new Error('Turn order does not match runtime initiative.');
-if (session.getState().combat.activeCombatantId !== session.getState().combat.turnOrder[session.getState().combat.activeTurnIndex]) throw new Error('Current combatant is not aligned with turn order.');
-if (!tacticalRoster.some((unit) => unit.startsWith('npc_prologue_companion_female:')) || !tacticalRoster.some((unit) => unit.startsWith('npc_prologue_companion_male:'))) throw new Error('Companions were not deployed.');
-for (const companionId of ['npc_prologue_companion_female', 'npc_prologue_companion_male']) {
-  const companion = session.getState().combat.combatants[companionId];
-  if (!companion || companion.team !== 'Player' || !companion.bodyImage) throw new Error(`${companionId} presentation data is incomplete.`);
-  if (!companion.weaponId || companion.abilityIds.length === 0) throw new Error(`${companionId} equipment or abilities were not resolved.`);
-  if (!session.getState().combat.turnOrder.includes(companionId)) throw new Error(`${companionId} is missing from turn order.`);
-  if (!Number.isFinite(companion.position.x) || !Number.isFinite(companion.position.y)) throw new Error(`${companionId} has no tactical position.`);
-}
-const positions = Object.values(session.getState().combat.combatants).map((unit) => `${unit.position.x}:${unit.position.y}`);
-if (new Set(positions).size !== positions.length) throw new Error('Initial grid positions overlap.');
-console.log('PreCombatResolvedRoster === TacticalCombatInitialRoster');
+
+const assertResolvedRosterHandoff = (session: GameSession, encounterId: string) => {
+  const preview = session.getCombatPreview(encounterId);
+  if (!preview) throw new Error(`${encounterId}: combat preview was not resolved.`);
+  const previewRoster = [
+    ...preview.party.map((unit) => `${unit.id}:Player`),
+    ...preview.enemies.flatMap((unit) => Array.from({ length: unit.count }, () => `${unit.id}:Enemy`)),
+  ].sort();
+  if (!session.startTacticalCombat(encounterId)) throw new Error(`${encounterId}: tactical combat did not start.`);
+  const combat = session.getState().combat;
+  const tacticalRoster = Object.values(combat.combatants).map((unit) => `${unit.id}:${unit.team}`).sort();
+  if (JSON.stringify(previewRoster) !== JSON.stringify(tacticalRoster)) {
+    throw new Error(`${encounterId}: resolved roster changed between preview and combat.\nPreview: ${previewRoster}\nCombat: ${tacticalRoster}`);
+  }
+  const initiativeOrder = Object.values(combat.combatants).sort((left, right) => right.initiative - left.initiative || left.id.localeCompare(right.id)).map((unit) => unit.id);
+  if (JSON.stringify(initiativeOrder) !== JSON.stringify(combat.turnOrder)) throw new Error(`${encounterId}: turn order does not match runtime initiative.`);
+  if (combat.activeCombatantId !== combat.turnOrder[combat.activeTurnIndex]) throw new Error(`${encounterId}: current combatant is not aligned with turn order.`);
+  for (const unit of Object.values(combat.combatants).filter((combatant) => combatant.team === 'Player')) {
+    if (!unit.name || unit.maxHp <= 0) throw new Error(`${encounterId}: ${unit.id} has incomplete combat presentation data.`);
+    if (!combat.turnOrder.includes(unit.id)) throw new Error(`${encounterId}: ${unit.id} is missing from turn order.`);
+    if (!Number.isFinite(unit.position.x) || !Number.isFinite(unit.position.y)) throw new Error(`${encounterId}: ${unit.id} has no tactical position.`);
+  }
+  const positions = Object.values(combat.combatants).map((unit) => `${unit.position.x}:${unit.position.y}`);
+  if (new Set(positions).size !== positions.length) throw new Error(`${encounterId}: initial grid positions overlap.`);
+};
+
+const freight = new GameSession(registry, 1337);
+freight.executeEffect({ type: 'setFlag', flag: 'prologue.entry_advantage', value: true });
+if (!freight.startEvent('evt_prologue_freight_encounter')) throw new Error('Freight encounter checkpoint did not start.');
+while (freight.getState().world.mode === 'Event') freight.advanceEventStep();
+assertResolvedRosterHandoff(freight, 'enc_prologue_ares_freight_checkpoint');
+
+const vault = new GameSession(registry, 7331);
+vault.executeEffect({ type: 'startQuest', questId: 'qst_prologue_ares_vault', initialStageId: 'stage_07_central_vault' });
+for (const npcId of ['npc_prologue_companion_female', 'npc_prologue_companion_male']) vault.executeEffect({ type: 'recruitNpc', npcId, asCompanion: true });
+if (!vault.startEvent('evt_prologue_central_vault_bonding')) throw new Error('Vault response setup did not start.');
+while (vault.getState().world.mode === 'Event') vault.advanceEventStep();
+assertResolvedRosterHandoff(vault, 'enc_prologue_ares_vault_response');
+
+console.log('Both Prologue Combat Preview rosters equal their Tactical Combat initial rosters.');

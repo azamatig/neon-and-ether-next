@@ -41,4 +41,6 @@ while (state.roundNumber < targetRound) {
 }
 assertActiveInvariant();
 if (!recoveredActorReceivedTurn) throw new Error('Recovered combatant never returned to turn order.');
+if (!state.log.some((entry) => entry.category === 'Round' && entry.message.includes('ends'))) throw new Error('Round end was not logged.');
+if (!state.log.some((entry) => entry.category === 'Round' && entry.message.includes('begins'))) throw new Error('Round start was not logged.');
 console.log('Combat turn state remained valid for 10 consecutive rounds.');

@@ -17,7 +17,15 @@
     "test:pending-resolutions": "bun scripts/test-pending-resolutions.ts",
     "test:editor-presets": "bun scripts/test-editor-presets.ts",
     "test:quest-walkthrough": "bun scripts/test-quest-walkthrough.ts",
-    "test:telemetry": "bun scripts/test-development-telemetry.ts"
+    "test:telemetry": "bun scripts/test-development-telemetry.ts",
+    "test:character-creation": "bun scripts/test-character-creation.ts",
+    "test:prologue-region1": "bun scripts/test-prologue-region1.ts",
+    "test:prologue-transition": "bun scripts/test-prologue-transition.ts",
+    "test:prologue-region2": "bun scripts/test-prologue-region2.ts",
+    "test:prologue-completion": "bun scripts/test-prologue-completion.ts",
+    "test:combat-roster": "bun scripts/test-combat-roster.ts",
+    "test:combat-turns": "bun scripts/test-combat-turn-state.ts",
+    "test:combat-grid": "bun scripts/test-combat-grid.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

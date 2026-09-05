@@ -44,6 +44,7 @@ export const handleChangeNpcStateEffect: EffectHandler<ChangeNpcStateEffect> = (
     if (effect.location.mapId) {
       npc.mapId = effect.location.mapId;
     }
+    if(effect.location.poiId!==undefined)npc.poiId=effect.location.poiId;
     if (effect.location.position) {
       npc.position = { ...effect.location.position };
     }

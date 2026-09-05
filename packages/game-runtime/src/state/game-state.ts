@@ -78,6 +78,9 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
   return {
     characterId: overrides.characterId ?? 'player',
     name: overrides.name ?? 'Player',
+    age: overrides.age,
+    portraitId: overrides.portraitId,
+    backgroundId: overrides.backgroundId,
     title: overrides.title ?? 'Drifter',
     level: overrides.level ?? 1,
     experience: overrides.experience ?? 0,
@@ -112,6 +115,7 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
     equipment: overrides.equipment ?? { slots: {}, appliedModifiers: {} },
     traits: overrides.traits ?? [],
     perks: overrides.perks ?? [],
+    abilityIds:overrides.abilityIds??[],
     temporaryModifiers: overrides.temporaryModifiers ?? [],
     statusEffects: overrides.statusEffects ?? [],
     activeStatusEffects: overrides.activeStatusEffects ?? [],
@@ -138,6 +142,7 @@ export function createInitialWorldState(overrides: Partial<WorldState> = {}): Wo
     doors: overrides.doors ?? {},
     ambientEtherModifier: overrides.ambientEtherModifier ?? 1.0,
     weatherByScope: overrides.weatherByScope ?? {},
+    activeMinigame:overrides.activeMinigame??null,
   };
 }
 
@@ -266,12 +271,15 @@ export function createInitialGameState(overrides: Partial<GameState> = {}): Game
     combat: overrides.combat ?? {
       encounterId: null,
       isActive: false,
+      phase: 'PREPARING',
       roundNumber: 0,
       turnOrder: [],
       activeTurnIndex: 0,
+      activeCombatantId: null,
       combatants: {},
       log: [],
       outcome: null,
+      grid: { width: 8, height: 6, movementApCost: 1, tiles: [], blockingCells: [], playerDeployment: [], enemyDeployment: [] },
     },
     journal: overrides.journal ?? [
       {
@@ -305,6 +313,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         facing: playerBlueprint.facing,
         traits: [...playerBlueprint.traits],
         perks: [...playerBlueprint.perks],
+        abilityIds:[...playerBlueprint.abilityIds],
         temporaryModifiers: [...playerBlueprint.temporaryModifiers],
         statusEffects: [...playerBlueprint.statusEffects],
         inventory: createInitialInventoryState({

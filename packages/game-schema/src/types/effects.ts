@@ -253,6 +253,9 @@ export type ChangeWeatherEffect=z.infer<typeof ChangeWeatherEffectSchema>;
 /** Generic persistent character status application shared by combat, events, items, and environments. */
 export const ApplyStatusEffectSchema=z.object({type:z.literal('applyStatusEffect'),statusEffectId:z.string().min(1),durationTurns:z.number().int().positive(),targetCharacterId:z.string().optional()});
 export type ApplyStatusEffect=z.infer<typeof ApplyStatusEffectSchema>;
+/** Generic persistent character ability unlock; stored in PlayerState and SaveGame. */
+export const SetAbilityUnlockedEffectSchema=z.object({type:z.literal('setAbilityUnlocked'),abilityId:z.string().min(1),unlocked:z.boolean().default(true),targetCharacterId:z.string().optional()});
+export type SetAbilityUnlockedEffect=z.infer<typeof SetAbilityUnlockedEffectSchema>;
 
 /**
  * Universal Effect Discriminated Union.
@@ -285,6 +288,7 @@ export const EffectSchema = z.discriminatedUnion('type', [
   SetWeatherEffectSchema,
   ChangeWeatherEffectSchema,
   ApplyStatusEffectSchema,
+  SetAbilityUnlockedEffectSchema,
 ]);
 
 export type Effect = z.infer<typeof EffectSchema>;

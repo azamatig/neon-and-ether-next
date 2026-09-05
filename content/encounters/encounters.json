@@ -268,5 +268,263 @@
       "poiId": "poi_glassline_clinic",
       "mapId": "map_slums_sec09"
     }
+  },
+  {
+    "id": "enc_prologue_ares_freight_checkpoint",
+    "name": "Lock 3 Interception",
+    "description": "Ares closes the freight lock and deploys two officers with a cradle-mounted sentry drone.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Mandatory",
+      "Checkpoint:Freight Combat"
+    ],
+    "mapId": "map_prologue_ares_logistics",
+    "enemyGroups": [
+      {
+        "enemyId": "enm_prologue_ares_security",
+        "count": 2,
+        "nameOverride": "Ares Security Officer",
+        "threatTier": "Standard",
+        "isBoss": false,
+        "isUnknown": false
+      },
+      {
+        "enemyId": "enm_prologue_ares_security_drone",
+        "count": 1,
+        "nameOverride": "Ares Sentry Drone",
+        "threatTier": "Standard",
+        "isBoss": false,
+        "isUnknown": false
+      }
+    ],
+    "environment": {
+      "ambientEtherLevel": 12,
+      "lighting": "Strobe",
+      "hazardDescription": "Lock 3 seals behind the team. Red work-lights strobe across cargo lanes with nowhere to retreat.",
+      "inheritWorldEnvironment": false,
+      "environmentTags": [
+        "indoor",
+        "sealed_access",
+        "industrial"
+      ],
+      "gameplayModifiers": {}
+    },
+    "threatLevel": 2,
+    "escapeRules": {
+      "allowed": false,
+      "conditions": [],
+      "disabledReason": "The freight access sealed behind the party."
+    },
+    "lootTable": [
+      {
+        "itemId": "itm_prologue_ares_security_keycard",
+        "dropRate": 1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemId": "itm_prologue_ares_ballistic_cells",
+        "dropRate": 1,
+        "minQuantity": 2,
+        "maxQuantity": 3
+      },
+      {
+        "itemId": "itm_signal_scrap",
+        "dropRate": 1,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemId": "con_trauma_patch",
+        "dropRate": 0.65,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemId": "arm_prologue_ares_light_carrier",
+        "dropRate": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ],
+    "xpReward": 120,
+    "creditsReward": {
+      "min": 20,
+      "max": 45
+    },
+    "initialConditions": [],
+    "modifiers": [
+      {
+        "id": "mod_prologue_security_route_initiative",
+        "label": "Mapped Security Route",
+        "description": "Route intelligence lets the team enter from a better angle.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.entry_advantage",
+            "operator": "==",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.encounter_advantage_applied",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "changeStat",
+            "stat": "initiative",
+            "mode": "add",
+            "delta": 3
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.encounter_advantage_applied",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "victoryOutcome": {
+      "type": "event",
+      "eventId": "evt_prologue_checkpoint_victory"
+    },
+    "defeatOutcome": {
+      "type": "showResult",
+      "title": "Checkpoint Overrun",
+      "resultText": "The sealed checkpoint overwhelms the infiltration team.",
+      "status": "Failure"
+    },
+    "survivingEnemyActions": []
+  },
+  {
+    "id": "enc_prologue_ares_vault_response",
+    "name": "Containment Response",
+    "description": "Three shaken Ares officers push through the breach behind a drone that has no mind for the artifact to touch.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Mandatory",
+      "MindmancerTutorial",
+      "Checkpoint:Vault Escape Combat"
+    ],
+    "mapId": "map_prologue_ares_inner_vault",
+    "enemyGroups": [
+      {
+        "enemyId": "enm_prologue_ares_security",
+        "count": 3,
+        "nameOverride": "Ares Response Officer",
+        "threatTier": "Standard",
+        "isBoss": false,
+        "isUnknown": false
+      },
+      {
+        "enemyId": "enm_prologue_ares_security_drone",
+        "count": 1,
+        "nameOverride": "Ares Security Drone",
+        "threatTier": "Standard",
+        "isBoss": false,
+        "isUnknown": false
+      }
+    ],
+    "environment": {
+      "ambientEtherLevel": 65,
+      "lighting": "Strobe",
+      "hazardDescription": "Containment arcs crawl over the floor while alarms and half-heard human intent compete for attention.",
+      "inheritWorldEnvironment": false,
+      "environmentTags": [
+        "indoor",
+        "containment_failure",
+        "alarm"
+      ],
+      "gameplayModifiers": {}
+    },
+    "threatLevel": 2,
+    "initialConditions": [
+      {
+        "type": "flag",
+        "flag": "player.mindmancer.unlocked",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "modifiers": [
+      {
+        "id": "mod_disabled_response_grid",
+        "label": "Security Grid Disabled",
+        "description": "Earlier sabotage delays the response formation.",
+        "conditions": [
+          {
+            "type": "flag",
+            "flag": "prologue.region2.security_disabled",
+            "operator": "==",
+            "value": true
+          },
+          {
+            "type": "flag",
+            "flag": "prologue.escape_modifier_applied",
+            "operator": "!=",
+            "value": true
+          }
+        ],
+        "effects": [
+          {
+            "type": "changeStat",
+            "stat": "initiative",
+            "delta": 2,
+            "mode": "add"
+          },
+          {
+            "type": "setFlag",
+            "flag": "prologue.escape_modifier_applied",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "escapeRules": {
+      "allowed": false,
+      "conditions": [],
+      "disabledReason": "Rhea is pinned beyond the response line; retreat would leave her behind."
+    },
+    "lootTable": [
+      {
+        "itemId": "itm_prologue_ares_ballistic_cells",
+        "dropRate": 1,
+        "minQuantity": 2,
+        "maxQuantity": 4
+      },
+      {
+        "itemId": "con_trauma_patch",
+        "dropRate": 0.7,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemId": "itm_signal_scrap",
+        "dropRate": 1,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ],
+    "creditsReward": {
+      "min": 15,
+      "max": 35
+    },
+    "xpReward": 150,
+    "victoryOutcome": {
+      "type": "event",
+      "eventId": "evt_prologue_wounded_officer"
+    },
+    "defeatOutcome": {
+      "type": "showResult",
+      "title": "Escape Cut Off",
+      "resultText": "The response line closes around the surviving team.",
+      "status": "Failure"
+    },
+    "survivingEnemyActions": []
   }
 ]

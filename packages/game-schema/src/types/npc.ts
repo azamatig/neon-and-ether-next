@@ -34,6 +34,7 @@ export const NPCSchema = BaseEntitySchema.extend({
   inventory: z.array(CharacterInventorySlotSchema).default([]),
   dialogueTreeId: z.string().optional(),
   portraitIcon: z.string().default('User'),
+  combatImage: z.string().optional(),
   defaultBehavior: z.enum(['Idle', 'Patrol', 'Guard', 'Wander']).default('Idle'),
   abilityIds: z.array(z.string()).default([]),
   traits: z.array(z.string()).default([]),

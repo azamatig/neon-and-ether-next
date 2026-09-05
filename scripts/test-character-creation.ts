@@ -1,0 +1,43 @@
+import type { CharacterCreationSelection } from '../packages/game-schema/src/index.ts';
+import { ContentRegistry, GameSession } from '../packages/game-runtime/src/index.ts';
+import { GAME_CONTENT_MANIFEST } from '../content/index.ts';
+
+const registry = new ContentRegistry();
+registry.loadManifest(GAME_CONTENT_MANIFEST);
+const session = new GameSession(registry);
+const options = session.getCharacterCreationOptions();
+const definition = options.definition;
+if (!definition || !options.backgrounds.length || definition.startingPerkCount > options.perks.length) throw new Error('Character creation content is incomplete.');
+let attributePoints = definition.attributePointBudget;
+const attributes = Object.fromEntries(definition.attributeRules.map((rule) => {
+  const purchased = Math.min(rule.maximum - rule.minimum, Math.floor(attributePoints / rule.costPerPoint));
+  attributePoints -= purchased * rule.costPerPoint;
+  return [rule.attribute, rule.minimum + purchased];
+}));
+let skillPoints = definition.skillPointBudget;
+const skills = Object.fromEntries(definition.skillRules.map((rule) => {
+  const purchased = Math.min(rule.maximum - rule.minimum, Math.floor(skillPoints / rule.costPerRank));
+  skillPoints -= purchased * rule.costPerRank;
+  return [rule.skillId, rule.minimum + purchased];
+}));
+const selection: CharacterCreationSelection = { name:'Rook', age:definition.defaultAge, portraitId:definition.portraits[0]?.id, backgroundId:options.backgrounds[0].id, attributes: attributes as CharacterCreationSelection['attributes'], skills, perkIds:options.perks.filter((perk) => !perk.requiredBackgroundIds.length || perk.requiredBackgroundIds.includes(options.backgrounds[0].id)).slice(0,definition.startingPerkCount).map((perk) => perk.id) };
+const validation = session.initializeNewGame(selection);
+if (!validation.valid) throw new Error(validation.reasons.join(' '));
+const created = session.getState();
+if (created.player.name !== selection.name || created.player.age !== selection.age || created.player.backgroundId !== selection.backgroundId) throw new Error('Created identity was not applied.');
+if (definition.startingEventId && created.world.mode !== 'Event') throw new Error('Configured prologue did not start.');
+session.advanceEventStep();
+if (session.getState().world.activeEventStepId !== 'intro_street') throw new Error('Background-conditioned intro variant was not selected.');
+while (session.getState().world.mode === 'Event') session.advanceEventStep();
+const completed = session.getState();
+if (completed.world.mode !== 'POI' || completed.world.currentPoiId !== definition.startingPoiId || completed.world.flags['intro.completed'] !== true) throw new Error('Prologue did not complete into the configured gameplay origin.');
+const skippedSession = new GameSession(registry);
+if (!skippedSession.initializeNewGame(selection).valid || !skippedSession.skipEvent()) throw new Error('Explicit intro skip failed.');
+const skipped = skippedSession.getState();
+if (skipped.world.mode !== completed.world.mode || skipped.world.currentPoiId !== completed.world.currentPoiId || skipped.world.flags['intro.completed'] !== true) throw new Error('Skip did not apply the mandatory completion state.');
+const serialized = session.serializeSave();
+const restored = new GameSession(registry);
+if (!restored.loadSave(serialized).success) throw new Error('Created character save failed to load.');
+const loaded = restored.getState();
+if (loaded.player.name !== selection.name || loaded.player.age !== selection.age || loaded.player.backgroundId !== selection.backgroundId) throw new Error('Character creation was not preserved by save/load.');
+console.log('Character creation → initializer → prologue → save/load passed.');

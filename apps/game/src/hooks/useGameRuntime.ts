@@ -101,6 +101,25 @@ export function useGameRuntime() {
     return session.getActiveCombatResolution();
   }, [session, gameState.world.mode]);
   const combatAbilities = useMemo(() => session.getContentRegistry().abilities.getAll(), [session]);
+  const combatCommands = useMemo(() => session.getResolvedCombatCommands(), [session, gameState.combat]);
+  const activeGameplayTargetId = useMemo(() => {
+    if (gameState.world.mode !== 'Screen' || !gameState.world.activeScreen || !selectedPoi) return undefined;
+    return selectedPoi.actions.find((action) => action.outcome?.type === 'gameplayScreen' && action.outcome.screen === gameState.world.activeScreen)?.outcome?.targetId;
+  }, [gameState.world.mode, gameState.world.activeScreen, selectedPoi]);
+  const activeShop = gameState.world.activeScreen === 'Market' && activeGameplayTargetId ? session.getShop(activeGameplayTargetId) : undefined;
+  const craftingContext = { location: 'room' as const, roomInstanceId: activeGameplayTargetId };
+  const recipes = session.getContentRegistry().recipes.getAll();
+  const availableRecipeIds = new Set(gameState.world.activeScreen === 'Workbench' ? session.getAvailableRecipes(craftingContext).map((recipe) => recipe.id) : []);
+  const itemDefinitions = session.getContentRegistry().items.getAll();
+  const characterCreationOptions = useMemo(() => session.getCharacterCreationOptions(), [session]);
+  const questDossiers = (Object.values(gameState.quests) as import('@neon-ether/game-schema').QuestRuntimeState[]).map((quest) => ({
+    runtime: quest,
+    definition: session.getContentRegistry().getQuest(quest.questId),
+  })).filter((quest) => quest.definition !== undefined);
+  const partyMembers = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[])
+    .filter((npc) => npc.assignment.partySlotId !== null)
+    .map((runtime) => ({ runtime, character: session.getResolvedNpcCharacter(runtime.npcId) }))
+    .filter((member) => member.character !== undefined);
 
   // --- Persistence & Savegame Handlers ---
 
@@ -144,6 +163,7 @@ export function useGameRuntime() {
 
   const baseResidents = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[]).filter((npc) => ['companion','employee'].includes(npc.relationship.status)).map((runtime) => ({ runtime, name: session.getContentRegistry().getNPC(runtime.npcId)?.name ?? runtime.npcId }));
   const baseJobs = session.getContentRegistry().baseJobs.getAll();
+  const activeMinigameSession=gameState.world.activeMinigame;const activeMinigame=activeMinigameSession?session.getContentRegistry().minigames.get(activeMinigameSession.definitionId):undefined;const minigameSequenceStates=session.getMinigameSequenceStates();
 
   return {
     session,
@@ -153,6 +173,7 @@ export function useGameRuntime() {
     currentWeather,
     baseResidents,
     baseJobs,
+    activeMinigameSession,activeMinigame,minigameSequenceStates,
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,
@@ -162,6 +183,14 @@ export function useGameRuntime() {
     activeCombatPreview,
     activeCombatResolution,
     combatAbilities,
+    combatCommands,
+    activeShop,
+    recipes,
+    availableRecipeIds,
+    itemDefinitions,
+    characterCreationOptions,
+    questDossiers,
+    partyMembers,
     lastCheck,
     saveStatus,
     openPoi: (poiId: string) => session.openPoi(poiId),
@@ -178,6 +207,7 @@ export function useGameRuntime() {
     advanceEventStep: () => session.advanceEventStep(),
     chooseEventOption: (choiceId: string) => session.chooseEventOption(choiceId),
     completeEvent: () => session.completeEvent(),
+    skipEvent: () => session.skipEvent(),
     // Combat methods
     startCombatEncounter: (encounterId: string, previewFirst: boolean = true) =>
       session.startCombatEncounter(encounterId, previewFirst),
@@ -196,6 +226,17 @@ export function useGameRuntime() {
     getBaseUpgradeOptions: (roomInstanceId: string) => session.getBaseUpgradeOptions(roomInstanceId),
     executeBaseManagementCommand: (command: import('@neon-ether/game-schema').BaseManagementCommand) =>
       session.executeBaseManagementCommand(command),
+    buyFromShop: (shopId: string, itemId: string) => session.buyFromShop(shopId, itemId),
+    sellToShop: (shopId: string, itemId: string) => session.sellToShop(shopId, itemId),
+    craftRecipe: (recipeId: string) => session.craftRecipe(recipeId, craftingContext),
+    returnToOrigin: () => session.resolveOutcome({ type: 'returnToOrigin' }),
+    selectMinigameCell:(row:number,column:number)=>session.selectMinigameCell(row,column),finishMinigame:()=>session.finishMinigame(),
+    equipInventoryEntry: (entryId: string, slotId: string) => session.equipInventoryEntry(entryId, { id: slotId, acceptsCategories: [], acceptsTags: [] }),
+    unequipSlot: (slotId: string) => session.unequipSlot(slotId),
+    dropInventoryItem: (itemId: string) => session.removeInventoryItem(itemId, 1),
+    validateCharacterCreation: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.validateCharacterCreation(selection),
+    initializeNewGame: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.initializeNewGame(selection),
+    previewCharacterCreation: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.previewCharacterCreation(selection),
     dismissCombatResult: () => session.dismissCombatResult(),
     saveToLocalSlot,
     loadFromLocalSlot,

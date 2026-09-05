@@ -10,6 +10,7 @@ import { ConditionSchema } from './conditions.ts';
 import { EffectSchema } from './effects.ts';
 import { GameplayOutcome, GameplayOutcomeSchema, OriginContextSchema } from './outcomes.ts';
 import { PostCombatActionDefinitionSchema } from './resolutions.ts';
+import { CombatGridSchema } from './combat.ts';
 
 export const EnemyGroupSetupSchema = z.object({
   enemyId: z.string().min(1),
@@ -60,6 +61,7 @@ export const EncounterModifierSchema = z.object({
 export type EncounterModifier = z.infer<typeof EncounterModifierSchema>;
 
 export const CombatEncounterSchema = BaseEntitySchema.extend({
+  tacticalGrid: CombatGridSchema.optional(),
   enemyGroups: z.array(EnemyGroupSetupSchema).min(1, 'Combat encounter must have at least one enemy group'),
   environment: z
     .object({

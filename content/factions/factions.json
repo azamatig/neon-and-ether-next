@@ -209,5 +209,64 @@
       "officer"
     ],
     "controlledAreaIds": []
+  },
+  {
+    "id": "fac_ares_industries",
+    "name": "Ares Industries",
+    "description": "A militarized industrial corporation operating secured logistics and research facilities.",
+    "tags": [
+      "Corporate",
+      "Security",
+      "Industrial"
+    ],
+    "ideology": "CorporateSecurity",
+    "defaultPlayerReputation": -10,
+    "colorHex": "#d97706",
+    "techTier": 4,
+    "shortName": "Ares",
+    "icon": "Building2",
+    "reputationTiers": [
+      {
+        "id": "hostile",
+        "name": "Hostile",
+        "minimumReputation": -100,
+        "hostile": true
+      },
+      {
+        "id": "unfriendly",
+        "name": "Unfriendly",
+        "minimumReputation": -20,
+        "hostile": false
+      },
+      {
+        "id": "neutral",
+        "name": "Neutral",
+        "minimumReputation": 0,
+        "hostile": false
+      },
+      {
+        "id": "cooperative",
+        "name": "Cooperative",
+        "minimumReputation": 30,
+        "hostile": false
+      },
+      {
+        "id": "trusted",
+        "name": "Trusted",
+        "minimumReputation": 65,
+        "hostile": false
+      }
+    ],
+    "defaultRelations": [],
+    "membershipStatuses": [
+      "none",
+      "contractor",
+      "employee",
+      "security"
+    ],
+    "controlledAreaIds": [
+      "map_prologue_ares_logistics",
+      "map_prologue_ares_inner_vault"
+    ]
   }
 ]

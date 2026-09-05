@@ -55,6 +55,7 @@ export const CombatGridSchema = z.object({
   height: z.number().int().min(3).default(6),
   movementApCost: z.number().int().min(1).default(1),
   tiles: z.array(GridTileSchema).default([]),
+  blockingCells: z.array(CombatGridPositionSchema).default([]),
   playerDeployment: z.array(CombatGridPositionSchema).default([]),
   enemyDeployment: z.array(CombatGridPositionSchema).default([]),
 });
@@ -80,6 +81,7 @@ export const CombatantSchema = z.object({
   isDefeated: z.boolean().default(false),
   position: CombatGridPositionSchema.default({ x: 0, y: 0 }),
   movementRange: z.number().int().min(1).default(3),
+  movementRemaining: z.number().int().min(0).default(3),
 });
 export type Combatant = z.infer<typeof CombatantSchema>;
 
@@ -107,6 +109,6 @@ export const CombatStateSchema = z.object({
   combatants: z.record(z.string(), CombatantSchema).default({}),
   log: z.array(CombatLogEntrySchema).default([]),
   outcome: z.enum(['Victory', 'Defeat']).nullable().default(null),
-  grid: CombatGridSchema.default({ width: 8, height: 6, movementApCost: 1, tiles: [], playerDeployment: [], enemyDeployment: [] }),
+  grid: CombatGridSchema.default({ width: 8, height: 6, movementApCost: 1, tiles: [], blockingCells: [], playerDeployment: [], enemyDeployment: [] }),
 });
 export type CombatState = z.infer<typeof CombatStateSchema>;

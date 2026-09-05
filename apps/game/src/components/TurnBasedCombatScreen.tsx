@@ -23,6 +23,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
   const targetSet = useMemo(() => new Set(targetIds), [targetIds]);
   const occupants = useMemo(() => new Map((Object.values(state.combatants) as Combatant[]).map((unit) => [`${unit.position.x}:${unit.position.y}`, unit])), [state.combatants]);
   const tiles = useMemo(() => new Map(state.grid.tiles.map((tile) => [`${tile.x}:${tile.y}`, tile])), [state.grid.tiles]);
+  const blockingCells = useMemo(() => new Set(state.grid.blockingCells.map((cell) => `${cell.x}:${cell.y}`)), [state.grid.blockingCells]);
   useEffect(() => { setSelected({ type: 'Attack' }); }, [activeId]);
 
   const selectCell = (x: number, y: number) => {
@@ -47,13 +48,13 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
         {Array.from({ length: state.grid.width * state.grid.height }, (_, index) => {
           const x=index%state.grid.width; const y=Math.floor(index/state.grid.width); const key=`${x}:${y}`; const unit=occupants.get(key); const tile=tiles.get(key);
           const legalMove=selected.type==='Move'&&moveKeys.has(key); const legalTarget=Boolean(unit&&targetSet.has(unit.id));
-          return <button key={key} type="button" className={`combat-cell tile-${tile?.type?.toLowerCase()??'floor'} ${legalMove?'is-move':''} ${legalTarget?'is-target':''} ${unit?.team==='Player'?'has-player':''} ${unit?.team==='Enemy'?'has-enemy':''}`} onClick={()=>selectCell(x,y)} disabled={!legalMove&&!legalTarget} aria-label={unit ? `${unit.name}, ${unit.currentHp} HP` : `${tile?.description ?? tile?.type ?? 'Floor'}, grid ${x + 1}, ${y + 1}`}>
+          return <button key={key} type="button" className={`combat-cell tile-${tile?.type?.toLowerCase()??'floor'} ${blockingCells.has(key)?'is-blocking':''} ${legalMove?'is-move':''} ${legalTarget?'is-target':''} ${unit?.team==='Player'?'has-player':''} ${unit?.team==='Enemy'?'has-enemy':''}`} onClick={()=>selectCell(x,y)} disabled={!legalMove&&!legalTarget} aria-label={unit ? `${unit.name}, ${unit.currentHp} HP` : `${tile?.description ?? tile?.type ?? 'Floor'}, grid ${x + 1}, ${y + 1}`}>
             <small>{tile?.type==='Console'||tile?.type==='Door'?tile.type.toUpperCase():`${x+1},${y+1}`}</small>{unit&&<div className={`combat-unit ${unit.isDefeated?'is-defeated':''}`}><div className="combat-unit-icon">{unit.team==='Player'?<Shield/>:<Crosshair/>}</div><strong>{unit.name}</strong><span>{unit.currentHp}/{unit.maxHp} HP</span><i style={{width:`${unit.currentHp/unit.maxHp*100}%`}}/></div>}
           </button>;
         })}
       </div>
       <aside className="combat-interface">
-        <div className="combat-actor"><span>{actor?.team==='Player'?'ACTIVE OPERATIVE':'HOSTILE TURN'}</span><strong>{actor?.name??'Resolving'}</strong><div><Activity/> AP {actor?.currentAp??0} <Zap/> ETH {actor?.currentEther??0} <Shield/> ARM {actor?.armor??0}</div></div>
+        <div className="combat-actor"><span>{actor?.team==='Player'?'ACTIVE OPERATIVE':'HOSTILE TURN'}</span><strong>{actor?.name??'Resolving'}</strong><div><Activity/> AP {actor?.currentAp??0} <Footprints/> MOV {actor?.movementRemaining??0}/{actor?.movementRange??0} <Zap/> ETH {actor?.currentEther??0} <Shield/> ARM {actor?.armor??0}</div></div>
         <div className="combat-commands"><h3>TACTICAL INTERFACE</h3>
           <button className={selected.type==='Attack'?'is-selected':''} disabled={!commands.attackTargetIds.length} onClick={()=>setSelected({type:'Attack'})}><Swords/> WEAPON ATTACK</button>
           <button className={selected.type==='Move'?'is-selected':''} disabled={!commands.legalMoves.length} onClick={()=>setSelected({type:'Move'})}><Footprints/> MOVE <small>{state.grid.movementApCost} AP</small></button>

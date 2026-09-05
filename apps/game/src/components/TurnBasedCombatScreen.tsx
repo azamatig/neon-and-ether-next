@@ -1,15 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Ability, CombatAction, Combatant, CombatState, Item } from '@neon-ether/game-schema';
+import { CombatAction, Combatant, CombatState, Item } from '@neon-ether/game-schema';
 import { type ResolvedCombatAction, type ResolvedCombatCommands } from '@neon-ether/game-runtime';
 import { Activity, Crosshair, Footprints, Shield, SkipForward, Swords, Zap } from 'lucide-react';
 
 export interface TurnBasedCombatScreenProps {
   state: CombatState;
   commands: ResolvedCombatCommands;
-  abilities: Ability[];
   items: Item[];
   onCommand: (command: CombatAction) => void;
   onAttemptFlee: () => void;
+  resolveAbilityName: (abilityId: string) => string;
+  resolveStatusEffectName: (statusEffectId: string) => string;
+  resolveEncounterName: (encounterId: string) => string;
 }
 
 type ActionCategory = 'Attacks' | 'Skills' | 'Support';
@@ -30,12 +32,11 @@ const actionIcon = (action: ResolvedCombatAction) => {
 };
 
 /** Pure tactical presentation: legal cells, targets, actions, and costs are resolved by the combat runtime. */
-export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, abilities, items, onCommand, onAttemptFlee }) => {
+export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, items, onCommand, onAttemptFlee, resolveAbilityName, resolveStatusEffectName, resolveEncounterName }) => {
   const [category, setCategory] = useState<ActionCategory>('Attacks');
   const [selectedActionId, setSelectedActionId] = useState('attack.weapon');
   const activeId = state.activeCombatantId ?? state.turnOrder[state.activeTurnIndex];
   const actor = state.combatants[activeId];
-  const abilityMap = useMemo(() => new Map(abilities.map((ability) => [ability.id, ability])), [abilities]);
   const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
   const selectedAction = commands.actions.find((action) => action.id === selectedActionId);
   const moveKeys = useMemo(() => new Set(commands.legalMoves.map((cell) => `${cell.x}:${cell.y}`)), [commands.legalMoves]);
@@ -58,7 +59,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
 
   return <section className="combat-grid-screen">
     <header className="combat-grid-header">
-      <div><p>TACTICAL COMBAT</p><h2>{state.encounterId?.replaceAll('_', ' ')}</h2></div>
+      <div><p>TACTICAL COMBAT</p><h2>{state.encounterId ? resolveEncounterName(state.encounterId) : 'Unknown Encounter'}</h2></div>
       <span>ROUND {state.roundNumber} · TURN {state.activeTurnIndex + 1}/{state.turnOrder.length}</span>
     </header>
 
@@ -93,7 +94,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
             const disposition = unit ? dispositionLabel(unit) : undefined;
             return <button key={key} type="button" className={`combat-cell tile-${tile?.type?.toLowerCase() ?? 'floor'} ${blockingCells.has(key) ? 'is-blocking' : ''} ${legalMove ? 'is-move' : ''} ${legalTarget ? 'is-target' : ''} ${rejection ? 'is-invalid-target' : ''} ${unit?.team === 'Player' ? 'has-player' : ''} ${unit?.team === 'Enemy' ? 'has-enemy' : ''}`} onClick={() => selectCell(x, y)} disabled={!legalMove && !legalTarget} title={rejection} aria-label={unit ? `${unit.name}, ${unit.currentHp} HP${rejection ? `, ${rejection}` : ''}` : `${tile?.description ?? tile?.type ?? 'Floor'}, grid ${x + 1}, ${y + 1}`}>
               <small>{tile?.type === 'Console' || tile?.type === 'Door' ? tile.type.toUpperCase() : `${x + 1},${y + 1}`}</small>
-              {unit && <article className={`combat-unit ${unit.isDefeated ? 'is-defeated' : ''} ${unit.isIncapacitated ? 'is-incapacitated' : ''}`} title={`${unit.name} · ${unit.abilityIds.map((id) => abilityMap.get(id)?.name ?? id).join(', ')}`}>
+              {unit && <article className={`combat-unit ${unit.isDefeated ? 'is-defeated' : ''} ${unit.isIncapacitated ? 'is-incapacitated' : ''}`} title={`${unit.name} · ${unit.abilityIds.map(resolveAbilityName).join(', ')}`}>
                 <div className="combat-unit-image">{unit.bodyImage ? <img src={unit.bodyImage} alt="" /> : unit.team === 'Player' ? <Shield /> : <Crosshair />}</div>
                 <div className="combat-unit-copy">
                   <span className="combat-unit-team">{unit.team === 'Player' ? 'SQUAD' : 'HOSTILE'}{unit.id === activeId ? ' · ACTIVE' : ''}</span>
@@ -103,7 +104,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
                 </div>
                 {(disposition || unit.statuses.length > 0 || rejection) && <div className="combat-unit-statuses">
                   {disposition && <em>{disposition}</em>}
-                  {!disposition && unit.statuses.slice(0, 1).map((status) => <em key={status.statusEffectId}>{status.statusEffectId.replace(/^status_/, '').replaceAll('_', ' ').toUpperCase()}</em>)}
+                  {!disposition && unit.statuses.slice(0, 1).map((status) => <em key={status.statusEffectId}>{resolveStatusEffectName(status.statusEffectId).toUpperCase()}</em>)}
                   {rejection && <em className="combat-target-rejection">{rejection}</em>}
                 </div>}
               </article>}

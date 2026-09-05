@@ -15,6 +15,7 @@
     "playtest:slice": "bun scripts/playtest-vertical-slice.ts",
     "test:rng": "bun scripts/test-deterministic-rng.ts",
     "test:pending-resolutions": "bun scripts/test-pending-resolutions.ts",
+    "test:entity-presentation": "bun scripts/test-entity-name-presentation.ts",
     "test:editor-presets": "bun scripts/test-editor-presets.ts",
     "test:quest-walkthrough": "bun scripts/test-quest-walkthrough.ts",
     "test:telemetry": "bun scripts/test-development-telemetry.ts",

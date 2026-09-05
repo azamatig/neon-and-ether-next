@@ -21,11 +21,13 @@ import {
 export interface ActionResultModalProps {
   resolution: ActionResolution;
   onDismiss: () => void;
+  resolveItemName: (itemId: string) => string;
 }
 
 export const ActionResultModal: React.FC<ActionResultModalProps> = ({
   resolution,
   onDismiss,
+  resolveItemName,
 }) => {
   const isSuccess = resolution.status === 'Success';
   const isFailure = resolution.status === 'Failure';
@@ -99,7 +101,7 @@ export const ActionResultModal: React.FC<ActionResultModalProps> = ({
                   >
                     <Package className="w-3.5 h-3.5" />
                     <span>
-                      +{item.quantity} {item.name ?? item.itemId}
+                      +{item.quantity} {resolveItemName(item.itemId)}
                     </span>
                   </span>
                 ))}
@@ -111,7 +113,7 @@ export const ActionResultModal: React.FC<ActionResultModalProps> = ({
                   >
                     <Package className="w-3.5 h-3.5" />
                     <span>
-                      -{item.quantity} {item.name ?? item.itemId}
+                      -{item.quantity} {resolveItemName(item.itemId)}
                     </span>
                   </span>
                 ))}

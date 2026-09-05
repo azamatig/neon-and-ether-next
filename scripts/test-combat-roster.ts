@@ -16,6 +16,13 @@ if (JSON.stringify(previewRoster) !== JSON.stringify(tacticalRoster)) {
   throw new Error(`Resolved roster changed between preview and combat.\nPreview: ${previewRoster}\nCombat: ${tacticalRoster}`);
 }
 if (!tacticalRoster.some((unit) => unit.startsWith('npc_prologue_companion_female:')) || !tacticalRoster.some((unit) => unit.startsWith('npc_prologue_companion_male:'))) throw new Error('Companions were not deployed.');
+for (const companionId of ['npc_prologue_companion_female', 'npc_prologue_companion_male']) {
+  const companion = session.getState().combat.combatants[companionId];
+  if (!companion || companion.team !== 'Player' || !companion.bodyImage) throw new Error(`${companionId} presentation data is incomplete.`);
+  if (!companion.weaponId || companion.abilityIds.length === 0) throw new Error(`${companionId} equipment or abilities were not resolved.`);
+  if (!session.getState().combat.turnOrder.includes(companionId)) throw new Error(`${companionId} is missing from turn order.`);
+  if (!Number.isFinite(companion.position.x) || !Number.isFinite(companion.position.y)) throw new Error(`${companionId} has no tactical position.`);
+}
 const positions = Object.values(session.getState().combat.combatants).map((unit) => `${unit.position.x}:${unit.position.y}`);
 if (new Set(positions).size !== positions.length) throw new Error('Initial grid positions overlap.');
 console.log('PreCombatResolvedRoster === TacticalCombatInitialRoster');

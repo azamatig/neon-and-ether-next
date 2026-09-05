@@ -40,6 +40,9 @@ export class TurnBasedCombatEngine {
     const weapon = equippedItems.find((item) => item.category === 'weapon');
     const armor = equippedItems.filter((item) => item.category === 'armor');
     const effectivePlayer = new CharacterStatsSystem().resolve(gameState.player);
+    const playerBodyImage = this.content.newGameDefinitions.getAll()
+      .flatMap((definition) => definition.portraits)
+      .find((portrait) => portrait.id === gameState.player.portraitId)?.image;
     const grid = encounter.tacticalGrid ?? {
       width: 8, height: 6, movementApCost: 1, tiles: [], blockingCells: [], playerDeployment: [], enemyDeployment: [],
     };
@@ -66,6 +69,8 @@ export class TurnBasedCombatEngine {
         id: gameState.player.characterId,
         sourceId: gameState.player.characterId,
         name: gameState.player.name,
+        bodyImage: playerBodyImage,
+        portraitIcon: 'User',
         team: 'Player',
         currentHp: effectivePlayer.derivedStats.currentHp,
         maxHp: effectivePlayer.derivedStats.maxHp,
@@ -78,7 +83,12 @@ export class TurnBasedCombatEngine {
         weaponId: weapon?.id,
         armorItemIds: armor.map((item) => item.id),
         abilityIds: [...playerAbilities],
-        statuses: [],
+        statuses: [
+          ...gameState.player.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })),
+          ...gameState.player.activeStatusEffects
+            .filter((status) => !gameState.player.statusEffects.some((value) => value.id === status.id))
+            .map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })),
+        ],
         isDefeated: false,
         position: claimDeployment('Player', 0),
         movementRange: 3,
@@ -91,9 +101,12 @@ export class TurnBasedCombatEngine {
       const runtime = gameState.npcs[npcId];
       if (!npc || runtime?.isAlive === false) return;
       const effective = new CharacterStatsSystem().resolve(npc);
-      const equipped = npc.inventory.map((slot) => this.content.getItem(slot.itemId)).filter((item) => item !== undefined);
+      const inventory = runtime?.inventory?.items ?? npc.inventory;
+      const equipped = inventory.filter((slot) => slot.isEquipped).map((slot) => this.content.getItem(slot.itemId)).filter((item) => item !== undefined);
+      const abilities = new Set([...npc.abilityIds, ...equipped.flatMap((item) => item.grantedAbilityIds)]);
       combatants[npcId] = {
         id: npcId, sourceId: npcId, name: npc.name, team: 'Player',
+        bodyImage: npc.combatImage, portraitIcon: npc.portraitIcon,
         currentHp: runtime?.currentHp ?? effective.derivedStats.currentHp,
         maxHp: runtime?.maxHp ?? effective.derivedStats.maxHp,
         currentEther: runtime?.currentEther ?? effective.derivedStats.currentEther,
@@ -102,7 +115,7 @@ export class TurnBasedCombatEngine {
         initiative: effective.derivedStats.initiative, armor: effective.derivedStats.armorRating,
         weaponId: equipped.find((item) => item.category === 'weapon')?.id,
         armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
-        abilityIds: npc.abilityIds, statuses: [], isDefeated: false,
+        abilityIds: [...abilities], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false,
         position: claimDeployment('Player', index + 1), movementRange: 3, movementRemaining: 3,
       };
     });
@@ -118,13 +131,14 @@ export class TurnBasedCombatEngine {
         enemyDeploymentIndex += 1;
         combatants[id] = {
           id, sourceId: enemy.id, name: group.nameOverride ?? enemy.name, team: 'Enemy',
+          bodyImage: enemy.combatImage, portraitIcon: enemy.portraitIcon,
           currentHp: group.customHp ?? effectiveEnemy.derivedStats.currentHp,
           maxHp: group.customHp ?? effectiveEnemy.derivedStats.maxHp,
           currentEther: effectiveEnemy.derivedStats.currentEther, maxEther: effectiveEnemy.derivedStats.maxEther,
           currentAp: effectiveEnemy.derivedStats.actionPointsMax, maxAp: effectiveEnemy.derivedStats.actionPointsMax,
           initiative: effectiveEnemy.derivedStats.initiative, armor: effectiveEnemy.derivedStats.armorRating,
           weaponId: enemy.equippedWeaponId, armorItemIds: [], abilityIds: enemy.abilityIds,
-          aiProfileId: enemy.combatAIProfileId, statuses: [], isDefeated: false,
+          aiProfileId: enemy.combatAIProfileId, statuses: enemy.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false,
           position: deployment, movementRange: 3, movementRemaining: 3,
         };
       }

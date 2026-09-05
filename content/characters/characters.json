@@ -426,7 +426,13 @@
       "y": 0
     },
     "facing": "East",
-    "inventory": [],
+    "inventory": [
+      {
+        "itemId": "wpn_thermal_pistol",
+        "quantity": 1,
+        "isEquipped": true
+      }
+    ],
     "portraitIcon": "Crosshair",
     "defaultBehavior": "Idle",
     "abilityIds": [
@@ -442,7 +448,8 @@
       "fear": 0,
       "loyalty": 10
     },
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "combatImage": "/assets/characters/rhea-voss.svg"
   },
   {
     "id": "npc_prologue_companion_male",
@@ -491,7 +498,13 @@
       "y": 0
     },
     "facing": "East",
-    "inventory": [],
+    "inventory": [
+      {
+        "itemId": "wpn_ether_baton",
+        "quantity": 1,
+        "isEquipped": true
+      }
+    ],
     "portraitIcon": "Shield",
     "defaultBehavior": "Idle",
     "abilityIds": [
@@ -507,7 +520,8 @@
       "fear": 0,
       "loyalty": 10
     },
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "combatImage": "/assets/characters/dax-mercer.svg"
   },
   {
     "id": "npc_prologue_ares_wounded_officer",

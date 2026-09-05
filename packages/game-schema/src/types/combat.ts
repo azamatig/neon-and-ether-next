@@ -64,6 +64,8 @@ export const CombatantSchema = z.object({
   id: z.string(),
   sourceId: z.string(),
   name: z.string(),
+  bodyImage: z.string().optional(),
+  portraitIcon: z.string().default('User'),
   team: z.enum(['Player', 'Enemy']),
   currentHp: z.number().int().min(0),
   maxHp: z.number().int().min(1),

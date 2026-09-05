@@ -15,15 +15,18 @@
     "portraits": [
       {
         "id": "portrait_drifer_01",
-        "name": "Drifter"
+        "name": "Drifter",
+        "image": "/assets/characters/drifter.svg"
       },
       {
         "id": "portrait_operator_01",
-        "name": "Operator"
+        "name": "Operator",
+        "image": "/assets/characters/operator.svg"
       },
       {
         "id": "portrait_ether_01",
-        "name": "Ether Adept"
+        "name": "Ether Adept",
+        "image": "/assets/characters/ether-adept.svg"
       }
     ],
     "attributePointBudget": 12,

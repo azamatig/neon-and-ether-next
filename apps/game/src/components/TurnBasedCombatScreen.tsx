@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Ability, CombatAction, Combatant, CombatState } from '@neon-ether/game-schema';
+import { Ability, CombatAction, Combatant, CombatState, Item } from '@neon-ether/game-schema';
 import { type ResolvedCombatCommands } from '@neon-ether/game-runtime';
 import { Activity, Crosshair, Footprints, Shield, SkipForward, Swords, Zap } from 'lucide-react';
 
@@ -7,17 +7,19 @@ export interface TurnBasedCombatScreenProps {
   state: CombatState;
   commands: ResolvedCombatCommands;
   abilities: Ability[];
+  items: Item[];
   onCommand: (command: CombatAction) => void;
 }
 
 type SelectedCommand = { type: 'Attack' } | { type: 'Ability'; abilityId: string } | { type: 'Move' };
 
 /** Pure tactical presentation: legal cells and targets are resolved by the combat runtime. */
-export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, abilities, onCommand }) => {
+export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, abilities, items, onCommand }) => {
   const [selected, setSelected] = useState<SelectedCommand>({ type: 'Attack' });
   const activeId = state.activeCombatantId ?? state.turnOrder[state.activeTurnIndex];
   const actor = state.combatants[activeId];
   const abilityMap = useMemo(() => new Map(abilities.map((ability) => [ability.id, ability])), [abilities]);
+  const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
   const moveKeys = useMemo(() => new Set(commands.legalMoves.map((cell) => `${cell.x}:${cell.y}`)), [commands.legalMoves]);
   const targetIds = selected.type === 'Attack' ? commands.attackTargetIds : selected.type === 'Ability' ? commands.abilityTargetIds[selected.abilityId] ?? [] : [];
   const targetSet = useMemo(() => new Set(targetIds), [targetIds]);
@@ -49,7 +51,13 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
           const x=index%state.grid.width; const y=Math.floor(index/state.grid.width); const key=`${x}:${y}`; const unit=occupants.get(key); const tile=tiles.get(key);
           const legalMove=selected.type==='Move'&&moveKeys.has(key); const legalTarget=Boolean(unit&&targetSet.has(unit.id));
           return <button key={key} type="button" className={`combat-cell tile-${tile?.type?.toLowerCase()??'floor'} ${blockingCells.has(key)?'is-blocking':''} ${legalMove?'is-move':''} ${legalTarget?'is-target':''} ${unit?.team==='Player'?'has-player':''} ${unit?.team==='Enemy'?'has-enemy':''}`} onClick={()=>selectCell(x,y)} disabled={!legalMove&&!legalTarget} aria-label={unit ? `${unit.name}, ${unit.currentHp} HP` : `${tile?.description ?? tile?.type ?? 'Floor'}, grid ${x + 1}, ${y + 1}`}>
-            <small>{tile?.type==='Console'||tile?.type==='Door'?tile.type.toUpperCase():`${x+1},${y+1}`}</small>{unit&&<div className={`combat-unit ${unit.isDefeated?'is-defeated':''}`}><div className="combat-unit-icon">{unit.team==='Player'?<Shield/>:<Crosshair/>}</div><strong>{unit.name}</strong><span>{unit.currentHp}/{unit.maxHp} HP</span><i style={{width:`${unit.currentHp/unit.maxHp*100}%`}}/></div>}
+            <small>{tile?.type==='Console'||tile?.type==='Door'?tile.type.toUpperCase():`${x+1},${y+1}`}</small>{unit&&<div className={`combat-unit ${unit.isDefeated?'is-defeated':''}`} title={`${unit.name} · ${unit.abilityIds.map((id)=>abilityMap.get(id)?.name??id).join(', ')}`}>
+              <div className="combat-unit-icon">{unit.bodyImage?<img src={unit.bodyImage} alt=""/>:unit.team==='Player'?<Shield/>:<Crosshair/>}</div><strong>{unit.name}</strong>
+              <span>{unit.currentHp}/{unit.maxHp} HP · {unit.currentAp} AP · {unit.currentEther} ETH</span>
+              <span>{unit.weaponId?itemMap.get(unit.weaponId)?.name??'Equipped weapon':'Unarmed'}{unit.armorItemIds.length?` · ARMOR ${unit.armorItemIds.length}`:''}</span>
+              {unit.statuses.length>0&&<em>{unit.statuses.map((status)=>`${status.statusEffectId} ${status.remainingTurns}`).join(' · ')}</em>}
+              <i style={{width:`${unit.currentHp/unit.maxHp*100}%`}}/>
+            </div>}
           </button>;
         })}
       </div>

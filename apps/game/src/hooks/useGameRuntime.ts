@@ -180,6 +180,7 @@ export function useGameRuntime() {
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,
+    activeDialogueTree,
     activeDialogueNode,
     activeActionResolution,
     activeEventState,

@@ -6,9 +6,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useGameRuntime } from './hooks/useGameRuntime.ts';
-import { DialogueOverlay } from './components/DialogueOverlay.tsx';
 import { ActionResultModal } from './components/ActionResultModal.tsx';
-import { EventContainer } from './components/EventContainer.tsx';
+import { SceneEventScreen } from './components/SceneEventScreen.tsx';
 import { CombatPreviewContainer } from './components/CombatPreviewContainer.tsx';
 import { CombatResultContainer } from './components/CombatResultContainer.tsx';
 import { TurnBasedCombatScreen } from './components/TurnBasedCombatScreen.tsx';
@@ -46,7 +45,7 @@ export const GameApp: React.FC = () => {
 
   let content: React.ReactNode;
   if(isMinigame)content=<MatchValuesScreen definition={runtime.activeMinigame!} session={runtime.activeMinigameSession!} states={runtime.minigameSequenceStates} onSelect={runtime.selectMinigameCell} onFinish={runtime.finishMinigame}/>;
-  else if (isEvent) content=<EventContainer eventState={runtime.activeEventState!} onAdvanceStep={runtime.advanceEventStep} onChooseOption={runtime.chooseEventOption} onSkip={runtime.skipEvent}/>;
+  else if (isEvent) content=<SceneEventScreen mode="event" eventState={runtime.activeEventState!} resolveNpcName={runtime.entityNames.npc} onAdvance={runtime.advanceEventStep} onChoose={runtime.chooseEventOption} onSkip={runtime.skipEvent}/>;
   else if (isPreview) content=<CombatPreviewContainer preview={runtime.activeCombatPreview!} onEngage={runtime.startTacticalCombat} onEscape={runtime.attemptCombatEscape}/>;
   else if (isResult) content=<CombatResultContainer resolution={runtime.activeCombatResolution!} resolveItemName={runtime.entityNames.item} onTakeLoot={runtime.takeLoot} onExecutePostCombatAction={runtime.executePostCombatAction} onDismiss={runtime.dismissCombatResult}/>;
   else if (isCombat) content=<TurnBasedCombatScreen state={gameState.combat} commands={runtime.combatCommands} items={runtime.itemDefinitions} resolveAbilityName={runtime.entityNames.ability} resolveStatusEffectName={runtime.entityNames.statusEffect} resolveEncounterName={runtime.entityNames.encounter} onCommand={runtime.executeCombatAction} onAttemptFlee={runtime.attemptCombatEscape}/>;
@@ -61,7 +60,7 @@ export const GameApp: React.FC = () => {
 
   return <GameShell mode={shellMode} hud={hud}>{content}
     {mode==='ActionResult'&&runtime.activeActionResolution&&<ActionResultModal resolution={runtime.activeActionResolution} resolveItemName={runtime.entityNames.item} onDismiss={runtime.dismissActionResolution}/>}
-    {mode==='Dialogue'&&runtime.activeDialogueNode&&<DialogueOverlay node={runtime.activeDialogueNode} onChoose={runtime.chooseDialogueOption} onClose={runtime.endDialogue}/>}
+    {mode==='Dialogue'&&runtime.activeDialogueTree&&runtime.activeDialogueNode&&<SceneEventScreen mode="dialogue" tree={runtime.activeDialogueTree} node={runtime.activeDialogueNode} onChoose={runtime.chooseDialogueOption} onClose={runtime.endDialogue}/>}
     {showCharacter&&<CharacterSheet state={gameState} items={runtime.itemDefinitions} quests={runtime.questDossiers} party={runtime.partyMembers} onClose={()=>setShowCharacter(false)} onEquip={runtime.equipInventoryEntry} onUnequip={runtime.unequipSlot} onDrop={runtime.dropInventoryItem}/>}
     {showGameMenu&&<InGameMenu onResume={()=>setShowGameMenu(false)} onMainMenu={()=>{setShowGameMenu(false);setShowMainMenu(true)}} onSave={runtime.saveToLocalSlot} onLoad={(slot)=>{const result=runtime.loadFromLocalSlot(slot);if(result.success)setShowGameMenu(false);return result;}}/>}
   </GameShell>;

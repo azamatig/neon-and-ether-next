@@ -16,11 +16,17 @@ const assertActiveInvariant = () => {
 };
 
 assertActiveInvariant();
-const skippedId = state.turnOrder.find((id) => id !== state.activeCombatantId);
+const initialActorId = state.activeCombatantId!;
+const initialActorIndex = state.activeTurnIndex;
+const firstEndTurn = engine.execute(state, { type: 'EndTurn', actorId: initialActorId });
+if (!firstEndTurn.success || firstEndTurn.state.activeCombatantId === initialActorId || firstEndTurn.state.activeTurnIndex === initialActorIndex) throw new Error('End Turn did not advance to the next valid actor.');
+state = firstEndTurn.state;
+const enemyCandidates = state.turnOrder.filter((id) => state.combatants[id].team === 'Enemy' && id !== state.activeCombatantId);
+const skippedId = enemyCandidates[0];
 if (!skippedId) throw new Error('Fixture requires a second combatant.');
 state.combatants[skippedId].isDefeated = true;
 state.combatants[skippedId].currentHp = 0;
-const incapacitatedId = state.turnOrder.find((id) => id !== state.activeCombatantId && id !== skippedId);
+const incapacitatedId = enemyCandidates[1];
 if (!incapacitatedId) throw new Error('Fixture requires an incapacitated combatant.');
 state.combatants[incapacitatedId].statuses = [{ statusEffectId: 'status_mental_suppression', remainingTurns: 2 }];
 state.combatants[incapacitatedId].isIncapacitated = true;

@@ -29,7 +29,9 @@
     "test:combat-abilities": "bun scripts/test-combat-abilities.ts",
     "test:combat-ai": "bun scripts/test-combat-ai-movement.ts",
     "test:combat-resolution": "bun scripts/test-combat-resolution.ts",
-    "test:combat-victory-escape": "bun scripts/test-combat-victory-escape.ts"
+    "test:combat-victory-escape": "bun scripts/test-combat-victory-escape.ts",
+    "test:combat-save": "bun scripts/test-combat-save-load.ts",
+    "test:combat": "npm run test:combat-roster && npm run test:combat-grid && npm run test:combat-turns && npm run test:combat-abilities && npm run test:combat-ai && npm run test:combat-resolution && npm run test:combat-victory-escape && npm run test:combat-save"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

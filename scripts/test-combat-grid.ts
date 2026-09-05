@@ -32,8 +32,10 @@ if (commands.legalMoves.some((cell) => cell.x === 1 && cell.y === 0)) throw new 
 if (!commands.legalMoves.some((cell) => cell.x === 1 && cell.y === 1 && cell.cost === 3)) throw new Error('Weighted route was not resolved.');
 if (commands.legalMoves.some((cell) => cell.x === 2 && cell.y === 1)) throw new Error('Explicit blocking cell is reachable.');
 if (commands.legalMoves.some((cell) => cell.x === enemy.position.x && cell.y === enemy.position.y)) throw new Error('Occupied cell is reachable.');
+if (engine.execute(state, { type: 'Move', actorId: actor.id, position: enemy.position }).success) throw new Error('Movement onto an occupied cell was accepted.');
 if (commands.attackTargetIds.includes(enemy.id)) throw new Error('A melee weapon was exposed as a ranged attack.');
 if (commands.actions.find((action) => action.type === 'WeaponAttack')?.disabledReason !== 'Requires an equipped ranged weapon.') throw new Error('Ranged attack did not require an equipped ranged weapon.');
+if (engine.execute(state, { type: 'MeleeAttack', weaponId: actor.weaponId, actorId: actor.id, targetId: enemy.id }).success) throw new Error('Out-of-range melee attack was accepted.');
 const outside = engine.execute(state, { type: 'Move', actorId: actor.id, position: { x: 5, y: 0 } });
 if (outside.success) throw new Error('Out-of-bounds movement was accepted.');
 const exhausted = structuredClone(state); exhausted.combatants[actor.id].currentAp = 1;
@@ -57,6 +59,8 @@ const shot = engine.execute(ranged, { type: 'RangedAttack', weaponId: 'wpn_therm
 if (!shot.success || shot.state.combatants[actor.id].currentAp !== 5) throw new Error('Ranged weapon AP cost was not applied.');
 if (shot.state.combatants[enemy.id].defeatType !== 'Lethal' || shot.state.combatants[enemy.id].isIncapacitated) throw new Error('Lethal ranged damage did not produce a dead combatant.');
 if (shot.state.combatants[enemy.id].resolutionState !== 'Dead') throw new Error('Lethal ranged damage did not record a dead resolution state.');
+const beyondRanged = structuredClone(ranged); beyondRanged.grid.width = 12; beyondRanged.combatants[enemy.id].position = { x: 9, y: 0 };
+if (engine.execute(beyondRanged, { type: 'RangedAttack', weaponId: 'wpn_thermal_pistol', actorId: actor.id, targetId: enemy.id }).success) throw new Error('Out-of-range ranged attack was accepted.');
 const mechanical = structuredClone(move.state); mechanical.combatants[enemy.id].sourceId = 'enm_prologue_ares_security_drone'; mechanical.combatants[enemy.id].currentHp = 1;
 const destroyed = engine.execute(mechanical, { type: 'MeleeAttack', weaponId: actor.weaponId, actorId: actor.id, targetId: enemy.id });
 if (!destroyed.success || destroyed.state.combatants[enemy.id].resolutionState !== 'Destroyed' || destroyed.state.combatants[enemy.id].isIncapacitated) throw new Error('Mechanical defeat did not resolve as destroyed.');

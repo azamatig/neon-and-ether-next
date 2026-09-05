@@ -7,6 +7,10 @@ registry.loadManifest(GAME_CONTENT_MANIFEST);
 const assertResolvedRosterHandoff = (session: GameSession, encounterId: string) => {
   const preview = session.getCombatPreview(encounterId);
   if (!preview) throw new Error(`${encounterId}: combat preview was not resolved.`);
+  const activeCompanionIds = session.getState().companions.filter((id) => session.getState().npcs[id]?.isAlive !== false);
+  const previewPartyIds = new Set(preview.party.map((unit) => unit.id));
+  for (const companionId of activeCompanionIds) if (!previewPartyIds.has(companionId)) throw new Error(`${encounterId}: active companion ${companionId} is missing from preview.`);
+  const previewEnemyCount = preview.enemies.reduce((total, group) => total + group.count, 0);
   const previewRoster = [
     ...preview.party.map((unit) => `${unit.id}:Player`),
     ...preview.enemies.flatMap((unit) => Array.from({ length: unit.count }, () => `${unit.id}:Enemy`)),
@@ -14,6 +18,9 @@ const assertResolvedRosterHandoff = (session: GameSession, encounterId: string) 
   if (!session.startTacticalCombat(encounterId)) throw new Error(`${encounterId}: tactical combat did not start.`);
   const combat = session.getState().combat;
   const tacticalRoster = Object.values(combat.combatants).map((unit) => `${unit.id}:${unit.team}`).sort();
+  const tacticalEnemyCount = Object.values(combat.combatants).filter((unit) => unit.team === 'Enemy').length;
+  if (previewEnemyCount !== tacticalEnemyCount) throw new Error(`${encounterId}: enemy count changed from ${previewEnemyCount} to ${tacticalEnemyCount}.`);
+  for (const companionId of activeCompanionIds) if (!combat.combatants[companionId]) throw new Error(`${encounterId}: active companion ${companionId} is missing from tactical combat.`);
   if (JSON.stringify(previewRoster) !== JSON.stringify(tacticalRoster)) {
     throw new Error(`${encounterId}: resolved roster changed between preview and combat.\nPreview: ${previewRoster}\nCombat: ${tacticalRoster}`);
   }
@@ -37,7 +44,9 @@ assertResolvedRosterHandoff(freight, 'enc_prologue_ares_freight_checkpoint');
 
 const vault = new GameSession(registry, 7331);
 vault.executeEffect({ type: 'startQuest', questId: 'qst_prologue_ares_vault', initialStageId: 'stage_07_central_vault' });
-for (const npcId of ['npc_prologue_companion_female', 'npc_prologue_companion_male']) vault.executeEffect({ type: 'recruitNpc', npcId, asCompanion: true });
+const infiltrationCompanions = registry.npcs.findByTag('AresInfiltration').filter((npc) => npc.isCompanion);
+if (infiltrationCompanions.length === 0) throw new Error('Vault response fixture did not resolve any active companions from content.');
+for (const companion of infiltrationCompanions) vault.executeEffect({ type: 'recruitNpc', npcId: companion.id, asCompanion: true });
 if (!vault.startEvent('evt_prologue_central_vault_bonding')) throw new Error('Vault response setup did not start.');
 while (vault.getState().world.mode === 'Event') vault.advanceEventStep();
 assertResolvedRosterHandoff(vault, 'enc_prologue_ares_vault_response');

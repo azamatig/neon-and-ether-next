@@ -26,4 +26,6 @@ if (!resolution.incapacitatedEnemies.some((enemy) => enemy.id === humans[2].id &
 if (resolution.incapacitatedEnemies.some((enemy) => enemy.id === mechanical.id)) throw new Error('Destroyed mechanical enemy became a prisoner.');
 const postCombat = encounterEngine.executePostCombatAction(humans[1].id, 'Restrain', state, registry);
 if (postCombat.actionId !== 'Restrain' || resolution.incapacitatedEnemies.find((enemy) => enemy.id === humans[1].id)?.status !== 'Restrained') throw new Error('Surviving sentient did not enter the existing post-combat action flow.');
+const capture = encounterEngine.executePostCombatAction(humans[1].id, 'Capture', state, registry);
+if (capture.actionId !== 'Capture' || !state.world.flags[`prisoner_${humans[1].id}`]) throw new Error('Incapacitated sentient was not available to Capture post-combat.');
 console.log('Tactical dispositions projected into post-combat resolution without fabricated prisoners.');

@@ -5,6 +5,10 @@ import { PresetControl } from '../presets/authoring-presets.tsx';
 
 type SchemaLike = { _def: Record<string, any>; safeParse?: (value: unknown) => any };
 
+function isSchemaLike(schema: unknown): schema is SchemaLike {
+  return Boolean(schema && typeof schema === 'object' && '_def' in schema && (schema as SchemaLike)._def);
+}
+
 export interface SchemaPropertyEditorProps {
   schema: SchemaLike;
   value: unknown;
@@ -18,9 +22,13 @@ function unwrap(schema: SchemaLike): { schema: SchemaLike; optional: boolean } {
   let optional = false;
   while (['optional', 'default', 'nullable'].includes(current._def.type)) {
     optional ||= current._def.type === 'optional' || current._def.type === 'nullable';
+    if (!isSchemaLike(current._def.innerType)) break;
     current = current._def.innerType;
   }
-  if (current._def.type === 'lazy') current = current._def.getter();
+  if (current._def.type === 'lazy') {
+    const resolved = current._def.getter?.();
+    if (isSchemaLike(resolved)) current = resolved;
+  }
   return { schema: current, optional };
 }
 
@@ -28,8 +36,8 @@ function labelFor(key: string): string {
   return key.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
 }
 
-function literalValue(schema: SchemaLike): unknown {
-  return schema._def.type === 'literal' ? schema._def.values?.[0] : undefined;
+function literalValue(schema: SchemaLike | undefined): unknown {
+  return schema?._def?.type === 'literal' ? schema._def.values?.[0] : undefined;
 }
 
 function createValue(source: SchemaLike): unknown {
@@ -103,7 +111,7 @@ export const TagsEditor: React.FC<{ value: string[]; onChange: (value: string[])
 
 function flattenVariants(schema: SchemaLike): SchemaLike[] {
   const resolved = unwrap(schema).schema;
-  if (resolved._def.type === 'union') return resolved._def.options.flatMap((option: SchemaLike) => flattenVariants(option));
+  if (resolved._def.type === 'union') return (resolved._def.options ?? []).filter(isSchemaLike).flatMap((option: SchemaLike) => flattenVariants(option));
   return resolved._def.type === 'object' && resolved._def.shape?.type ? [resolved] : [];
 }
 
@@ -119,6 +127,9 @@ export const VariantListEditor: React.FC<{ kind: 'condition' | 'effect'; value: 
 };
 
 export const SchemaPropertyEditor: React.FC<SchemaPropertyEditorProps> = ({ schema: source, value, path = [], content, onChange }) => {
+  if (!isSchemaLike(source)) {
+    return <div role="alert" className="rounded border border-rose-500/30 bg-rose-950/20 p-3 text-xs text-rose-300">Editor schema is unavailable for {labelFor(path.at(-1) ?? 'this field')}.</div>;
+  }
   const { schema, optional } = unwrap(source);
   const type = schema._def.type;
   const field = path.at(-1) ?? '';
@@ -155,7 +166,7 @@ export const SchemaPropertyEditor: React.FC<SchemaPropertyEditorProps> = ({ sche
   }
   if (type === 'union') {
     const variants = flattenVariants(schema);
-    const currentType = String((value as { type?: string })?.type ?? literalValue(variants[0]?._def.shape?.type) ?? '');
+    const currentType = String((value as { type?: string })?.type ?? literalValue(variants[0]?._def?.shape?.type) ?? '');
     const selected = variants.find((variant) => literalValue(variant._def.shape.type) === currentType) ?? variants[0];
     if (selected) return <div className="space-y-2"><select value={currentType} onChange={(event) => { const variant=variants.find((candidate)=>literalValue(candidate._def.shape.type)===event.target.value); if(variant) onChange(createValue(variant)); }} className={inputClass}>{variants.map((variant)=><option key={String(literalValue(variant._def.shape.type))}>{String(literalValue(variant._def.shape.type))}</option>)}</select><SchemaPropertyEditor schema={selected} value={value} path={path} content={content} onChange={onChange}/></div>;
   }

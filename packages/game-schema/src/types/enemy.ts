@@ -55,6 +55,7 @@ export const EnemySchema = BaseEntitySchema.extend({
   abilityIds: z.array(z.string()).default([]),
   combatAIProfileId: z.string().optional(),
   portraitIcon: z.string().default('Skull'),
+  combatImage: z.string().optional(),
 });
 
 export type Enemy = z.infer<typeof EnemySchema>;

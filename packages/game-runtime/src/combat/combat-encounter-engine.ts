@@ -8,6 +8,8 @@ import {
   CombatEncounter,
   CombatIncapacitatedEnemy,
   CombatResolution,
+  CombatResolvedEnemy,
+  CombatState,
   Enemy,
   EscapeRules,
   GameplayOutcome,
@@ -98,64 +100,21 @@ export class CombatEncounterEngine {
   public getEncounterPreview(
     encounterId: string,
     state: GameState,
-    contentRegistry: ContentRegistry
+    contentRegistry: ContentRegistry,
+    resolvedCombat?: CombatState,
   ): ResolvedCombatPreview | undefined {
     const encounter = contentRegistry.getEncounter(encounterId);
     if (!encounter) return undefined;
 
-    // Build Player Side
-    const p = state.player;
-    const playerPartyMember: PreCombatPartyMember = {
-      id: p.characterId,
-      name: p.name,
-      title: p.title,
-      portrait: 'User',
-      currentHp: p.vitals.currentHp,
-      maxHp: p.vitals.maxHp,
-      currentEther: p.vitals.currentEther,
-      maxEther: p.vitals.maxEther,
-      actionPoints: p.vitals.actionPointsCurrent,
-      statusEffects: p.activeStatusEffects.map((s) => s.name),
-      injuries: p.vitals.currentHp < p.vitals.maxHp * 0.4 ? ['Light Concussion', 'Fractured Plating'] : [],
-    };
-
-    const party: PreCombatPartyMember[] = [playerPartyMember];
-
-    // Build active companions
-    for (const compId of state.companions ?? []) {
-      const compNpc = contentRegistry.getNPC(compId);
-      const runtime = state.npcs[compId];
-      if (compNpc) {
-        party.push({
-          id: compId,
-          name: compNpc.name,
-          title: compNpc.title ?? 'Companion',
-          portrait: compNpc.portraitIcon ?? 'Users',
-          currentHp: runtime?.currentHp ?? 28,
-          maxHp: runtime?.maxHp ?? 28,
-          currentEther: runtime?.currentEther ?? 20,
-          maxEther: 20,
-          actionPoints: 6,
-          statusEffects: [],
-          injuries: [],
-        });
-      }
-    }
-
-    // Build Enemy Side
-    const enemies: PreCombatEnemyUnit[] = encounter.enemyGroups.map((group, idx) => {
-      const enemyDef = contentRegistry.getEnemy(group.enemyId);
-      return {
-        id: `eg_${idx}_${group.enemyId}`,
-        enemyId: group.enemyId,
-        name: group.isUnknown ? 'Unknown Threat' : group.nameOverride ?? enemyDef?.name ?? 'Hostile Unit',
-        count: group.count,
-        threatTier: group.threatTier,
-        isBoss: group.isBoss,
-        isUnknown: group.isUnknown,
-        portrait: group.portraitOverride ?? enemyDef?.portraitIcon ?? 'Bot',
-        estimatedHp: group.customHp ?? enemyDef?.vitals.maxHp ?? 25,
-      };
+    const roster = Object.values(resolvedCombat?.combatants ?? {});
+    const party: PreCombatPartyMember[] = roster.filter((unit) => unit.team === 'Player').map((unit) => {
+      const npc = contentRegistry.getNPC(unit.sourceId);
+      return { id: unit.id, name: unit.name, title: unit.sourceId === state.player.characterId ? state.player.title : npc?.title ?? 'Companion', portrait: npc?.portraitIcon ?? 'User', currentHp: unit.currentHp, maxHp: unit.maxHp, currentEther: unit.currentEther, maxEther: unit.maxEther, actionPoints: unit.currentAp, statusEffects: unit.statuses.map((status) => contentRegistry.getStatusEffect(status.statusEffectId)?.name ?? status.statusEffectId), injuries: [] };
+    });
+    const enemies: PreCombatEnemyUnit[] = roster.filter((unit) => unit.team === 'Enemy').map((unit) => {
+      const definition = contentRegistry.getEnemy(unit.sourceId);
+      const group = encounter.enemyGroups.find((entry) => entry.enemyId === unit.sourceId);
+      return { id: unit.id, enemyId: unit.sourceId, name: group?.isUnknown ? 'Unknown Threat' : unit.name, count: 1, threatTier: group?.threatTier ?? 'Standard', isBoss: group?.isBoss ?? false, isUnknown: group?.isUnknown ?? false, portrait: group?.portraitOverride ?? definition?.portraitIcon ?? 'Bot', estimatedHp: unit.maxHp };
     });
 
     // Evaluate Escape Rules
@@ -205,7 +164,7 @@ export class CombatEncounterEngine {
     contentRegistry: ContentRegistry,
     logJournal?: (category: any, text: string) => void
   ): { success: boolean; reason?: string; statCheck?: StatCheckResolution } {
-    const preview = this.getEncounterPreview(encounterId, state, contentRegistry);
+    const preview = this.getEncounterPreview(encounterId, state, contentRegistry, state.combat.encounterId === encounterId ? state.combat : undefined);
     if (!preview) return { success: false, reason: 'Encounter not found' };
 
     if (!preview.escape.allowed) {
@@ -310,38 +269,35 @@ export class CombatEncounterEngine {
     const maxCred = encounter?.creditsReward.max ?? 180;
     const creditsFound = this.diceRoller.integer(minCred,maxCred);
 
-    // 3. Enemy casualties and surviving incapacitated enemies
+    // 3. Project the tactical outcome; never regenerate or invent survivors here.
     const enemyCasualties: { enemyId: string; name: string; count: number }[] = [];
     const incapacitatedEnemies: CombatIncapacitatedEnemy[] = [];
-
-    if (encounter?.enemyGroups) {
-      for (let i = 0; i < encounter.enemyGroups.length; i++) {
-        const grp = encounter.enemyGroups[i];
-        const enemyDef = contentRegistry.getEnemy(grp.enemyId);
-        const name = grp.nameOverride ?? enemyDef?.name ?? 'Hostile Raider';
-
-        enemyCasualties.push({
-          enemyId: grp.enemyId,
-          name,
-          count: grp.count,
-        });
-
-        // Chance of an incapacitated/surrendered survivor if humanoid
-        if (i === 0) {
-          incapacitatedEnemies.push({
-            id: `inc_${grp.enemyId}_01`,
-            enemyId: grp.enemyId,
-            name: `${name} Squad Leader`,
-            portrait: enemyDef?.portraitIcon ?? 'User',
-            status: 'Incapacitated',
-            canBeInterrogated: true,
-            canBeCaptured: true,
-            canBeSearched: true,
-            intelAvailable: 'Encrypted Syndicate frequency chip recovered.',
-          });
-        }
+    const deadEnemies: CombatResolvedEnemy[] = [];
+    const surrenderedEnemies: CombatResolvedEnemy[] = [];
+    const escapedEnemies: CombatResolvedEnemy[] = [];
+    const destroyedEnemies: CombatResolvedEnemy[] = [];
+    const enemies = Object.values(state.combat.combatants).filter((combatant) => combatant.team === 'Enemy');
+    for (const combatant of enemies) {
+      const enemyDef = contentRegistry.getEnemy(combatant.sourceId);
+      const resolved = { id: combatant.id, enemyId: combatant.sourceId, name: combatant.name, portrait: enemyDef?.portraitIcon };
+      const resolutionState = combatant.resolutionState === 'Alive' && combatant.isDefeated
+        ? enemyDef?.tags.includes('Mechanical') ? 'Destroyed' : combatant.defeatType === 'NonLethal' ? 'Incapacitated' : 'Dead'
+        : combatant.resolutionState;
+      if (resolutionState === 'Dead') deadEnemies.push(resolved);
+      if (resolutionState === 'Destroyed') destroyedEnemies.push(resolved);
+      if (resolutionState === 'Escaped') escapedEnemies.push(resolved);
+      if (resolutionState === 'Surrendered') surrenderedEnemies.push(resolved);
+      if ((resolutionState === 'Incapacitated' || resolutionState === 'Surrendered') && enemyDef?.tags.includes('HasMind')) {
+        incapacitatedEnemies.push({ ...resolved, status: resolutionState, canBeInterrogated: true, canBeCaptured: true, canBeSearched: true });
       }
     }
+    const casualtiesByEnemy = new Map<string, { enemyId: string; name: string; count: number }>();
+    for (const enemy of [...deadEnemies, ...destroyedEnemies]) {
+      const casualty = casualtiesByEnemy.get(enemy.enemyId);
+      if (casualty) casualty.count += 1;
+      else casualtiesByEnemy.set(enemy.enemyId, { enemyId: enemy.enemyId, name: enemy.name, count: 1 });
+    }
+    enemyCasualties.push(...casualtiesByEnemy.values());
 
     const resolution: CombatResolution = {
       encounterId,
@@ -357,6 +313,10 @@ export class CombatEncounterEngine {
       deadCompanions: [],
       enemyCasualties,
       incapacitatedEnemies,
+      deadEnemies,
+      surrenderedEnemies,
+      escapedEnemies,
+      destroyedEnemies,
       resourcesFound: { techScrap: 12, etherCells: 4 },
       availableLoot,
       creditsFound,
@@ -410,6 +370,10 @@ export class CombatEncounterEngine {
       deadCompanions: [],
       enemyCasualties: [],
       incapacitatedEnemies: [],
+      deadEnemies: [],
+      surrenderedEnemies: [],
+      escapedEnemies: [],
+      destroyedEnemies: [],
       resourcesFound: {},
       availableLoot: [],
       creditsFound: 0,

@@ -14,6 +14,7 @@ import { PoiStatusSchema } from './world.ts';
 import { ActionResolutionSchema, CombatResolutionSchema, PostCombatResolutionSchema } from './resolutions.ts';
 import { GameplayOutcomeSchema } from './outcomes.ts';
 import { InventoryEntrySchema, InventoryItemSlotSchema } from './inventory-state.ts';
+import {MinigameSessionSchema} from './minigame.ts';
 export type { InventoryEntry, InventoryItemSlot } from './inventory-state.ts';
 export { InventoryEntrySchema, InventoryItemSlotSchema } from './inventory-state.ts';
 
@@ -58,6 +59,9 @@ export type ActiveStatusEffect = z.infer<typeof ActiveStatusEffectSchema>;
 export const PlayerStateSchema = z.object({
   characterId: z.string().default('player'),
   name: z.string().default('Player'),
+  age: z.number().int().min(1).optional(),
+  portraitId: z.string().optional(),
+  backgroundId: z.string().optional(),
   title: z.string().default('Drifter'),
   level: z.number().int().min(1).default(1),
   experience: z.number().int().min(0).default(0),
@@ -97,6 +101,7 @@ export const PlayerStateSchema = z.object({
   equipment: EquipmentStateSchema.default({ slots: {}, appliedModifiers: {} }),
   traits: z.array(z.string()).default([]),
   perks: z.array(z.string()).default([]),
+  abilityIds: z.array(z.string()).default([]),
   temporaryModifiers: z.array(CharacterStatModifierSchema).default([]),
   statusEffects: z.array(CharacterStatusEffectSchema).default([]),
   activeStatusEffects: z.array(ActiveStatusEffectSchema).default([]),
@@ -291,6 +296,7 @@ export const GameModeSchema = z.enum([
   'InventoryInspection',
   'Screen',
   'GameOver',
+  'Minigame',
 ]);
 
 export type GameMode = z.infer<typeof GameModeSchema>;
@@ -322,6 +328,7 @@ export const WorldStateSchema = z.object({
   doors: z.record(z.string(), DoorRuntimeStateSchema).default({}),
   ambientEtherModifier: z.number().min(0).max(2).default(1.0),
   weatherByScope: z.record(z.string(), WeatherStateSchema).default({}),
+  activeMinigame:MinigameSessionSchema.nullable().default(null),
 });
 
 export type WorldState = z.infer<typeof WorldStateSchema>;
@@ -425,12 +432,15 @@ export const GameStateSchema = z.object({
   combat: TacticalCombatStateSchema.default({
     encounterId: null,
     isActive: false,
+    phase: 'PREPARING',
     roundNumber: 0,
     turnOrder: [],
     activeTurnIndex: 0,
+    activeCombatantId: null,
     combatants: {},
     log: [],
     outcome: null,
+    grid: { width: 8, height: 6, movementApCost: 1, tiles: [], blockingCells: [], playerDeployment: [], enemyDeployment: [] },
   }),
   journal: z.array(GameJournalEntrySchema).default([]),
 });

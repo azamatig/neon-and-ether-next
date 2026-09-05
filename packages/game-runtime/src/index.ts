@@ -31,3 +31,6 @@ export * from './economy/index.ts';
 export * from './time/index.ts';
 export * from './factions/faction-state.ts';
 export * from './weather/index.ts';
+
+export * from './state/new-game-initializer.ts';
+export * from './minigames/match-values-runtime.ts';

@@ -17,12 +17,18 @@ import { BaseJobDefinitionSchema, CharacterManagementRuleSchema, PartySlotDefini
 import { ProgressionDefinitionSchema } from './progression.ts';
 import { BaseUpgradeDefinitionSchema, PlayerBaseDefinitionSchema } from './base-management.ts';
 import { WeatherDefinitionSchema, WeatherProfileSchema } from './weather.ts';
+import { BackgroundDefinitionSchema, NewGameDefinitionSchema, PerkDefinitionSchema } from './character-creation.ts';
+import {MinigameDefinitionSchema} from './minigame.ts';
 
 export const GameContentSchema = z.object({
   version: z.string().default('1.0.0'),
   items: z.array(ItemSchema).default([]),
   shops: z.array(ShopDefinitionSchema).default([]),
   progressionDefinitions: z.array(ProgressionDefinitionSchema).default([]),
+  backgrounds: z.array(BackgroundDefinitionSchema).default([]),
+  perks: z.array(PerkDefinitionSchema).default([]),
+  newGameDefinitions: z.array(NewGameDefinitionSchema).default([]),
+  minigames:z.array(MinigameDefinitionSchema).default([]),
   npcs: z.array(NPCSchema).default([]),
   enemies: z.array(EnemySchema).default([]),
   encounters: z.array(CombatEncounterSchema).default([]),

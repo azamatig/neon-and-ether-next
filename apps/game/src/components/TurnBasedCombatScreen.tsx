@@ -1,53 +1,138 @@
-import React, { useMemo, useState } from 'react';
-import { Ability, CombatAction, Combatant, CombatState } from '@neon-ether/game-schema';
-import { Activity, Shield, SkipForward, Swords, Zap } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Ability, CombatAction, Combatant, CombatState, Item } from '@neon-ether/game-schema';
+import { type ResolvedCombatAction, type ResolvedCombatCommands } from '@neon-ether/game-runtime';
+import { Activity, Crosshair, Footprints, Shield, SkipForward, Swords, Zap } from 'lucide-react';
 
 export interface TurnBasedCombatScreenProps {
   state: CombatState;
+  commands: ResolvedCombatCommands;
   abilities: Ability[];
+  items: Item[];
   onCommand: (command: CombatAction) => void;
+  onAttemptFlee: () => void;
 }
 
-/** Pure combat presentation: renders a snapshot and dispatches typed commands. */
-export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, abilities, onCommand }) => {
-  const [targetId, setTargetId] = useState<string | null>(null);
-  const activeId = state.turnOrder[state.activeTurnIndex];
+type ActionCategory = 'Attacks' | 'Skills' | 'Support';
+
+const dispositionLabel = (unit: Combatant): string | undefined => {
+  if (unit.resolutionState === 'Destroyed') return 'DESTROYED';
+  if (unit.resolutionState === 'Surrendered') return 'SURRENDERED';
+  if (unit.resolutionState === 'Escaped') return 'ESCAPED';
+  if (unit.resolutionState === 'Incapacitated' || unit.isIncapacitated) return 'INCAPACITATED';
+  if (unit.resolutionState === 'Dead' || unit.isDefeated) return 'DEAD';
+};
+
+const actionIcon = (action: ResolvedCombatAction) => {
+  if (action.type === 'Move' || action.type === 'AttemptFlee') return <Footprints />;
+  if (action.type === 'EndTurn') return <SkipForward />;
+  if (action.type === 'Ability') return <Zap />;
+  return <Swords />;
+};
+
+/** Pure tactical presentation: legal cells, targets, actions, and costs are resolved by the combat runtime. */
+export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, abilities, items, onCommand, onAttemptFlee }) => {
+  const [category, setCategory] = useState<ActionCategory>('Attacks');
+  const [selectedActionId, setSelectedActionId] = useState('attack.weapon');
+  const activeId = state.activeCombatantId ?? state.turnOrder[state.activeTurnIndex];
   const actor = state.combatants[activeId];
   const abilityMap = useMemo(() => new Map(abilities.map((ability) => [ability.id, ability])), [abilities]);
-  const combatants = Object.values(state.combatants) as Combatant[];
-  const enemies = combatants.filter((unit) => unit.team === 'Enemy' && !unit.isDefeated);
-  const selectedTarget = targetId && state.combatants[targetId] && !state.combatants[targetId].isDefeated
-    ? targetId : enemies[0]?.id;
-  const canCommand = actor?.team === 'Player' && state.isActive;
+  const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
+  const selectedAction = commands.actions.find((action) => action.id === selectedActionId);
+  const moveKeys = useMemo(() => new Set(commands.legalMoves.map((cell) => `${cell.x}:${cell.y}`)), [commands.legalMoves]);
+  const targetIds = selectedAction?.targetIds ?? [];
+  const targetSet = useMemo(() => new Set(targetIds), [targetIds]);
+  const occupants = useMemo(() => new Map((Object.values(state.combatants) as Combatant[]).map((unit) => [`${unit.position.x}:${unit.position.y}`, unit])), [state.combatants]);
+  const tiles = useMemo(() => new Map(state.grid.tiles.map((tile) => [`${tile.x}:${tile.y}`, tile])), [state.grid.tiles]);
+  const blockingCells = useMemo(() => new Set(state.grid.blockingCells.map((cell) => `${cell.x}:${cell.y}`)), [state.grid.blockingCells]);
+  useEffect(() => { setCategory('Attacks'); setSelectedActionId('attack.weapon'); }, [activeId]);
 
-  return (
-    <section className="h-full min-h-[520px] rounded-xl border border-rose-500/40 bg-[#050713] p-4 font-mono text-zinc-100 shadow-[0_0_40px_rgba(244,63,94,0.08)]">
-      <header className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
-        <div><p className="text-[10px] tracking-[0.28em] text-rose-400">TURN-BASED COMBAT MODULE</p><h2 className="font-bold">ROUND {state.roundNumber} // {actor?.name ?? 'RESOLVING'}</h2></div>
-        <div className="text-xs text-zinc-400">TURN {state.activeTurnIndex + 1}/{state.turnOrder.length}</div>
-      </header>
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {combatants.map((unit) => (
-            <button key={unit.id} type="button" onClick={() => unit.team === 'Enemy' && setTargetId(unit.id)}
-              className={`rounded-xl border p-4 text-left transition ${unit.isDefeated ? 'opacity-35' : ''} ${selectedTarget === unit.id ? 'border-rose-400 bg-rose-950/30' : unit.team === 'Player' ? 'border-cyan-500/40 bg-cyan-950/15' : 'border-zinc-700 bg-zinc-950'}`}>
-              <div className="mb-3 flex items-center justify-between"><strong>{unit.name}</strong><span className={unit.team === 'Player' ? 'text-cyan-400' : 'text-rose-400'}>{unit.team.toUpperCase()}</span></div>
-              <div className="mb-1 flex justify-between text-xs"><span>HP</span><span>{unit.currentHp}/{unit.maxHp}</span></div>
-              <div className="h-2 overflow-hidden rounded bg-zinc-800"><div className="h-full bg-rose-500" style={{ width: `${unit.currentHp / unit.maxHp * 100}%` }} /></div>
-              <div className="mt-3 flex gap-4 text-xs text-zinc-400"><span className="flex gap-1"><Activity className="h-3.5 w-3.5"/> AP {unit.currentAp}</span><span className="flex gap-1"><Zap className="h-3.5 w-3.5"/> ETH {unit.currentEther}</span><span className="flex gap-1"><Shield className="h-3.5 w-3.5"/> {unit.armor}</span></div>
-              {unit.statuses.length > 0 && <div className="mt-3 flex gap-1">{unit.statuses.map((status) => <span key={`${status.statusEffectId}-${status.remainingTurns}`} className="rounded border border-amber-500/40 px-2 py-1 text-[10px] text-amber-300">{status.statusEffectId} · {status.remainingTurns}</span>)}</div>}
-            </button>
-          ))}
+  const selectCell = (x: number, y: number) => {
+    if (!actor || actor.team !== 'Player') return;
+    const occupant = occupants.get(`${x}:${y}`);
+    if (selectedAction?.type === 'Move' && moveKeys.has(`${x}:${y}`)) onCommand({ type: 'Move', actorId: actor.id, position: { x, y } });
+    if (!occupant || !targetSet.has(occupant.id)) return;
+    if (selectedAction?.type === 'WeaponAttack' && selectedAction.weaponId) onCommand({ type: 'RangedAttack', weaponId: selectedAction.weaponId, actorId: actor.id, targetId: occupant.id });
+    if (selectedAction?.type === 'MeleeAttack') onCommand({ type: 'MeleeAttack', weaponId: selectedAction.weaponId, actorId: actor.id, targetId: occupant.id });
+    if (selectedAction?.type === 'Ability' && selectedAction.abilityId) onCommand({ type: 'Ability', actorId: actor.id, targetId: occupant.id, abilityId: selectedAction.abilityId });
+  };
+
+  return <section className="combat-grid-screen">
+    <header className="combat-grid-header">
+      <div><p>TACTICAL COMBAT</p><h2>{state.encounterId?.replaceAll('_', ' ')}</h2></div>
+      <span>ROUND {state.roundNumber} · TURN {state.activeTurnIndex + 1}/{state.turnOrder.length}</span>
+    </header>
+
+    <div className="combat-turn-order" aria-label="Combat turn order">
+      <strong><Activity /> TURN ORDER</strong>
+      {state.turnOrder.map((id, index) => {
+        const unit = state.combatants[id];
+        if (!unit) return null;
+        const disposition = dispositionLabel(unit);
+        return <div key={id} className={`combat-turn-chip ${id === activeId ? 'is-active' : ''} ${unit.team === 'Enemy' ? 'is-enemy' : 'is-player'} ${disposition ? 'is-defeated' : ''}`}>
+          <span>{index + 1}</span>
+          <div className="combat-turn-portrait">{unit.bodyImage ? <img src={unit.bodyImage} alt="" /> : unit.team === 'Player' ? <Shield /> : <Crosshair />}</div>
+          <b>{unit.name}</b>
+          {disposition && <em>{disposition}</em>}
+        </div>;
+      })}
+    </div>
+
+    <div className="combat-grid-layout">
+      <main className="combat-board-wrap">
+        <div className="combat-board-label"><span>TACTICAL GRID · {state.grid.width}×{state.grid.height}</span><span>{actor ? `ACTIVE: ${actor.name}` : 'CONFLICT RESOLVED'}</span></div>
+        <div className="combat-board" style={{ gridTemplateColumns: `repeat(${state.grid.width}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${state.grid.height}, minmax(72px, 1fr))` }}>
+          {Array.from({ length: state.grid.width * state.grid.height }, (_, index) => {
+            const x = index % state.grid.width;
+            const y = Math.floor(index / state.grid.width);
+            const key = `${x}:${y}`;
+            const unit = occupants.get(key);
+            const tile = tiles.get(key);
+            const legalMove = selectedAction?.type === 'Move' && moveKeys.has(key);
+            const legalTarget = Boolean(unit && targetSet.has(unit.id));
+            const rejection = unit ? selectedAction?.targetRejections?.[unit.id] : undefined;
+            const disposition = unit ? dispositionLabel(unit) : undefined;
+            return <button key={key} type="button" className={`combat-cell tile-${tile?.type?.toLowerCase() ?? 'floor'} ${blockingCells.has(key) ? 'is-blocking' : ''} ${legalMove ? 'is-move' : ''} ${legalTarget ? 'is-target' : ''} ${rejection ? 'is-invalid-target' : ''} ${unit?.team === 'Player' ? 'has-player' : ''} ${unit?.team === 'Enemy' ? 'has-enemy' : ''}`} onClick={() => selectCell(x, y)} disabled={!legalMove && !legalTarget} title={rejection} aria-label={unit ? `${unit.name}, ${unit.currentHp} HP${rejection ? `, ${rejection}` : ''}` : `${tile?.description ?? tile?.type ?? 'Floor'}, grid ${x + 1}, ${y + 1}`}>
+              <small>{tile?.type === 'Console' || tile?.type === 'Door' ? tile.type.toUpperCase() : `${x + 1},${y + 1}`}</small>
+              {unit && <article className={`combat-unit ${unit.isDefeated ? 'is-defeated' : ''} ${unit.isIncapacitated ? 'is-incapacitated' : ''}`} title={`${unit.name} · ${unit.abilityIds.map((id) => abilityMap.get(id)?.name ?? id).join(', ')}`}>
+                <div className="combat-unit-image">{unit.bodyImage ? <img src={unit.bodyImage} alt="" /> : unit.team === 'Player' ? <Shield /> : <Crosshair />}</div>
+                <div className="combat-unit-copy">
+                  <span className="combat-unit-team">{unit.team === 'Player' ? 'SQUAD' : 'HOSTILE'}{unit.id === activeId ? ' · ACTIVE' : ''}</span>
+                  <strong>{unit.name}</strong>
+                  <span className="combat-unit-vitals">HP {unit.currentHp}/{unit.maxHp}</span>
+                  <div className="combat-hp-track"><i style={{ width: `${unit.currentHp / unit.maxHp * 100}%` }} /></div>
+                </div>
+                {(disposition || unit.statuses.length > 0 || rejection) && <div className="combat-unit-statuses">
+                  {disposition && <em>{disposition}</em>}
+                  {!disposition && unit.statuses.slice(0, 1).map((status) => <em key={status.statusEffectId}>{status.statusEffectId.replace(/^status_/, '').replaceAll('_', ' ').toUpperCase()}</em>)}
+                  {rejection && <em className="combat-target-rejection">{rejection}</em>}
+                </div>}
+              </article>}
+            </button>;
+          })}
         </div>
-        <aside className="flex flex-col gap-3">
-          <div className="rounded-xl border border-zinc-800 bg-black/40 p-3"><div className="mb-2 text-xs text-cyan-400">AVAILABLE COMMANDS</div>
-            <button disabled={!canCommand || !selectedTarget} onClick={() => selectedTarget && onCommand({ type: 'Attack', actorId: activeId, targetId: selectedTarget })} className="mb-2 flex w-full items-center gap-2 rounded border border-zinc-700 p-3 text-left text-xs hover:border-rose-400 disabled:opacity-40"><Swords className="h-4 w-4 text-rose-400"/> Weapon Attack</button>
-            {actor?.abilityIds.map((id) => { const ability = abilityMap.get(id); if (!ability) return null; const target = ability.target === 'Self' || ability.target === 'Ally' ? actor.id : selectedTarget; return <button key={id} disabled={!canCommand || !target || actor.currentAp < ability.apCost || actor.currentEther < ability.etherCost} onClick={() => target && onCommand({ type: 'Ability', actorId: activeId, targetId: target, abilityId: id })} className="mb-2 w-full rounded border border-zinc-700 p-3 text-left text-xs hover:border-cyan-400 disabled:opacity-40"><span className="text-cyan-300">{ability.name}</span><span className="mt-1 block text-[10px] text-zinc-500">{ability.apCost} AP · {ability.etherCost} ETH</span></button>; })}
-            <button disabled={!canCommand} onClick={() => onCommand({ type: 'EndTurn', actorId: activeId })} className="flex w-full items-center gap-2 rounded border border-zinc-700 p-3 text-left text-xs hover:border-amber-400 disabled:opacity-40"><SkipForward className="h-4 w-4 text-amber-400"/> End Turn</button>
-          </div>
-          <div className="max-h-64 overflow-auto rounded-xl border border-zinc-800 bg-black/40 p-3"><div className="mb-2 text-xs text-zinc-400">COMBAT LOG</div>{state.log.slice(-8).reverse().map((entry) => <p key={entry.id} className="border-b border-zinc-900 py-2 text-[10px] text-zinc-400"><span className="text-zinc-600">R{entry.round}</span> {entry.message}</p>)}</div>
-        </aside>
-      </div>
-    </section>
-  );
+      </main>
+
+      <aside className="combat-interface">
+        <div className="combat-commands">
+          <div className="combat-interface-heading"><div><p>TACTICAL INTERFACE</p><h3>COMMANDS</h3></div><span>{actor?.team === 'Player' ? 'READY' : 'WAIT'}</span></div>
+          <nav>{(['Attacks', 'Skills', 'Support'] as ActionCategory[]).map((value) => <button key={value} aria-pressed={category === value} className={category === value ? 'is-selected' : ''} onClick={() => setCategory(value)}>{value.toUpperCase()}</button>)}</nav>
+          <div className="combat-action-list">{commands.actions.filter((action) => action.category === category).map((action) => <button key={action.id} className={selectedActionId === action.id ? 'is-selected' : ''} disabled={actor?.team !== 'Player' || !state.isActive || Boolean(action.disabledReason)} title={action.disabledReason} onClick={() => {
+            if (action.type === 'EndTurn') { if (actor) onCommand({ type: 'EndTurn', actorId: actor.id }); return; }
+            if (action.type === 'AttemptFlee') { onAttemptFlee(); return; }
+            setSelectedActionId(action.id);
+          }}>{actionIcon(action)}<span>{action.label}<small>{action.disabledReason ?? `${action.apCost} AP${action.etherCost ? ` · ${action.etherCost} ETH` : ''}`}</small></span></button>)}</div>
+        </div>
+
+        <div className="combat-status"><strong>{selectedAction?.type === 'Move' ? 'SELECT A HIGHLIGHTED CELL' : 'SELECT A HIGHLIGHTED TARGET'}</strong><span>{selectedAction?.type === 'Move' ? commands.legalMoves.length : targetIds.length} VALID</span></div>
+
+        <section className={`combat-actor ${actor?.team === 'Enemy' ? 'is-enemy' : ''}`}>
+          <div className="combat-actor-portrait">{actor?.bodyImage ? <img src={actor.bodyImage} alt="" /> : actor?.team === 'Enemy' ? <Crosshair /> : <Shield />}</div>
+          <div><span>{actor?.team === 'Player' ? 'CURRENT OPERATIVE' : 'HOSTILE ACTING'}</span><strong>{actor?.name ?? 'Resolving'}</strong><small>{actor?.weaponId ? itemMap.get(actor.weaponId)?.name ?? 'Equipped weapon' : 'Unarmed'}</small></div>
+          <dl><div><dt>HP</dt><dd>{actor?.currentHp ?? 0}/{actor?.maxHp ?? 0}</dd></div><div><dt>AP</dt><dd>{actor?.currentAp ?? 0}</dd></div><div><dt>MOV</dt><dd>{actor?.movementRemaining ?? 0}</dd></div><div><dt>ETH</dt><dd>{actor?.currentEther ?? 0}</dd></div></dl>
+        </section>
+
+        <details className="combat-log" open><summary>COMBAT LOG <span>{state.log.length}</span></summary><div>{state.log.slice(-8).reverse().map((entry) => <p key={entry.id} className={`log-${entry.category.toLowerCase()}`}><span>R{entry.round} · {entry.category.toUpperCase()}</span> {entry.message}</p>)}</div></details>
+      </aside>
+    </div>
+  </section>;
 };

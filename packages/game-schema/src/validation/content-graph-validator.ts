@@ -19,6 +19,8 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     shop: new Set(content.shops.map((value) => value.id)),
     weather: new Set(content.weatherDefinitions.map((value) => value.id)), weatherProfile: new Set(content.weatherProfiles.map((value) => value.id)),
     statusEffect: new Set(content.statusEffects.map((value) => value.id)),
+    ability:new Set(content.abilities.map(value=>value.id)),
+    minigame:new Set(content.minigames.map(value=>value.id)),
   };
   const missing = (set: ReadonlySet<string>, id: string | undefined, kind: string, owner: Owner) => {
     if (id && !set.has(id)) issues.push({ severity: 'error', category: owner.category, targetId: owner.targetId, field: owner.field, message: `Missing ${kind} reference '${id}'` });
@@ -65,6 +67,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if (current.type === 'setWeather') missing(ids.weather, current.weatherId, 'weather', owner);
     if (current.type === 'changeWeather') missing(ids.weatherProfile, current.weatherProfileId, 'weather profile', owner);
     if (current.type === 'applyStatusEffect') missing(ids.statusEffect, current.statusEffectId, 'status effect', owner);
+    if(current.type==='setAbilityUnlocked')missing(ids.ability,current.abilityId,'ability',owner);
   };
   const outcome = (value: GameplayOutcome | undefined, owner: Owner): void => {
     if (!value) return;
@@ -77,6 +80,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if (current.type === 'combat') missing(ids.encounter, current.encounterId, 'encounter', owner);
     if (current.type === 'poi') { missing(ids.poi, current.poiId, 'POI', owner); missing(ids.map, current.mapId, 'map', owner); }
     if (current.type === 'map') missing(ids.map, current.mapId, 'map', owner);
+    if(current.type==='minigame')missing(ids.minigame,current.minigameId,'minigame',owner);
   };
   const lists = (conditions: Condition[], effects: Effect[], owner: Owner) => { conditions.forEach((entry,index)=>condition(entry,{...owner,field:`${owner.field}.conditions.${index}`})); effects.forEach((entry,index)=>effect(entry,{...owner,field:`${owner.field}.effects.${index}`})); };
 
@@ -84,6 +88,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     lists([...poi.visibilityConditions, ...poi.availabilityConditions], [], { category:'POI',targetId:poi.id,field:'availability' });
     for (const action of poi.actions) { const owner={category:'POI' as const,targetId:poi.id,field:`actions.${action.id}`}; lists(action.conditions,action.effects,owner); action.check?.passEffects.forEach((entry,index)=>effect(entry,{...owner,field:`${owner.field}.check.passEffects.${index}`})); action.check?.failEffects.forEach((entry,index)=>effect(entry,{...owner,field:`${owner.field}.check.failEffects.${index}`})); outcome(action.check?.passOutcome,{...owner,field:`${owner.field}.check.passOutcome`});outcome(action.check?.failOutcome,{...owner,field:`${owner.field}.check.failOutcome`});outcome(action.outcome,owner); }
   }
+  for(const minigame of content.minigames){const owner={category:'Integrity' as const,targetId:minigame.id,field:'minigame'};for(const target of minigame.targets){target.effects.forEach((entry,index)=>effect(entry,{...owner,field:`targets.${target.id}.effects.${index}`}));outcome(target.outcome,{...owner,field:`targets.${target.id}.outcome`})}minigame.failureEffects.forEach((entry,index)=>effect(entry,{...owner,field:`failureEffects.${index}`}));minigame.partialEffects.forEach((entry,index)=>effect(entry,{...owner,field:`partialEffects.${index}`}));minigame.successEffects.forEach((entry,index)=>effect(entry,{...owner,field:`successEffects.${index}`}));outcome(minigame.failureOutcome,{...owner,field:'failureOutcome'});outcome(minigame.partialOutcome,{...owner,field:'partialOutcome'});outcome(minigame.successOutcome,{...owner,field:'successOutcome'})}
   for (const quest of content.quests) { const objectiveIds=new Set<string>(),actionIds=new Set<string>(),branchIds=new Set<string>(); for (const stage of Object.values(quest.stages)) {
     const owner={category:'Quest' as const,targetId:quest.id,field:`stages.${stage.id}`}; lists([...stage.entryConditions,...stage.completionConditions],[...stage.entryEffects,...stage.completionEffects],owner);
     for(const objective of stage.objectives){if(objectiveIds.has(objective.id))issues.push({severity:'error',category:'Quest',targetId:quest.id,field:`${owner.field}.objectives`,message:`Duplicate objective ID '${objective.id}'`});objectiveIds.add(objective.id);}

@@ -7,6 +7,7 @@
 
 import {
   BaseRoomDefinition,
+  BackgroundDefinition,
   Ability,
   BaseJobDefinition,
   BaseUpgradeDefinition,
@@ -28,6 +29,9 @@ import {
   PartySlotDefinition,
   PlayerBaseDefinition,
   ProgressionDefinition,
+  NewGameDefinition,
+  MinigameDefinition,
+  PerkDefinition,
   Quest,
   Recipe,
   StatusEffectDefinition,
@@ -123,6 +127,10 @@ export class ContentRegistry {
   public readonly items = new RegistryCollection<Item>('Item');
   public readonly shops = new RegistryCollection<ShopDefinition>('Shop');
   public readonly progressionDefinitions = new RegistryCollection<ProgressionDefinition>('ProgressionDefinition');
+  public readonly backgrounds = new RegistryCollection<BackgroundDefinition>('Background');
+  public readonly perks = new RegistryCollection<PerkDefinition>('Perk');
+  public readonly newGameDefinitions = new RegistryCollection<NewGameDefinition>('NewGameDefinition');
+  public readonly minigames=new RegistryCollection<MinigameDefinition>('Minigame');
   public readonly npcs = new RegistryCollection<NPC>('NPC');
   public readonly enemies = new RegistryCollection<Enemy>('Enemy');
   public readonly encounters = new RegistryCollection<CombatEncounter>('CombatEncounter');
@@ -181,6 +189,10 @@ export class ContentRegistry {
     }
     for (const shop of content.shops ?? []) this.shops.set(shop.id, shop);
     for (const definition of content.progressionDefinitions ?? []) this.progressionDefinitions.set(definition.id, definition);
+    for (const background of content.backgrounds ?? []) this.backgrounds.set(background.id, background);
+    for (const perk of content.perks ?? []) this.perks.set(perk.id, perk);
+    for (const definition of content.newGameDefinitions ?? []) this.newGameDefinitions.set(definition.id, definition);
+    for(const definition of content.minigames??[])this.minigames.set(definition.id,definition);
 
     // Index NPCs / Characters
     const npcList = content.npcs ?? content.characters ?? [];
@@ -278,6 +290,10 @@ export class ContentRegistry {
       items: this.items.getAll(),
       shops: this.shops.getAll(),
       progressionDefinitions: this.progressionDefinitions.getAll(),
+      backgrounds: this.backgrounds.getAll(),
+      perks: this.perks.getAll(),
+      newGameDefinitions: this.newGameDefinitions.getAll(),
+      minigames:this.minigames.getAll(),
       npcs: this.npcs.getAll(),
       enemies: this.enemies.getAll(),
       encounters: this.encounters.getAll(),
@@ -310,6 +326,10 @@ export class ContentRegistry {
     this.items.clear();
     this.shops.clear();
     this.progressionDefinitions.clear();
+    this.backgrounds.clear();
+    this.perks.clear();
+    this.newGameDefinitions.clear();
+    this.minigames.clear();
     this.npcs.clear();
     this.enemies.clear();
     this.encounters.clear();

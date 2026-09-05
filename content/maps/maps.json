@@ -100,5 +100,168 @@
     ],
     "defaultTravelTimeMinutes": 30,
     "weatherProfileId": "weather_profile_urban"
+  },
+  {
+    "id": "map_prologue_ares_logistics",
+    "name": "Ares Logistics Ring",
+    "description": "Rain, sodium work-lights, and automated freight lanes surround the service route into Ares Central Vault.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Industrial",
+      "Infiltration"
+    ],
+    "district": "Ares Logistics Perimeter",
+    "subregion": "Warehouse Ring",
+    "backgroundImage": "bg_prologue_ares_logistics",
+    "poiIds": [
+      "poi_prologue_service_entrance",
+      "poi_prologue_warehouse",
+      "poi_prologue_maintenance_office",
+      "poi_prologue_freight_access"
+    ],
+    "defaultPoiId": "poi_prologue_service_entrance",
+    "connectedMapIds": [],
+    "ambientEtherLevel": 12,
+    "securityLevel": 3,
+    "controllingFactionId": "fac_ares_industries",
+    "recommendedLevel": 1,
+    "regions": [
+      {
+        "id": "reg_prologue_ares_warehouse_perimeter",
+        "name": "Warehouse Perimeter",
+        "description": "A night-shift perimeter of loading bays, blind camera arcs, and sealed freight corridors.",
+        "securityLevel": 3,
+        "controllingFactionId": "fac_ares_industries",
+        "weatherProfileId": "weather_profile_urban",
+        "bounds": {
+          "x": 3,
+          "y": 5,
+          "width": 94,
+          "height": 90
+        },
+        "metadata": {}
+      }
+    ],
+    "metadata": {
+      "visualTheme": "ares-industrial-night"
+    },
+    "routes": [
+      {
+        "id": "route_prologue_service_warehouse",
+        "fromPoiId": "poi_prologue_service_entrance",
+        "toPoiId": "poi_prologue_warehouse",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_prologue_warehouse_office",
+        "fromPoiId": "poi_prologue_warehouse",
+        "toPoiId": "poi_prologue_maintenance_office",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_prologue_office_freight",
+        "fromPoiId": "poi_prologue_maintenance_office",
+        "toPoiId": "poi_prologue_freight_access",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_prologue_warehouse_freight",
+        "fromPoiId": "poi_prologue_warehouse",
+        "toPoiId": "poi_prologue_freight_access",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 8,
+        "metadata": {}
+      }
+    ],
+    "defaultTravelTimeMinutes": 8,
+    "weatherProfileId": "weather_profile_urban"
+  },
+  {
+    "id": "map_prologue_ares_inner_vault",
+    "name": "Ares Central Vault",
+    "description": "Beyond the freight checkpoint, research corridors descend toward a containment system Ares no longer controls.",
+    "tags": [
+      "Prologue",
+      "Ares",
+      "Industrial",
+      "Region2"
+    ],
+    "district": "Ares Central Repository",
+    "subregion": "Inner Access Ring",
+    "backgroundImage": "bg_prologue_ares_inner_vault",
+    "poiIds": [
+      "poi_prologue_decontamination_hall",
+      "poi_prologue_research_annex",
+      "poi_prologue_security_nexus",
+      "poi_prologue_central_vault"
+    ],
+    "defaultPoiId": "poi_prologue_decontamination_hall",
+    "connectedMapIds": [
+      "map_prologue_ares_logistics"
+    ],
+    "ambientEtherLevel": 18,
+    "securityLevel": 4,
+    "controllingFactionId": "fac_ares_industries",
+    "recommendedLevel": 1,
+    "regions": [
+      {
+        "id": "reg_prologue_ares_inner_access",
+        "name": "Inner Access Ring",
+        "description": "A restricted research and security ring scarred by a failure no evacuation protocol contained.",
+        "securityLevel": 4,
+        "controllingFactionId": "fac_ares_industries",
+        "bounds": {
+          "x": 3,
+          "y": 5,
+          "width": 94,
+          "height": 90
+        },
+        "metadata": {}
+      }
+    ],
+    "metadata": {
+      "visualTheme": "ares-damaged-interior"
+    },
+    "routes": [
+      {
+        "id": "route_decon_annex",
+        "fromPoiId": "poi_prologue_decontamination_hall",
+        "toPoiId": "poi_prologue_research_annex",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_annex_nexus",
+        "fromPoiId": "poi_prologue_research_annex",
+        "toPoiId": "poi_prologue_security_nexus",
+        "bidirectional": true,
+        "travelCost": 1,
+        "travelTimeMinutes": 5,
+        "metadata": {}
+      },
+      {
+        "id": "route_nexus_vault",
+        "fromPoiId": "poi_prologue_security_nexus",
+        "toPoiId": "poi_prologue_central_vault",
+        "bidirectional": true,
+        "travelCost": 2,
+        "travelTimeMinutes": 8,
+        "metadata": {}
+      }
+    ],
+    "defaultTravelTimeMinutes": 5
   }
 ]

@@ -27,6 +27,7 @@ import {
   PostCombatResolution,
   Vector2D,
   EquipmentSlot,
+  MinigameResult,
 } from '@neon-ether/game-schema';
 import { DiceRoller, type RandomSource, TypedEventEmitter } from '@neon-ether/engine';
 import {
@@ -63,10 +64,13 @@ import { CombatEncounterEngine, ResolvedCombatPreview } from '../combat/combat-e
 import type { RuntimeTraceEvent, RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import { InventorySystem, InventoryCommandResult } from '../inventory/inventory-system.ts';
 import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
+import { NewGameInitializer, type CharacterCreationValidation } from './new-game-initializer.ts';
+import type { CharacterCreationSelection } from '@neon-ether/game-schema';
 import { CraftingSystem, type CraftingContext, type CraftingResult } from '../crafting/crafting-system.ts';
 import { EconomySystem, type ShopView, type TradeResult } from '../economy/economy-system.ts';
 import { WorldTimeSystem, type TimeAdvance, type TimeAdvanceResult } from '../time/world-time-system.ts';
 import { WeatherSystem, type ResolvedEnvironment } from '../weather/weather-system.ts';
+import{MatchValuesRuntime}from'../minigames/match-values-runtime.ts';
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   deserializeSaveGame,
@@ -136,6 +140,7 @@ export class GameSession {
   private economySystem: EconomySystem;
   private worldTimeSystem: WorldTimeSystem;
   private weatherSystem: WeatherSystem;
+  private minigameRuntime=new MatchValuesRuntime();
   public events: TypedEventEmitter<GameRuntimeEvents>;
 
   constructor(
@@ -189,6 +194,32 @@ export class GameSession {
 
   public getPlayerState(): PlayerState {
     return structuredClone(this.state.player);
+  }
+
+  public getCharacterCreationOptions() {
+    const initializer = new NewGameInitializer(this.contentRegistry);
+    return { definition: initializer.getDefinition(), backgrounds: this.contentRegistry.backgrounds.getAll(), perks: this.contentRegistry.perks.getAll() };
+  }
+  public validateCharacterCreation(selection: CharacterCreationSelection): CharacterCreationValidation {
+    return new NewGameInitializer(this.contentRegistry).validate(selection);
+  }
+  public initializeNewGame(selection: CharacterCreationSelection): CharacterCreationValidation {
+    const initializer = new NewGameInitializer(this.contentRegistry);
+    const validation = initializer.validate(selection);
+    if (!validation.valid) return validation;
+    this.state = initializer.initialize(selection);
+    this.outcomeEngine.bindState(this.state);
+    this.inventorySystem.hydrate(this.state);
+    this.weatherSystem.update(this.state);
+    const startingEventId = initializer.getDefinition()?.startingEventId;
+    if (startingEventId) this.startEvent(startingEventId, { type:'map', id:this.state.world.currentMapId });
+    this.events.emit('STATE_CHANGED', this.state);
+    return validation;
+  }
+  public previewCharacterCreation(selection: CharacterCreationSelection) {
+    const initializer = new NewGameInitializer(this.contentRegistry);
+    const validation = initializer.validate(selection);
+    return validation.valid ? initializer.preview(selection) : undefined;
   }
 
   public getInventoryWeight(): number { return this.inventorySystem.getWeight(this.state.player.inventory); }
@@ -390,7 +421,7 @@ export class GameSession {
       inventory: p.inventory.items.map((slot) => ({ ...slot })),
       portraitIcon: 'User',
       defaultBehavior: 'Idle',
-      abilityIds: this.contentRegistry.getCharacter(p.characterId)?.abilityIds ?? [],
+      abilityIds: [...new Set([...(this.contentRegistry.getCharacter(p.characterId)?.abilityIds??[]),...p.abilityIds])],
       traits: this.contentRegistry.getCharacter(p.characterId)?.traits ?? [],
       availabilityConditions: [],
     };
@@ -752,6 +783,9 @@ export class GameSession {
     this.reportTrace({ kind: 'OutcomeResolved', message: `Outcome resolved: ${outcome.type}`, details: { type: outcome.type } });
     this.events.emit('STATE_CHANGED', this.state);
   }
+  public selectMinigameCell(row:number,column:number){const session=this.state.world.activeMinigame;if(!session)return false;const ok=this.minigameRuntime.select(session,row,column);if(ok)this.events.emit('STATE_CHANGED',this.state);return ok}
+  public getMinigameSequenceStates(){const session=this.state.world.activeMinigame;if(!session)return{};const definition=this.contentRegistry.minigames.get(session.definitionId);return Object.fromEntries((definition?.targets??[]).map(t=>[t.id,this.minigameRuntime.sequenceState(session,t.values)]))}
+  public finishMinigame():MinigameResult|undefined{const session=this.state.world.activeMinigame;if(!session)return;const definition=this.contentRegistry.minigames.get(session.definitionId);if(!definition)return;const result=this.minigameRuntime.finish(session,definition);for(const target of definition.targets.filter(t=>result.completedSequenceIds.includes(t.id)))this.effectExecutor.executeBatch(target.effects,{state:this.state,contentRegistry:this.contentRegistry,random:this.diceRoller});const effects=result.status==='success'?definition.successEffects:result.status==='partialSuccess'?definition.partialEffects:definition.failureEffects;this.effectExecutor.executeBatch(effects,{state:this.state,contentRegistry:this.contentRegistry,random:this.diceRoller});const final=result.status==='success'?definition.successOutcome:result.status==='partialSuccess'?definition.partialOutcome:definition.failureOutcome;this.state.world.activeMinigame=null;this.outcomeEngine.resolveOutcome(final??{type:'returnToOrigin'},this.state,this.contentRegistry);this.events.emit('STATE_CHANGED',this.state);return result}
 
   public getActiveActionResolution(): ActionResolution | null {
     return this.outcomeEngine.getActiveActionResolution();
@@ -817,6 +851,15 @@ export class GameSession {
     return ok;
   }
 
+  public skipEvent(): boolean {
+    const eventId = this.state.world.activeEventId;
+    const event = eventId ? this.contentRegistry.getEvent(eventId) : undefined;
+    if (!event) return false;
+    const ok = this.eventRuntime.skipEvent(event, this.state, this.contentRegistry, (cat, txt) => this.logJournal(cat, txt));
+    if (ok) this.events.emit('STATE_CHANGED', this.state);
+    return ok;
+  }
+
   // --- Combat Encounter & Resolution Lifecycle ---
 
   public startCombatEncounter(encounterId: string, previewFirst: boolean = true, originContext?: OriginContext): boolean {
@@ -840,13 +883,32 @@ export class GameSession {
   public getCombatPreview(encounterId?: string): ResolvedCombatPreview | undefined {
     const id = encounterId ?? this.state.world.activeEncounterId;
     if (!id) return undefined;
-    return this.combatEncounterEngine.getEncounterPreview(id, this.state, this.contentRegistry);
+    if (this.state.combat.encounterId !== id || Object.keys(this.state.combat.combatants).length === 0) {
+      const prepared = this.turnBasedCombatEngine.createEncounter(id, this.state, false);
+      if (!prepared) return undefined;
+      this.state.combat = prepared;
+    }
+    return this.combatEncounterEngine.getEncounterPreview(id, this.state, this.contentRegistry, this.state.combat);
   }
 
   public attemptCombatEscape(encounterId?: string): { success: boolean; reason?: string } {
     const id = encounterId ?? this.state.world.activeEncounterId;
     if (!id) return { success: false, reason: 'No active combat encounter' };
+    const definition = this.contentRegistry.getEncounter(id);
+    const activeCombatant = this.state.combat.activeCombatantId ? this.state.combat.combatants[this.state.combat.activeCombatantId] : undefined;
+    const tacticalAttempt = this.state.world.mode === 'TacticalCombat';
+    const apCost = definition?.escapeRules.check?.apCost ?? 0;
+    if (tacticalAttempt && (!activeCombatant || activeCombatant.team !== 'Player')) return { success: false, reason: 'Retreat can only be attempted on a player turn.' };
+    if (tacticalAttempt && activeCombatant.currentAp < apCost) return { success: false, reason: 'Not enough AP to attempt retreat.' };
+    if (tacticalAttempt) activeCombatant.currentAp -= apCost;
     const res = this.combatEncounterEngine.attemptEscape(id, this.state, this.contentRegistry, (cat, txt) => this.logJournal(cat, txt));
+    if (tacticalAttempt && !res.success && activeCombatant.currentAp === 0) {
+      const ended = this.turnBasedCombatEngine.execute(this.state.combat, { type: 'EndTurn', actorId: activeCombatant.id });
+      if (ended.success) {
+        this.state.combat = ended.state;
+        this.resolvePendingAiTurns();
+      }
+    }
     if(res.statCheck)this.reportTrace({kind:'SkillCheck',message:`Combat escape check: ${res.statCheck.outcome}`,details:{encounterId:id,skill:'escape',difficulty:res.statCheck.difficulty,targetDc:res.statCheck.targetDc,roll:res.statCheck.diceRoll.total,result:res.statCheck.outcome,passed:res.statCheck.isPassed}});
     if(res.success)this.reportTrace({kind:'CombatCompleted',message:`Combat escaped: ${id}`,details:{encounterId:id,outcome:'Escape',turns:this.state.combat.roundNumber,damageDealt:0,damageReceived:0,remainingHp:{[this.state.player.characterId]:this.state.player.vitals.currentHp},injuries:[],xp:0,lootValue:0}});
     this.events.emit('STATE_CHANGED', this.state);
@@ -861,9 +923,15 @@ export class GameSession {
     for (const modifier of definition.modifiers) {
       if (this.evaluateConditions(modifier.conditions).allMet) this.executeEffects(modifier.effects);
     }
-    const combat = this.turnBasedCombatEngine.createEncounter(id, this.state);
+    const combat = this.state.combat.encounterId === id && Object.keys(this.state.combat.combatants).length > 0
+      ? structuredClone(this.state.combat)
+      : this.turnBasedCombatEngine.createEncounter(id, this.state);
     const ok = combat !== undefined;
     if (combat) {
+      combat.isActive = true;
+      combat.phase = 'ACTIVE';
+      combat.activeCombatantId = combat.turnOrder[combat.activeTurnIndex] ?? null;
+      this.turnBasedCombatEngine.synchronizePlayer(combat, this.state);
       this.state.world.activeEncounterId = id;
       this.state.world.mode = 'TacticalCombat';
       this.state.combat = combat;
@@ -899,10 +967,36 @@ export class GameSession {
     return result;
   }
 
+  public getResolvedCombatCommands() {
+    const commands = this.turnBasedCombatEngine.getResolvedCommands(this.state.combat);
+    const encounter = this.state.combat.encounterId ? this.contentRegistry.getEncounter(this.state.combat.encounterId) : undefined;
+    if (!encounter || commands.actions.length === 0) return commands;
+    const escapeConditionsMet = this.evaluateConditions(encounter.escapeRules.conditions).allMet;
+    const actor = commands.actorId ? this.state.combat.combatants[commands.actorId] : undefined;
+    const escapeApCost = encounter.escapeRules.check?.apCost ?? 0;
+    commands.actions.push({
+      id: 'attempt-flee',
+      type: 'AttemptFlee',
+      category: 'Support',
+      label: 'Attempt Flee',
+      apCost: escapeApCost,
+      etherCost: 0,
+      targetIds: [],
+      disabledReason: encounter.escapeRules.allowed && escapeConditionsMet && (actor?.currentAp ?? 0) >= escapeApCost
+        ? undefined
+        : encounter.escapeRules.allowed && escapeConditionsMet
+          ? 'Not enough AP to attempt retreat.'
+        : encounter.escapeRules.disabledReason ?? 'Retreat is unavailable.',
+    });
+    return commands;
+  }
+
   private resolvePendingAiTurns(): void {
     let guard = 0;
-    while (this.state.combat.isActive && guard < 50) {
-      const activeId = this.state.combat.turnOrder[this.state.combat.activeTurnIndex];
+    const maximumActions = Math.max(32, this.state.combat.turnOrder.length * 16);
+    while (this.state.combat.isActive && guard < maximumActions) {
+      const activeId = this.state.combat.activeCombatantId;
+      if (!activeId) break;
       if (this.state.combat.combatants[activeId]?.team !== 'Enemy') break;
       const aiAction = this.turnBasedCombatEngine.chooseAIAction(this.state.combat);
       if (!aiAction) break;
@@ -913,6 +1007,16 @@ export class GameSession {
       const damageDealt=Object.values(this.state.combat.combatants).filter((unit)=>unit.team==='Player').reduce((sum,unit)=>sum+Math.max(0,(before[unit.id]?.currentHp??unit.currentHp)-unit.currentHp),0);
       this.reportTrace({kind:'CombatAction',message:`Combat AI action: ${aiAction.type}`,details:{encounterId:this.state.combat.encounterId,action:aiAction,round:this.state.combat.roundNumber,damageDealt,damageReceived:0,actorTeam:'Enemy'}});
       guard += 1;
+    }
+    // A broken AI policy may not hold an ACTIVE combat hostage indefinitely.
+    let forcedTransitions = 0;
+    while (this.state.combat.isActive && forcedTransitions < this.state.combat.turnOrder.length) {
+      const activeId = this.state.combat.activeCombatantId;
+      if (!activeId || this.state.combat.combatants[activeId]?.team !== 'Enemy') break;
+      const forced = this.turnBasedCombatEngine.execute(this.state.combat, { type: 'EndTurn', actorId: activeId });
+      if (!forced.success) break;
+      this.state.combat = forced.state;
+      forcedTransitions += 1;
     }
   }
 

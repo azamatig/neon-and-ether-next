@@ -20,7 +20,7 @@ export interface ResolvedCombatCommands {
 
 export interface ResolvedCombatAction {
   id: string;
-  type: 'WeaponAttack' | 'MeleeAttack' | 'Ability' | 'Move' | 'EndTurn';
+  type: 'WeaponAttack' | 'MeleeAttack' | 'Ability' | 'Move' | 'AttemptFlee' | 'EndTurn';
   category: 'Attacks' | 'Skills' | 'Support';
   label: string;
   apCost: number;
@@ -466,9 +466,12 @@ export class TurnBasedCombatEngine {
   }
 
   private updateOutcome(state: CombatState): void {
-    const living = Object.values(state.combatants).filter((combatant) => !combatant.isDefeated);
-    if (!living.some((combatant) => combatant.team === 'Enemy')) state.outcome = 'Victory';
-    if (!living.some((combatant) => combatant.team === 'Player')) state.outcome = 'Defeat';
+    const canContinue = (combatant: Combatant) => !combatant.isDefeated
+      && !combatant.isIncapacitated
+      && combatant.resolutionState === 'Alive';
+    const combatCapable = Object.values(state.combatants).filter(canContinue);
+    if (!combatCapable.some((combatant) => combatant.team === 'Enemy')) state.outcome = 'Victory';
+    if (!combatCapable.some((combatant) => combatant.team === 'Player')) state.outcome = 'Defeat';
     state.isActive = state.outcome === null;
     state.phase = state.outcome === 'Victory' ? 'VICTORY' : state.outcome === 'Defeat' ? 'DEFEAT' : 'ACTIVE';
     if (!state.isActive) state.activeCombatantId = null;

@@ -28,7 +28,8 @@
     "test:combat-grid": "bun scripts/test-combat-grid.ts",
     "test:combat-abilities": "bun scripts/test-combat-abilities.ts",
     "test:combat-ai": "bun scripts/test-combat-ai-movement.ts",
-    "test:combat-resolution": "bun scripts/test-combat-resolution.ts"
+    "test:combat-resolution": "bun scripts/test-combat-resolution.ts",
+    "test:combat-victory-escape": "bun scripts/test-combat-victory-escape.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

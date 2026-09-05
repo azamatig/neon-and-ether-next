@@ -894,7 +894,21 @@ export class GameSession {
   public attemptCombatEscape(encounterId?: string): { success: boolean; reason?: string } {
     const id = encounterId ?? this.state.world.activeEncounterId;
     if (!id) return { success: false, reason: 'No active combat encounter' };
+    const definition = this.contentRegistry.getEncounter(id);
+    const activeCombatant = this.state.combat.activeCombatantId ? this.state.combat.combatants[this.state.combat.activeCombatantId] : undefined;
+    const tacticalAttempt = this.state.world.mode === 'TacticalCombat';
+    const apCost = definition?.escapeRules.check?.apCost ?? 0;
+    if (tacticalAttempt && (!activeCombatant || activeCombatant.team !== 'Player')) return { success: false, reason: 'Retreat can only be attempted on a player turn.' };
+    if (tacticalAttempt && activeCombatant.currentAp < apCost) return { success: false, reason: 'Not enough AP to attempt retreat.' };
+    if (tacticalAttempt) activeCombatant.currentAp -= apCost;
     const res = this.combatEncounterEngine.attemptEscape(id, this.state, this.contentRegistry, (cat, txt) => this.logJournal(cat, txt));
+    if (tacticalAttempt && !res.success && activeCombatant.currentAp === 0) {
+      const ended = this.turnBasedCombatEngine.execute(this.state.combat, { type: 'EndTurn', actorId: activeCombatant.id });
+      if (ended.success) {
+        this.state.combat = ended.state;
+        this.resolvePendingAiTurns();
+      }
+    }
     if(res.statCheck)this.reportTrace({kind:'SkillCheck',message:`Combat escape check: ${res.statCheck.outcome}`,details:{encounterId:id,skill:'escape',difficulty:res.statCheck.difficulty,targetDc:res.statCheck.targetDc,roll:res.statCheck.diceRoll.total,result:res.statCheck.outcome,passed:res.statCheck.isPassed}});
     if(res.success)this.reportTrace({kind:'CombatCompleted',message:`Combat escaped: ${id}`,details:{encounterId:id,outcome:'Escape',turns:this.state.combat.roundNumber,damageDealt:0,damageReceived:0,remainingHp:{[this.state.player.characterId]:this.state.player.vitals.currentHp},injuries:[],xp:0,lootValue:0}});
     this.events.emit('STATE_CHANGED', this.state);
@@ -954,7 +968,27 @@ export class GameSession {
   }
 
   public getResolvedCombatCommands() {
-    return this.turnBasedCombatEngine.getResolvedCommands(this.state.combat);
+    const commands = this.turnBasedCombatEngine.getResolvedCommands(this.state.combat);
+    const encounter = this.state.combat.encounterId ? this.contentRegistry.getEncounter(this.state.combat.encounterId) : undefined;
+    if (!encounter || commands.actions.length === 0) return commands;
+    const escapeConditionsMet = this.evaluateConditions(encounter.escapeRules.conditions).allMet;
+    const actor = commands.actorId ? this.state.combat.combatants[commands.actorId] : undefined;
+    const escapeApCost = encounter.escapeRules.check?.apCost ?? 0;
+    commands.actions.push({
+      id: 'attempt-flee',
+      type: 'AttemptFlee',
+      category: 'Support',
+      label: 'Attempt Flee',
+      apCost: escapeApCost,
+      etherCost: 0,
+      targetIds: [],
+      disabledReason: encounter.escapeRules.allowed && escapeConditionsMet && (actor?.currentAp ?? 0) >= escapeApCost
+        ? undefined
+        : encounter.escapeRules.allowed && escapeConditionsMet
+          ? 'Not enough AP to attempt retreat.'
+        : encounter.escapeRules.disabledReason ?? 'Retreat is unavailable.',
+    });
+    return commands;
   }
 
   private resolvePendingAiTurns(): void {

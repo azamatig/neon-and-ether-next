@@ -9,12 +9,13 @@ export interface TurnBasedCombatScreenProps {
   abilities: Ability[];
   items: Item[];
   onCommand: (command: CombatAction) => void;
+  onAttemptFlee: () => void;
 }
 
 type ActionCategory = 'Attacks' | 'Skills' | 'Support';
 
 /** Pure tactical presentation: legal cells and targets are resolved by the combat runtime. */
-export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, abilities, items, onCommand }) => {
+export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, abilities, items, onCommand, onAttemptFlee }) => {
   const [category, setCategory] = useState<ActionCategory>('Attacks');
   const [selectedActionId, setSelectedActionId] = useState('attack.weapon');
   const activeId = state.activeCombatantId ?? state.turnOrder[state.activeTurnIndex];
@@ -70,7 +71,8 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
           <nav>{(['Attacks','Skills','Support'] as ActionCategory[]).map((value)=><button key={value} className={category===value?'is-selected':''} onClick={()=>setCategory(value)}>{value.toUpperCase()}</button>)}</nav>
           {commands.actions.filter((action)=>action.category===category).map((action)=><button key={action.id} className={selectedActionId===action.id?'is-selected':''} disabled={actor?.team!=='Player'||!state.isActive||Boolean(action.disabledReason)} title={action.disabledReason} onClick={()=>{
             if(action.type==='EndTurn'){if(actor)onCommand({type:'EndTurn',actorId:actor.id});return} setSelectedActionId(action.id);
-          }}>{action.type==='Move'?<Footprints/>:action.type==='EndTurn'?<SkipForward/>:action.type==='Ability'?<Zap/>:<Swords/>}{action.label}<small>{action.apCost} AP{action.etherCost?` · ${action.etherCost} ETH`:''}</small></button>)}
+            if(action.type==='AttemptFlee'){onAttemptFlee();return}
+          }}>{action.type==='Move'||action.type==='AttemptFlee'?<Footprints/>:action.type==='EndTurn'?<SkipForward/>:action.type==='Ability'?<Zap/>:<Swords/>}{action.label}<small>{action.apCost} AP{action.etherCost?` · ${action.etherCost} ETH`:''}</small></button>)}
         </div>
         <div className="combat-status"><strong>{selectedAction?.type==='Move'?'SELECT A HIGHLIGHTED CELL':'SELECT A HIGHLIGHTED TARGET'}</strong><span>{selectedAction?.type==='Move'?commands.legalMoves.length:targetIds.length} valid options</span></div>
         <div className="combat-log"><h3>COMBAT LOG</h3>{state.log.slice(-6).reverse().map((entry)=><p key={entry.id}><span>R{entry.round}</span> {entry.message}</p>)}</div>

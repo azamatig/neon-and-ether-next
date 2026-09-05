@@ -56,4 +56,8 @@ if (!rangedAction?.targetIds.includes(enemy.id) || rangedAction.weaponId !== 'wp
 const shot = engine.execute(ranged, { type: 'RangedAttack', weaponId: 'wpn_thermal_pistol', actorId: actor.id, targetId: enemy.id });
 if (!shot.success || shot.state.combatants[actor.id].currentAp !== 5) throw new Error('Ranged weapon AP cost was not applied.');
 if (shot.state.combatants[enemy.id].defeatType !== 'Lethal' || shot.state.combatants[enemy.id].isIncapacitated) throw new Error('Lethal ranged damage did not produce a dead combatant.');
+if (shot.state.combatants[enemy.id].resolutionState !== 'Dead') throw new Error('Lethal ranged damage did not record a dead resolution state.');
+const mechanical = structuredClone(move.state); mechanical.combatants[enemy.id].sourceId = 'enm_prologue_ares_security_drone'; mechanical.combatants[enemy.id].currentHp = 1;
+const destroyed = engine.execute(mechanical, { type: 'MeleeAttack', weaponId: actor.weaponId, actorId: actor.id, targetId: enemy.id });
+if (!destroyed.success || destroyed.state.combatants[enemy.id].resolutionState !== 'Destroyed' || destroyed.state.combatants[enemy.id].isIncapacitated) throw new Error('Mechanical defeat did not resolve as destroyed.');
 console.log('Combat grid movement, terrain cost, occupancy, and target range passed.');

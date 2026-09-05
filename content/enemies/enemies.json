@@ -62,6 +62,7 @@
     "tags": [
       "Robot",
       "Drone",
+      "Mechanical",
       "OmniCorp"
     ],
     "factionId": "fac_omnicorp",
@@ -284,7 +285,8 @@
       "Ares",
       "Security",
       "Drone",
-      "Robot"
+      "Robot",
+      "Mechanical"
     ],
     "factionId": "fac_ares_industries",
     "level": 1,

@@ -8,6 +8,7 @@ import {
   CombatEncounter,
   CombatIncapacitatedEnemy,
   CombatResolution,
+  CombatResolvedEnemy,
   CombatState,
   Enemy,
   EscapeRules,
@@ -268,38 +269,35 @@ export class CombatEncounterEngine {
     const maxCred = encounter?.creditsReward.max ?? 180;
     const creditsFound = this.diceRoller.integer(minCred,maxCred);
 
-    // 3. Enemy casualties and surviving incapacitated enemies
+    // 3. Project the tactical outcome; never regenerate or invent survivors here.
     const enemyCasualties: { enemyId: string; name: string; count: number }[] = [];
     const incapacitatedEnemies: CombatIncapacitatedEnemy[] = [];
-
-    if (encounter?.enemyGroups) {
-      for (let i = 0; i < encounter.enemyGroups.length; i++) {
-        const grp = encounter.enemyGroups[i];
-        const enemyDef = contentRegistry.getEnemy(grp.enemyId);
-        const name = grp.nameOverride ?? enemyDef?.name ?? 'Hostile Raider';
-
-        enemyCasualties.push({
-          enemyId: grp.enemyId,
-          name,
-          count: grp.count,
-        });
-
-        // Chance of an incapacitated/surrendered survivor if humanoid
-        if (i === 0) {
-          incapacitatedEnemies.push({
-            id: `inc_${grp.enemyId}_01`,
-            enemyId: grp.enemyId,
-            name: `${name} Squad Leader`,
-            portrait: enemyDef?.portraitIcon ?? 'User',
-            status: 'Incapacitated',
-            canBeInterrogated: true,
-            canBeCaptured: true,
-            canBeSearched: true,
-            intelAvailable: 'Encrypted Syndicate frequency chip recovered.',
-          });
-        }
+    const deadEnemies: CombatResolvedEnemy[] = [];
+    const surrenderedEnemies: CombatResolvedEnemy[] = [];
+    const escapedEnemies: CombatResolvedEnemy[] = [];
+    const destroyedEnemies: CombatResolvedEnemy[] = [];
+    const enemies = Object.values(state.combat.combatants).filter((combatant) => combatant.team === 'Enemy');
+    for (const combatant of enemies) {
+      const enemyDef = contentRegistry.getEnemy(combatant.sourceId);
+      const resolved = { id: combatant.id, enemyId: combatant.sourceId, name: combatant.name, portrait: enemyDef?.portraitIcon };
+      const resolutionState = combatant.resolutionState === 'Alive' && combatant.isDefeated
+        ? enemyDef?.tags.includes('Mechanical') ? 'Destroyed' : combatant.defeatType === 'NonLethal' ? 'Incapacitated' : 'Dead'
+        : combatant.resolutionState;
+      if (resolutionState === 'Dead') deadEnemies.push(resolved);
+      if (resolutionState === 'Destroyed') destroyedEnemies.push(resolved);
+      if (resolutionState === 'Escaped') escapedEnemies.push(resolved);
+      if (resolutionState === 'Surrendered') surrenderedEnemies.push(resolved);
+      if ((resolutionState === 'Incapacitated' || resolutionState === 'Surrendered') && enemyDef?.tags.includes('HasMind')) {
+        incapacitatedEnemies.push({ ...resolved, status: resolutionState, canBeInterrogated: true, canBeCaptured: true, canBeSearched: true });
       }
     }
+    const casualtiesByEnemy = new Map<string, { enemyId: string; name: string; count: number }>();
+    for (const enemy of [...deadEnemies, ...destroyedEnemies]) {
+      const casualty = casualtiesByEnemy.get(enemy.enemyId);
+      if (casualty) casualty.count += 1;
+      else casualtiesByEnemy.set(enemy.enemyId, { enemyId: enemy.enemyId, name: enemy.name, count: 1 });
+    }
+    enemyCasualties.push(...casualtiesByEnemy.values());
 
     const resolution: CombatResolution = {
       encounterId,
@@ -315,6 +313,10 @@ export class CombatEncounterEngine {
       deadCompanions: [],
       enemyCasualties,
       incapacitatedEnemies,
+      deadEnemies,
+      surrenderedEnemies,
+      escapedEnemies,
+      destroyedEnemies,
       resourcesFound: { techScrap: 12, etherCells: 4 },
       availableLoot,
       creditsFound,
@@ -368,6 +370,10 @@ export class CombatEncounterEngine {
       deadCompanions: [],
       enemyCasualties: [],
       incapacitatedEnemies: [],
+      deadEnemies: [],
+      surrenderedEnemies: [],
+      escapedEnemies: [],
+      destroyedEnemies: [],
       resourcesFound: {},
       availableLoot: [],
       creditsFound: 0,

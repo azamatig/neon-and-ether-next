@@ -46,7 +46,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
       <div><p>COMBAT GRID</p><h2>{state.encounterId?.replaceAll('_', ' ')}</h2></div>
       <span>ROUND {state.roundNumber} · TURN {state.activeTurnIndex + 1}/{state.turnOrder.length}</span>
     </header>
-    <div className="combat-turn-order"><strong>TURN ORDER</strong>{state.turnOrder.map((id) => { const unit=state.combatants[id]; return <span key={id} className={`${id===activeId?'is-active':''} ${unit?.team==='Enemy'?'is-enemy':''} ${unit?.isDefeated?'is-defeated':''} ${unit?.isIncapacitated?'is-incapacitated':''}`}>{unit?.name}{unit?.defeatType==='NonLethal'?' · INCAPACITATED':unit?.isDefeated?' · DEAD':unit?.isIncapacitated?' · INCAPACITATED':''}</span>; })}</div>
+    <div className="combat-turn-order"><strong>TURN ORDER</strong>{state.turnOrder.map((id) => { const unit=state.combatants[id]; return <span key={id} className={`${id===activeId?'is-active':''} ${unit?.team==='Enemy'?'is-enemy':''} ${unit?.isDefeated?'is-defeated':''} ${unit?.isIncapacitated?'is-incapacitated':''}`}>{unit?.name}{unit?.resolutionState==='Destroyed'?' · DESTROYED':unit?.resolutionState==='Incapacitated'?' · INCAPACITATED':unit?.resolutionState==='Surrendered'?' · SURRENDERED':unit?.isDefeated?' · DEAD':unit?.isIncapacitated?' · INCAPACITATED':''}</span>; })}</div>
     <div className="combat-grid-layout">
       <div className="combat-board" style={{ gridTemplateColumns: `repeat(${state.grid.width}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${state.grid.height}, minmax(58px, 1fr))` }}>
         {Array.from({ length: state.grid.width * state.grid.height }, (_, index) => {

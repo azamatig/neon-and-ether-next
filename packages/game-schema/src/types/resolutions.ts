@@ -96,6 +96,14 @@ export const CombatIncapacitatedEnemySchema = z.object({
 
 export type CombatIncapacitatedEnemy = z.infer<typeof CombatIncapacitatedEnemySchema>;
 
+export const CombatResolvedEnemySchema = z.object({
+  id: z.string(),
+  enemyId: z.string(),
+  name: z.string(),
+  portrait: z.string().optional(),
+});
+export type CombatResolvedEnemy = z.infer<typeof CombatResolvedEnemySchema>;
+
 export const CombatResolutionSchema = z.object({
   encounterId: z.string(),
   encounterName: z.string(),
@@ -118,6 +126,10 @@ export const CombatResolutionSchema = z.object({
     )
     .default([]),
   incapacitatedEnemies: z.array(CombatIncapacitatedEnemySchema).default([]),
+  deadEnemies: z.array(CombatResolvedEnemySchema).default([]),
+  surrenderedEnemies: z.array(CombatResolvedEnemySchema).default([]),
+  escapedEnemies: z.array(CombatResolvedEnemySchema).default([]),
+  destroyedEnemies: z.array(CombatResolvedEnemySchema).default([]),
   resourcesFound: z.record(z.string(), z.number()).default({}),
   availableLoot: z.array(InventoryItemSlotSchema).default([]),
   creditsFound: z.number().int().default(0),

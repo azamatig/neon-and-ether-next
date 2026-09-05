@@ -88,6 +88,7 @@ export const CombatantSchema = z.object({
   isDefeated: z.boolean().default(false),
   isIncapacitated: z.boolean().default(false),
   defeatType: z.enum(['Lethal', 'NonLethal']).nullable().optional(),
+  resolutionState: z.enum(['Alive', 'Dead', 'Incapacitated', 'Surrendered', 'Escaped', 'Destroyed']).default('Alive'),
   position: CombatGridPositionSchema.default({ x: 0, y: 0 }),
   movementRange: z.number().int().min(1).default(3),
   movementRemaining: z.number().int().min(0).default(3),

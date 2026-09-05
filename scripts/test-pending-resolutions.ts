@@ -38,6 +38,13 @@ assert.deepEqual(restoredLootSession.getRandomState(), rngAtSave);
 // A surviving enemy's mutable post-combat options are part of the pending
 // resolution. They remain changed after load instead of being regenerated.
 const prisonerSession = createSession(17);
+assert.equal(prisonerSession.startCombatEncounter(ENCOUNTER_ID, false), true);
+assert.equal(prisonerSession.startTacticalCombat(), true);
+const prisonerSave = JSON.parse(prisonerSession.serializeSave(false));
+const tacticalSurvivor = Object.values(prisonerSave.state.combat.combatants as Record<string, any>).find((unit: any) => unit.team === 'Enemy') as any;
+assert.ok(tacticalSurvivor);
+Object.assign(tacticalSurvivor, { currentHp: 0, isDefeated: true, isIncapacitated: true, defeatType: 'NonLethal', resolutionState: 'Incapacitated' });
+assert.equal(prisonerSession.loadSave(prisonerSave).success, true);
 const prisonerVictory = prisonerSession.resolveCombatVictory(ENCOUNTER_ID, 2);
 const survivorId = prisonerVictory?.incapacitatedEnemies[0]?.id;
 assert.ok(survivorId);

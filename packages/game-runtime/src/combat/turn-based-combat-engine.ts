@@ -113,6 +113,7 @@ export class TurnBasedCombatEngine {
         ],
         isDefeated: false,
         isIncapacitated: false, defeatType: null,
+        resolutionState: 'Alive',
         position: claimDeployment('Player', 0),
         movementRange: 3,
         movementRemaining: 3,
@@ -138,7 +139,7 @@ export class TurnBasedCombatEngine {
         initiative: effective.derivedStats.initiative, armor: effective.derivedStats.armorRating,
         weaponId: equipped.find((item) => item.category === 'weapon')?.id,
         armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
-        abilityIds: [...abilities], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null,
+        abilityIds: [...abilities], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null, resolutionState: 'Alive',
         position: claimDeployment('Player', index + 1), movementRange: 3, movementRemaining: 3,
       };
     });
@@ -161,7 +162,7 @@ export class TurnBasedCombatEngine {
           currentAp: effectiveEnemy.derivedStats.actionPointsMax, maxAp: effectiveEnemy.derivedStats.actionPointsMax,
           initiative: effectiveEnemy.derivedStats.initiative, armor: effectiveEnemy.derivedStats.armorRating,
           weaponId: enemy.equippedWeaponId, armorItemIds: [], abilityIds: enemy.abilityIds,
-          aiProfileId: enemy.combatAIProfileId, statuses: enemy.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false,
+          aiProfileId: enemy.combatAIProfileId, statuses: enemy.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, resolutionState: 'Alive',
           position: deployment, movementRange: 3, movementRemaining: 3,
         };
       }
@@ -400,7 +401,8 @@ export class TurnBasedCombatEngine {
     target.isDefeated = target.currentHp === 0;
     if (target.isDefeated) {
       target.defeatType = defeatType;
-      target.isIncapacitated = defeatType === 'NonLethal';
+      target.resolutionState = this.resolveDefeatState(target, defeatType);
+      target.isIncapacitated = target.resolutionState === 'Incapacitated';
     }
     this.log(state, `${actor.name} uses ${label} on ${target.name} for ${damage} damage.`);
   }
@@ -453,7 +455,8 @@ export class TurnBasedCombatEngine {
       combatant.isDefeated = combatant.currentHp === 0;
       if (combatant.isDefeated) {
         combatant.defeatType = definition.damageDefeatType;
-        combatant.isIncapacitated = definition.damageDefeatType === 'NonLethal';
+        combatant.resolutionState = this.resolveDefeatState(combatant, definition.damageDefeatType);
+        combatant.isIncapacitated = combatant.resolutionState === 'Incapacitated';
       }
       active.remainingTurns -= 1;
       this.log(state, `${definition.name} affects ${combatant.name}.`);
@@ -503,8 +506,14 @@ export class TurnBasedCombatEngine {
 
   private refreshIncapacitation(combatant: Combatant): void {
     combatant.isIncapacitated = combatant.isDefeated
-      ? combatant.defeatType === 'NonLethal'
+      ? combatant.resolutionState === 'Incapacitated'
       : combatant.statuses.some((status) => this.content.getStatusEffect(status.statusEffectId)?.preventsTurn === true);
+  }
+
+  private resolveDefeatState(combatant: Combatant, defeatType: 'Lethal' | 'NonLethal'): Combatant['resolutionState'] {
+    const definition = this.content.getEnemy(combatant.sourceId) ?? this.content.getCharacter(combatant.sourceId);
+    if (definition?.tags.includes('Mechanical')) return 'Destroyed';
+    return defeatType === 'NonLethal' ? 'Incapacitated' : 'Dead';
   }
 
   private log(state: CombatState, message: string): void {

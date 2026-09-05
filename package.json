@@ -27,7 +27,8 @@
     "test:combat-turns": "bun scripts/test-combat-turn-state.ts",
     "test:combat-grid": "bun scripts/test-combat-grid.ts",
     "test:combat-abilities": "bun scripts/test-combat-abilities.ts",
-    "test:combat-ai": "bun scripts/test-combat-ai-movement.ts"
+    "test:combat-ai": "bun scripts/test-combat-ai-movement.ts",
+    "test:combat-resolution": "bun scripts/test-combat-resolution.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

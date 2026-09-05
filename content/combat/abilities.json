@@ -22,7 +22,8 @@
         "durationTurns": 2
       }
     ],
-    "icon": "Crosshair"
+    "icon": "Crosshair",
+    "rangeTiles": 7
   },
   {
     "id": "ability_arc_strike",
@@ -43,7 +44,8 @@
         "max": 16
       }
     ],
-    "icon": "Zap"
+    "icon": "Zap",
+    "rangeTiles": 1
   },
   {
     "id": "ability_ether_patch",
@@ -63,7 +65,8 @@
         "max": 14
       }
     ],
-    "icon": "Activity"
+    "icon": "Activity",
+    "rangeTiles": 4
   },
   {
     "id": "ability_mindmancer_read_mind",
@@ -90,7 +93,8 @@
     "requiredTargetTags": [
       "HasMind"
     ],
-    "excludedTargetTags": []
+    "excludedTargetTags": [],
+    "rangeTiles": 8
   },
   {
     "id": "ability_mindmancer_command",
@@ -117,7 +121,8 @@
     "requiredTargetTags": [
       "HasMind"
     ],
-    "excludedTargetTags": []
+    "excludedTargetTags": [],
+    "rangeTiles": 8
   },
   {
     "id": "ability_mindmancer_memory_fracture",
@@ -149,7 +154,8 @@
     "requiredTargetTags": [
       "HasMind"
     ],
-    "excludedTargetTags": []
+    "excludedTargetTags": [],
+    "rangeTiles": 8
   },
   {
     "id": "ability_mindmancer_suppression",
@@ -176,6 +182,7 @@
     "requiredTargetTags": [
       "HasMind"
     ],
-    "excludedTargetTags": []
+    "excludedTargetTags": [],
+    "rangeTiles": 8
   }
 ]

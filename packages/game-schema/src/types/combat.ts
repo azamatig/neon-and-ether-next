@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
+import { GridTileSchema } from './grid.ts';
 
 export const CombatTargetSchema = z.enum(['Enemy', 'Ally', 'Self']);
 export const AbilityEffectSchema = z.object({
@@ -18,6 +19,7 @@ export const AbilitySchema = BaseEntitySchema.extend({
   icon: z.string().default('Zap'),
   requiredTargetTags:z.array(z.string()).default([]),
   excludedTargetTags:z.array(z.string()).default([]),
+  rangeTiles: z.number().int().min(0).default(6),
 });
 export type Ability = z.infer<typeof AbilitySchema>;
 
@@ -51,6 +53,10 @@ export const CombatGridPositionSchema = z.object({
 export const CombatGridSchema = z.object({
   width: z.number().int().min(4).default(8),
   height: z.number().int().min(3).default(6),
+  movementApCost: z.number().int().min(1).default(1),
+  tiles: z.array(GridTileSchema).default([]),
+  playerDeployment: z.array(CombatGridPositionSchema).default([]),
+  enemyDeployment: z.array(CombatGridPositionSchema).default([]),
 });
 
 export const CombatantSchema = z.object({
@@ -101,6 +107,6 @@ export const CombatStateSchema = z.object({
   combatants: z.record(z.string(), CombatantSchema).default({}),
   log: z.array(CombatLogEntrySchema).default([]),
   outcome: z.enum(['Victory', 'Defeat']).nullable().default(null),
-  grid: CombatGridSchema.default({ width: 8, height: 6 }),
+  grid: CombatGridSchema.default({ width: 8, height: 6, movementApCost: 1, tiles: [], playerDeployment: [], enemyDeployment: [] }),
 });
 export type CombatState = z.infer<typeof CombatStateSchema>;

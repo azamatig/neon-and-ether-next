@@ -22,6 +22,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
   const targetIds = selected.type === 'Attack' ? commands.attackTargetIds : selected.type === 'Ability' ? commands.abilityTargetIds[selected.abilityId] ?? [] : [];
   const targetSet = useMemo(() => new Set(targetIds), [targetIds]);
   const occupants = useMemo(() => new Map((Object.values(state.combatants) as Combatant[]).map((unit) => [`${unit.position.x}:${unit.position.y}`, unit])), [state.combatants]);
+  const tiles = useMemo(() => new Map(state.grid.tiles.map((tile) => [`${tile.x}:${tile.y}`, tile])), [state.grid.tiles]);
   useEffect(() => { setSelected({ type: 'Attack' }); }, [activeId]);
 
   const selectCell = (x: number, y: number) => {
@@ -42,12 +43,12 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
     </header>
     <div className="combat-turn-order"><strong>TURN ORDER</strong>{state.turnOrder.map((id) => { const unit=state.combatants[id]; return <span key={id} className={`${id===activeId?'is-active':''} ${unit?.team==='Enemy'?'is-enemy':''}`}>{unit?.name}{unit?.isDefeated?' · DOWN':''}</span>; })}</div>
     <div className="combat-grid-layout">
-      <div className="combat-board" style={{ gridTemplateColumns: `repeat(${state.grid.width}, minmax(0, 1fr))` }}>
+      <div className="combat-board" style={{ gridTemplateColumns: `repeat(${state.grid.width}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${state.grid.height}, minmax(58px, 1fr))` }}>
         {Array.from({ length: state.grid.width * state.grid.height }, (_, index) => {
-          const x=index%state.grid.width; const y=Math.floor(index/state.grid.width); const key=`${x}:${y}`; const unit=occupants.get(key);
+          const x=index%state.grid.width; const y=Math.floor(index/state.grid.width); const key=`${x}:${y}`; const unit=occupants.get(key); const tile=tiles.get(key);
           const legalMove=selected.type==='Move'&&moveKeys.has(key); const legalTarget=Boolean(unit&&targetSet.has(unit.id));
-          return <button key={key} type="button" className={`combat-cell ${legalMove?'is-move':''} ${legalTarget?'is-target':''} ${unit?.team==='Player'?'has-player':''} ${unit?.team==='Enemy'?'has-enemy':''}`} onClick={()=>selectCell(x,y)} disabled={!legalMove&&!legalTarget} aria-label={unit ? `${unit.name}, ${unit.currentHp} HP` : `Grid ${x + 1}, ${y + 1}`}>
-            <small>{x+1},{y+1}</small>{unit&&<div className={`combat-unit ${unit.isDefeated?'is-defeated':''}`}><div className="combat-unit-icon">{unit.team==='Player'?<Shield/>:<Crosshair/>}</div><strong>{unit.name}</strong><span>{unit.currentHp}/{unit.maxHp} HP</span><i style={{width:`${unit.currentHp/unit.maxHp*100}%`}}/></div>}
+          return <button key={key} type="button" className={`combat-cell tile-${tile?.type?.toLowerCase()??'floor'} ${legalMove?'is-move':''} ${legalTarget?'is-target':''} ${unit?.team==='Player'?'has-player':''} ${unit?.team==='Enemy'?'has-enemy':''}`} onClick={()=>selectCell(x,y)} disabled={!legalMove&&!legalTarget} aria-label={unit ? `${unit.name}, ${unit.currentHp} HP` : `${tile?.description ?? tile?.type ?? 'Floor'}, grid ${x + 1}, ${y + 1}`}>
+            <small>{tile?.type==='Console'||tile?.type==='Door'?tile.type.toUpperCase():`${x+1},${y+1}`}</small>{unit&&<div className={`combat-unit ${unit.isDefeated?'is-defeated':''}`}><div className="combat-unit-icon">{unit.team==='Player'?<Shield/>:<Crosshair/>}</div><strong>{unit.name}</strong><span>{unit.currentHp}/{unit.maxHp} HP</span><i style={{width:`${unit.currentHp/unit.maxHp*100}%`}}/></div>}
           </button>;
         })}
       </div>
@@ -55,7 +56,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
         <div className="combat-actor"><span>{actor?.team==='Player'?'ACTIVE OPERATIVE':'HOSTILE TURN'}</span><strong>{actor?.name??'Resolving'}</strong><div><Activity/> AP {actor?.currentAp??0} <Zap/> ETH {actor?.currentEther??0} <Shield/> ARM {actor?.armor??0}</div></div>
         <div className="combat-commands"><h3>TACTICAL INTERFACE</h3>
           <button className={selected.type==='Attack'?'is-selected':''} disabled={!commands.attackTargetIds.length} onClick={()=>setSelected({type:'Attack'})}><Swords/> WEAPON ATTACK</button>
-          <button className={selected.type==='Move'?'is-selected':''} disabled={!commands.legalMoves.length} onClick={()=>setSelected({type:'Move'})}><Footprints/> MOVE <small>1 AP</small></button>
+          <button className={selected.type==='Move'?'is-selected':''} disabled={!commands.legalMoves.length} onClick={()=>setSelected({type:'Move'})}><Footprints/> MOVE <small>{state.grid.movementApCost} AP</small></button>
           {actor?.abilityIds.map((id)=>{const ability=abilityMap.get(id);if(!ability)return null;return <button key={id} className={selected.type==='Ability'&&selected.abilityId===id?'is-selected':''} disabled={!commands.abilityTargetIds[id]?.length} onClick={()=>setSelected({type:'Ability',abilityId:id})}><Zap/> {ability.name}<small>{ability.apCost} AP · {ability.etherCost} ETH</small></button>})}
           <button disabled={actor?.team!=='Player'||!state.isActive} onClick={()=>actor&&onCommand({type:'EndTurn',actorId:actor.id})}><SkipForward/> END TURN</button>
         </div>

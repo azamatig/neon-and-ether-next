@@ -12,7 +12,7 @@ export interface CombatCommandResult {
 
 export interface ResolvedCombatCommands {
   actorId?: string;
-  legalMoves: Array<{ x: number; y: number }>;
+  legalMoves: Array<{ x: number; y: number; cost: number }>;
   attackTargetIds: string[];
   abilityTargetIds: Record<string, string[]>;
 }
@@ -40,6 +40,24 @@ export class TurnBasedCombatEngine {
     const weapon = equippedItems.find((item) => item.category === 'weapon');
     const armor = equippedItems.filter((item) => item.category === 'armor');
     const effectivePlayer = new CharacterStatsSystem().resolve(gameState.player);
+    const grid = encounter.tacticalGrid ?? {
+      width: 8, height: 6, movementApCost: 1, tiles: [], playerDeployment: [], enemyDeployment: [],
+    };
+    const blocked = new Set(grid.tiles.filter((tile) => tile.type === 'Wall').map((tile) => `${tile.x}:${tile.y}`));
+    const deployed = new Set<string>();
+    const claimDeployment = (team: 'Player' | 'Enemy', index: number): { x: number; y: number } => {
+      const authored = (team === 'Player' ? grid.playerDeployment : grid.enemyDeployment)[index];
+      const generated = Array.from({ length: grid.width * grid.height }, (_, ordinal) => ({
+        x: team === 'Player' ? Math.floor(ordinal / grid.height) : grid.width - 1 - Math.floor(ordinal / grid.height),
+        y: ordinal % grid.height,
+      }));
+      const position = [authored, ...generated].find((candidate) => candidate
+        && candidate.x >= 0 && candidate.y >= 0 && candidate.x < grid.width && candidate.y < grid.height
+        && !blocked.has(`${candidate.x}:${candidate.y}`) && !deployed.has(`${candidate.x}:${candidate.y}`));
+      if (!position) throw new Error(`Combat grid ${encounterId} has no free deployment cell for ${team}.`);
+      deployed.add(`${position.x}:${position.y}`);
+      return position;
+    };
     const combatants: Record<string, Combatant> = {
       [gameState.player.characterId]: {
         id: gameState.player.characterId,
@@ -59,13 +77,12 @@ export class TurnBasedCombatEngine {
         abilityIds: [...playerAbilities],
         statuses: [],
         isDefeated: false,
-        position: { x: 0, y: 2 },
+        position: claimDeployment('Player', 0),
         movementRange: 3,
       },
     };
 
-    const partyDeployment = [{ x: 0, y: 1 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 1, y: 0 }, { x: 1, y: 5 }];
-    gameState.companions.slice(0, partyDeployment.length).forEach((npcId, index) => {
+    gameState.companions.forEach((npcId, index) => {
       const npc = this.content.getNPC(npcId);
       const runtime = gameState.npcs[npcId];
       if (!npc || runtime?.isAlive === false) return;
@@ -82,7 +99,7 @@ export class TurnBasedCombatEngine {
         weaponId: equipped.find((item) => item.category === 'weapon')?.id,
         armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
         abilityIds: npc.abilityIds, statuses: [], isDefeated: false,
-        position: partyDeployment[index], movementRange: 3,
+        position: claimDeployment('Player', index + 1), movementRange: 3,
       };
     });
 
@@ -93,7 +110,7 @@ export class TurnBasedCombatEngine {
       const effectiveEnemy = new CharacterStatsSystem().resolve(enemy);
       for (let index = 0; index < group.count; index += 1) {
         const id = `enemy_${groupIndex}_${index}`;
-        const deployment = { x: 7 - Math.floor(enemyDeploymentIndex / 6), y: enemyDeploymentIndex % 6 };
+        const deployment = claimDeployment('Enemy', enemyDeploymentIndex);
         enemyDeploymentIndex += 1;
         combatants[id] = {
           id, sourceId: enemy.id, name: group.nameOverride ?? enemy.name, team: 'Enemy',
@@ -115,7 +132,7 @@ export class TurnBasedCombatEngine {
       encounterId, isActive: active, phase: active ? 'ACTIVE' : 'PREPARING', roundNumber: 1,
       turnOrder, activeTurnIndex: 0, activeCombatantId: active ? turnOrder[0] ?? null : null,
       combatants, log: [{ id: 'combat_start', round: 1, message: `${encounter.name} engaged.` }], outcome: null,
-      grid: { width: 8, height: 6 },
+      grid,
     };
   }
 
@@ -126,24 +143,22 @@ export class TurnBasedCombatEngine {
     this.repairTurnState(state);
     const actorId = state.activeCombatantId ?? undefined;
     const actor = actorId ? state.combatants[actorId] : undefined;
-    if (!actor || actor.team !== 'Player' || actor.isDefeated || !state.isActive) {
+    if (!actor || actor.isDefeated || !state.isActive) {
       return { actorId, legalMoves: [], attackTargetIds: [], abilityTargetIds: {} };
     }
     const occupied = new Set(Object.values(state.combatants).filter((unit) => !unit.isDefeated).map((unit) => `${unit.position.x}:${unit.position.y}`));
-    const legalMoves: Array<{ x: number; y: number }> = [];
-    if (actor.currentAp > 0) {
-      for (let y = 0; y < state.grid.height; y += 1) for (let x = 0; x < state.grid.width; x += 1) {
-        const distance = Math.abs(actor.position.x - x) + Math.abs(actor.position.y - y);
-        if (distance > 0 && distance <= actor.movementRange && !occupied.has(`${x}:${y}`)) legalMoves.push({ x, y });
-      }
-    }
+    const legalMoves = actor.currentAp >= state.grid.movementApCost
+      ? this.resolveReachableCells(state, actor, occupied)
+      : [];
     const living = Object.values(state.combatants).filter((unit) => !unit.isDefeated);
-    const attackTargetIds = living.filter((unit) => unit.team !== actor.team).map((unit) => unit.id);
+    const weapon = actor.weaponId ? this.content.getItem(actor.weaponId) : undefined;
+    const attackRange = weapon?.rangeTiles ?? 1;
+    const attackTargetIds = living.filter((unit) => unit.team !== actor.team && this.distance(actor, unit) <= attackRange).map((unit) => unit.id);
     const abilityTargetIds: Record<string, string[]> = {};
     for (const abilityId of actor.abilityIds) {
       const ability = this.content.getAbility(abilityId);
       if (!ability || actor.currentAp < ability.apCost || actor.currentEther < ability.etherCost) continue;
-      abilityTargetIds[abilityId] = living.filter((target) => !this.validateAbilityTarget(actor, target, ability)).map((target) => target.id);
+      abilityTargetIds[abilityId] = living.filter((target) => this.distance(actor, target) <= ability.rangeTiles && !this.validateAbilityTarget(actor, target, ability)).map((target) => target.id);
     }
     return { actorId, legalMoves, attackTargetIds, abilityTargetIds };
   }
@@ -175,7 +190,7 @@ export class TurnBasedCombatEngine {
       const legal = this.getResolvedCommands(state).legalMoves.some((position) => position.x === action.position.x && position.y === action.position.y);
       if (!legal) return { success: false, state, reason: 'Destination is unavailable.' };
       actor.position = action.position;
-      actor.currentAp -= 1;
+      actor.currentAp -= state.grid.movementApCost;
       this.log(state, `${actor.name} repositions.`);
       if (actor.currentAp === 0) this.advanceTurn(state);
       return { success: true, state };
@@ -185,6 +200,7 @@ export class TurnBasedCombatEngine {
 
     if (action.type === 'Attack') {
       if (actor.team === target.team) return { success: false, state, reason: 'Attack requires an enemy target.' };
+      if (!this.getResolvedCommands(state).attackTargetIds.includes(target.id)) return { success: false, state, reason: 'Target is out of range.' };
       const weapon = actor.weaponId ? this.content.getItem(actor.weaponId) : undefined;
       const apCost = weapon?.apUseCost ?? 2;
       if (actor.currentAp < apCost) return { success: false, state, reason: 'Not enough AP.' };
@@ -196,6 +212,7 @@ export class TurnBasedCombatEngine {
       if (!ability) return { success: false, state, reason: 'Ability is unavailable.' };
       const targetError = this.validateAbilityTarget(actor, target, ability);
       if (targetError) return { success: false, state, reason: targetError };
+      if (!this.getResolvedCommands(state).abilityTargetIds[ability.id]?.includes(target.id)) return { success: false, state, reason: 'Target is out of range.' };
       if (actor.currentAp < ability.apCost || actor.currentEther < ability.etherCost) {
         return { success: false, state, reason: 'Not enough AP or Ether.' };
       }
@@ -226,19 +243,61 @@ export class TurnBasedCombatEngine {
     const actor = state.combatants[actorId];
     if (!actor || actor.team !== 'Enemy' || actor.isDefeated) return undefined;
     const profile = actor.aiProfileId ? this.content.getCombatAIProfile(actor.aiProfileId) : undefined;
-    const targets = Object.values(state.combatants).filter((target) => target.team !== actor.team && !target.isDefeated);
-    if (!targets.length) return { type: 'EndTurn', actorId };
+    const commands = this.getResolvedCommands(state);
+    const targets = Object.values(state.combatants).filter((target) => commands.attackTargetIds.includes(target.id));
+    const allEnemies = Object.values(state.combatants).filter((target) => target.team !== actor.team && !target.isDefeated);
+    if (!allEnemies.length) return { type: 'EndTurn', actorId };
+    if (!targets.length) {
+      const rangedAbility = [...(profile?.abilityPriority ?? []), ...actor.abilityIds]
+        .map((id) => this.content.getAbility(id))
+        .find((ability) => ability?.target === 'Enemy' && (commands.abilityTargetIds[ability.id]?.length ?? 0) > 0);
+      const rangedTargetId = rangedAbility ? commands.abilityTargetIds[rangedAbility.id]?.[0] : undefined;
+      if (rangedAbility && rangedTargetId) return { type: 'Ability', actorId, targetId: rangedTargetId, abilityId: rangedAbility.id };
+      const nearest = [...allEnemies].sort((a, b) => this.distance(actor, a) - this.distance(actor, b))[0];
+      const destination = [...commands.legalMoves].sort((a, b) =>
+        Math.abs(a.x - nearest.position.x) + Math.abs(a.y - nearest.position.y)
+        - Math.abs(b.x - nearest.position.x) - Math.abs(b.y - nearest.position.y)
+      )[0];
+      return destination ? { type: 'Move', actorId, position: destination } : { type: 'EndTurn', actorId };
+    }
     const target = [...targets].sort((a, b) => a.currentHp / a.maxHp - b.currentHp / b.maxHp)[0];
     const prioritized = [...(profile?.abilityPriority ?? []), ...actor.abilityIds]
       .map((id) => this.content.getAbility(id))
-      .find((ability) => ability && actor.abilityIds.includes(ability.id) && actor.currentAp >= ability.apCost && actor.currentEther >= ability.etherCost);
+      .find((ability) => ability && actor.abilityIds.includes(ability.id) && actor.currentAp >= ability.apCost && actor.currentEther >= ability.etherCost && (commands.abilityTargetIds[ability.id]?.length ?? 0) > 0);
     const woundedAlly = Object.values(state.combatants)
       .filter((unit) => unit.team === actor.team && !unit.isDefeated && unit.currentHp < unit.maxHp)
       .sort((a, b) => a.currentHp / a.maxHp - b.currentHp / b.maxHp)[0];
+    const validAbilityTargets = prioritized ? commands.abilityTargetIds[prioritized.id] ?? [] : [];
     const abilityTarget = prioritized?.target === 'Self' ? actor : prioritized?.target === 'Ally' ? woundedAlly : target;
     return prioritized && abilityTarget
-      ? { type: 'Ability', actorId, targetId: abilityTarget.id, abilityId: prioritized.id }
+      && validAbilityTargets.includes(abilityTarget.id) ? { type: 'Ability', actorId, targetId: abilityTarget.id, abilityId: prioritized.id }
       : actor.currentAp >= 2 ? { type: 'Attack', actorId, targetId: target.id } : { type: 'EndTurn', actorId };
+  }
+
+  private resolveReachableCells(state: CombatState, actor: Combatant, occupied: Set<string>): Array<{ x: number; y: number; cost: number }> {
+    const tileMap = new Map(state.grid.tiles.map((tile) => [`${tile.x}:${tile.y}`, tile]));
+    const costs = new Map<string, number>([[`${actor.position.x}:${actor.position.y}`, 0]]);
+    const frontier = [{ ...actor.position, cost: 0 }];
+    while (frontier.length > 0) {
+      frontier.sort((a, b) => a.cost - b.cost);
+      const current = frontier.shift()!;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const x = current.x + dx; const y = current.y + dy; const key = `${x}:${y}`;
+        if (x < 0 || y < 0 || x >= state.grid.width || y >= state.grid.height || occupied.has(key)) continue;
+        const tile = tileMap.get(key);
+        if (tile?.type === 'Wall') continue;
+        const nextCost = current.cost + (tile?.movementCost ?? 1);
+        if (nextCost > actor.movementRange || nextCost >= (costs.get(key) ?? Infinity)) continue;
+        costs.set(key, nextCost); frontier.push({ x, y, cost: nextCost });
+      }
+    }
+    return [...costs.entries()].filter(([key]) => key !== `${actor.position.x}:${actor.position.y}`).map(([key, cost]) => {
+      const [x, y] = key.split(':').map(Number); return { x, y, cost };
+    });
+  }
+
+  private distance(left: Combatant, right: Combatant): number {
+    return Math.abs(left.position.x - right.position.x) + Math.abs(left.position.y - right.position.y);
   }
 
   private validateAbilityTarget(actor: Combatant, target: Combatant, ability: Ability): string | undefined {

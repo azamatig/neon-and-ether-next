@@ -1,5 +1,6 @@
 import { ContentRegistry, GameSession } from '@neon-ether/game-runtime';
 import { GAME_CONTENT_MANIFEST } from '@neon-ether/content';
+import type { ChangeStatEffect, Effect } from '@neon-ether/game-schema';
 
 const content = new ContentRegistry();
 content.loadManifest(GAME_CONTENT_MANIFEST);
@@ -8,11 +9,13 @@ const player = session.getState().player;
 const resolvedPlayer = session.getResolvedPlayerCharacter();
 const equippedWeapon = player.inventory.items.map((entry) => entry.isEquipped ? content.getItem(entry.itemId) : undefined).find((item) => item?.category === 'weapon');
 const playerAverageDamage = equippedWeapon?.damageRange ? (equippedWeapon.damageRange[0] + equippedWeapon.damageRange[1]) / 2 : 0;
-const healing = content.items.getAll().filter((item) => item.usableContexts.includes('Combat') && item.useEffects.some((effect) => effect.type === 'changeStat' && effect.stat.toLowerCase() === 'currenthp' && (effect.delta ?? 0) > 0));
+const isHpRestoration = (effect: Effect): effect is ChangeStatEffect =>
+  effect.type === 'changeStat' && effect.stat.toLowerCase() === 'currenthp' && (effect.delta ?? 0) > 0;
+const healing = content.items.getAll().filter((item) => item.usableContexts.includes('Combat') && item.useEffects.some(isHpRestoration));
 
 console.log(`Starting HP: ${resolvedPlayer.vitals.currentHp}/${resolvedPlayer.vitals.maxHp}`);
 console.log(`Starting weapon: ${equippedWeapon?.name ?? 'None'} (${equippedWeapon?.damageRange?.join('–') ?? 'no damage'} damage)`);
-console.log(`Combat healing authored: ${healing.map((item) => `${item.name} +${item.useEffects.find((effect) => effect.type === 'changeStat' && effect.stat.toLowerCase() === 'currenthp')?.delta ?? 0} HP (starting quantity ${player.inventory.items.find((entry) => entry.itemId === item.id)?.quantity ?? 0})`).join(', ') || 'None'}`);
+console.log(`Combat healing authored: ${healing.map((item) => `${item.name} +${item.useEffects.find(isHpRestoration)?.delta ?? 0} HP (starting quantity ${player.inventory.items.find((entry) => entry.itemId === item.id)?.quantity ?? 0})`).join(', ') || 'None'}`);
 
 for (const encounter of content.encounters.findByTag('Prologue')) {
   const enemies = encounter.enemyGroups.flatMap((group) => Array.from({ length: group.count }, () => content.getEnemy(group.enemyId))).filter((enemy) => enemy !== undefined);

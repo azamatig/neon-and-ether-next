@@ -12,7 +12,7 @@ const warnings: string[] = [];
 const names = new EntityNameResolver(registry, (message) => warnings.push(message));
 const presented = names.item('item_trauma_patch');
 
-if (presented !== 'Trauma Patch' || presented === 'item_trauma_patch') {
+if (presented !== 'Trauma Patch') {
   throw new Error(`Expected authored item name, received '${presented}'.`);
 }
 if (names.item('itm_missing') !== 'Unknown Item' || warnings.length !== 1) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { DialogueChoice, DialogueNode, DialogueTree } from '@neon-ether/game-schema';
+import { DialogueNodeSchema, type DialogueChoice, type DialogueNode, type DialogueTree } from '@neon-ether/game-schema';
 import type { ResolvedEventState } from '@neon-ether/game-runtime';
 import { ArrowRight, ImageOff, UserRound, X } from 'lucide-react';
 import { Button } from '@neon-ether/shared-ui';
@@ -47,12 +47,17 @@ export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = 
   const participants = useMemo<SceneParticipant[]>(() => {
     if (props.mode === 'dialogue') {
       const unique = new Map<string, SceneParticipant>();
-      Object.values(props.tree.nodes).forEach((node) => unique.set(node.speakerName, {
-        key: node.speakerName,
-        name: node.speakerName,
-        title: node.speakerTitle,
-        portrait: node.speakerPortrait,
-      }));
+      Object.values(props.tree.nodes).forEach((candidate) => {
+        const parsed = DialogueNodeSchema.safeParse(candidate);
+        if (!parsed.success) return;
+        const node = parsed.data;
+        unique.set(node.speakerName, {
+          key: node.speakerName,
+          name: node.speakerName,
+          title: node.speakerTitle,
+          portrait: node.speakerPortrait,
+        });
+      });
       return [...unique.values()];
     }
     const unique = new Map<string, SceneParticipant>();

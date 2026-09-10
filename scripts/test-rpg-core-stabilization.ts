@@ -1,7 +1,7 @@
 import { ContentRegistry, GameSession } from '@neon-ether/game-runtime';
 import { GAME_CONTENT_MANIFEST } from '@neon-ether/content';
 
-const assert = (condition: unknown, message: string): asserts condition => { if (!condition) throw new Error(message); };
+const assert: (condition: unknown, message: string) => asserts condition = (condition, message) => { if (!condition) throw new Error(message); };
 const registry = new ContentRegistry();
 registry.loadManifest(GAME_CONTENT_MANIFEST);
 const session = new GameSession(registry, 41);

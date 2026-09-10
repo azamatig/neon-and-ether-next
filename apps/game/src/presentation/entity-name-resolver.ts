@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import type { ContentRegistry } from '@neon-ether/game-runtime';
 
 export type ProductionEntityKind = 'Item' | 'NPC' | 'Ability' | 'Status Effect' | 'Quest' | 'Faction' | 'POI' | 'Encounter';

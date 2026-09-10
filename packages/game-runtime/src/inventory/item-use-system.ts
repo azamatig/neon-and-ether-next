@@ -1,4 +1,4 @@
-import type { GameState, ItemDefinition } from '@neon-ether/game-schema';
+import type { ChangeStatEffect, GameState, ItemDefinition } from '@neon-ether/game-schema';
 import type { RandomSource } from '@neon-ether/engine';
 import type { ContentRegistry } from '../content/content-registry.ts';
 import type { ConditionRegistry } from '../conditions/condition-registry.ts';
@@ -37,7 +37,7 @@ export class ItemUseSystem {
     const conditionState = context === 'Combat' ? structuredClone(state) : state;
     const combatant = context === 'Combat' ? conditionState.combat.combatants[conditionState.player.characterId] : undefined;
     if (combatant) { conditionState.player.vitals.currentHp = combatant.currentHp; conditionState.player.vitals.currentEther = combatant.currentEther; }
-    const restorativeEffects = item.useEffects.filter((effect) => effect.type === 'changeStat' && (effect.delta ?? 0) > 0);
+    const restorativeEffects = item.useEffects.filter((effect): effect is ChangeStatEffect => effect.type === 'changeStat' && (effect.delta ?? 0) > 0);
     if (restorativeEffects.length === item.useEffects.length && restorativeEffects.every((effect) => {
       const stat = effect.stat.toLowerCase();
       return stat === 'currenthp' ? conditionState.player.vitals.currentHp >= conditionState.player.vitals.maxHp

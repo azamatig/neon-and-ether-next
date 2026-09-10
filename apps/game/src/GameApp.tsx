@@ -61,7 +61,7 @@ export const GameApp: React.FC = () => {
   return <GameShell mode={shellMode} hud={hud}>{content}
     {mode==='ActionResult'&&runtime.activeActionResolution&&<ActionResultModal resolution={runtime.activeActionResolution} resolveItemName={runtime.entityNames.item} onDismiss={runtime.dismissActionResolution}/>}
     {mode==='Dialogue'&&runtime.activeDialogueTree&&runtime.activeDialogueNode&&<SceneEventScreen mode="dialogue" tree={runtime.activeDialogueTree} node={runtime.activeDialogueNode} onChoose={runtime.chooseDialogueOption} onClose={runtime.endDialogue}/>}
-    {showCharacter&&<CharacterSheet state={gameState} items={runtime.itemDefinitions} quests={runtime.questDossiers} party={runtime.partyMembers} onClose={()=>setShowCharacter(false)} onEquip={runtime.equipInventoryEntry} onUnequip={runtime.unequipSlot} onDrop={runtime.dropInventoryItem}/>}
+    {showCharacter&&<CharacterSheet state={gameState} resolvedPlayer={runtime.resolvedPlayer} items={runtime.itemDefinitions} progression={runtime.playerProgression} equipmentOptions={runtime.equipmentOptions} quests={runtime.questDossiers} party={runtime.partyMembers} onClose={()=>setShowCharacter(false)} onEquip={runtime.equipInventoryEntry} onUnequip={runtime.unequipSlot} onUse={runtime.useInventoryItem} onDrop={runtime.dropInventoryItem}/>}
     {showGameMenu&&<InGameMenu onResume={()=>setShowGameMenu(false)} onMainMenu={()=>{setShowGameMenu(false);setShowMainMenu(true)}} onSave={runtime.saveToLocalSlot} onLoad={(slot)=>{const result=runtime.loadFromLocalSlot(slot);if(result.success)setShowGameMenu(false);return result;}}/>}
   </GameShell>;
 };

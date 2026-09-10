@@ -63,6 +63,8 @@ import { QuestRuntime, QuestCommandResult, ResolvedQuestState } from '../quests/
 import { CombatEncounterEngine, ResolvedCombatPreview } from '../combat/combat-encounter-engine.ts';
 import type { RuntimeTraceEvent, RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import { InventorySystem, InventoryCommandResult } from '../inventory/inventory-system.ts';
+import { ItemUseSystem, type ItemUseResult } from '../inventory/item-use-system.ts';
+import { ProgressionSystem, type ProgressionView } from '../progression/progression-system.ts';
 import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
 import { NewGameInitializer, type CharacterCreationValidation } from './new-game-initializer.ts';
 import type { CharacterCreationSelection } from '@neon-ether/game-schema';
@@ -136,6 +138,7 @@ export class GameSession {
   private questRuntime: QuestRuntime;
   private combatEncounterEngine: CombatEncounterEngine;
   private inventorySystem: InventorySystem;
+  private itemUseSystem: ItemUseSystem;
   private craftingSystem: CraftingSystem;
   private economySystem: EconomySystem;
   private worldTimeSystem: WorldTimeSystem;
@@ -161,6 +164,7 @@ export class GameSession {
     this.effectRegistry = effectRegistry ?? new EffectRegistry(true);
     this.effectExecutor = new EffectExecutor(this.effectRegistry, report);
     this.inventorySystem = new InventorySystem(contentRegistry, (effects, state) => { this.effectExecutor.executeBatch(effects, { state, contentRegistry,random:this.diceRoller }); });
+    this.itemUseSystem = new ItemUseSystem(contentRegistry, this.conditionRegistry, this.effectExecutor, this.diceRoller);
     this.craftingSystem = new CraftingSystem(contentRegistry, this.conditionRegistry, this.effectExecutor,this.diceRoller);
     this.economySystem = new EconomySystem(contentRegistry, this.conditionRegistry,this.diceRoller);
     this.worldTimeSystem = new WorldTimeSystem();
@@ -238,6 +242,18 @@ export class GameSession {
     if (result.success) this.events.emit('STATE_CHANGED', this.state);
     return result;
   }
+  public canEquipInventoryEntry(entryId: string, slotId: string): InventoryCommandResult {
+    const entry = this.state.player.inventory.items.find((candidate) => candidate.entryId === entryId);
+    const item = entry ? this.contentRegistry.getItem(entry.itemId) : undefined;
+    if (!entry || !item) return { success: false, reason: 'Inventory item is unavailable.' };
+    return this.inventorySystem.canEquip(this.state, item, { id: slotId, acceptsCategories: [], acceptsTags: [] });
+  }
+  public useInventoryItem(itemId: string): ItemUseResult {
+    const result = this.itemUseSystem.use(this.state, itemId, 'Exploration');
+    if (result.success && result.nextState) { this.state = result.nextState; this.outcomeEngine.bindState(this.state); this.events.emit('STATE_CHANGED', this.state); }
+    return result;
+  }
+  public getPlayerProgressionView(): ProgressionView { return new ProgressionSystem(this.contentRegistry).resolvePlayer(this.state); }
   public unequipSlot(slotId: string): InventoryCommandResult {
     const result = this.inventorySystem.unequip(this.state, slotId);
     if (result.success) this.events.emit('STATE_CHANGED', this.state);
@@ -947,6 +963,23 @@ export class GameSession {
 
   public executeCombatAction(action: CombatAction): CombatCommandResult {
     const before=structuredClone(this.state.combat.combatants);
+    if (action.type === 'UseItem') {
+      const used = this.itemUseSystem.use(this.state, action.itemId, 'Combat');
+      if (!used.success || !used.nextState) return { success: false, state: this.state.combat, reason: used.reason };
+      this.state = used.nextState;
+      this.outcomeEngine.bindState(this.state);
+      const actor = this.state.combat.combatants[action.actorId];
+      if (actor?.currentAp === 0) {
+        const ended = this.turnBasedCombatEngine.execute(this.state.combat, { type: 'EndTurn', actorId: actor.id });
+        if (ended.success) this.state.combat = ended.state;
+      }
+      this.resolvePendingAiTurns();
+      this.state.player.vitals.currentHp = this.state.combat.combatants[this.state.player.characterId]?.currentHp ?? this.state.player.vitals.currentHp;
+      this.state.player.vitals.currentEther = this.state.combat.combatants[this.state.player.characterId]?.currentEther ?? this.state.player.vitals.currentEther;
+      this.events.emit('COMBAT_STATE_CHANGED', undefined);
+      this.events.emit('STATE_CHANGED', this.state);
+      return { success: true, state: this.state.combat };
+    }
     let result = this.turnBasedCombatEngine.execute(this.state.combat, action);
     if (!result.success) return result;
     this.state.combat = result.state;
@@ -973,6 +1006,15 @@ export class GameSession {
     if (!encounter || commands.actions.length === 0) return commands;
     const escapeConditionsMet = this.evaluateConditions(encounter.escapeRules.conditions).allMet;
     const actor = commands.actorId ? this.state.combat.combatants[commands.actorId] : undefined;
+    if (actor?.sourceId === this.state.player.characterId) {
+      const consumableIds = [...new Set(this.state.player.inventory.items.filter((entry) => entry.quantity > 0).map((entry) => entry.itemId))];
+      for (const itemId of consumableIds) {
+        const item = this.contentRegistry.getItem(itemId);
+        if (!item || item.category !== 'consumable' || !item.usableContexts.includes('Combat')) continue;
+        const allowed = this.itemUseSystem.canUseDefinition(this.state, item, 'Combat');
+        commands.actions.push({ id: `item.${item.id}`, type: 'UseItem', category: 'Support', label: item.name, apCost: item.apUseCost ?? 0, etherCost: 0, itemId: item.id, targetIds: [], disabledReason: !allowed.success ? allowed.reason : actor.currentAp < (item.apUseCost ?? 0) ? 'Not enough AP.' : undefined });
+      }
+    }
     const escapeApCost = encounter.escapeRules.check?.apCost ?? 0;
     commands.actions.push({
       id: 'attempt-flee',

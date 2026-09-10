@@ -20,13 +20,14 @@ export interface ResolvedCombatCommands {
 
 export interface ResolvedCombatAction {
   id: string;
-  type: 'WeaponAttack' | 'MeleeAttack' | 'Ability' | 'Move' | 'AttemptFlee' | 'EndTurn';
+  type: 'WeaponAttack' | 'MeleeAttack' | 'Ability' | 'UseItem' | 'Move' | 'AttemptFlee' | 'EndTurn';
   category: 'Attacks' | 'Skills' | 'Support';
   label: string;
   apCost: number;
   etherCost: number;
   rangeTiles?: number;
   abilityId?: string;
+  itemId?: string;
   weaponId?: string;
   defeatType?: 'Lethal' | 'NonLethal';
   targetIds: string[];
@@ -258,6 +259,7 @@ export class TurnBasedCombatEngine {
     const actor = state.combatants[action.actorId];
     if (!actor || actor.isDefeated || actor.isIncapacitated) return { success: false, state, reason: 'Actor is unavailable.' };
     if (state.activeCombatantId !== actor.id) return { success: false, state, reason: 'It is not this combatant’s turn.' };
+    if (action.type === 'UseItem') return { success: false, state, reason: 'Item use must be executed with inventory context.' };
 
     if (action.type === 'EndTurn') {
       this.advanceTurn(state);

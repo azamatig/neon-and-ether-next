@@ -113,6 +113,8 @@ export function useGameRuntime() {
   const recipes = session.getContentRegistry().recipes.getAll();
   const availableRecipeIds = new Set(gameState.world.activeScreen === 'Workbench' ? session.getAvailableRecipes(craftingContext).map((recipe) => recipe.id) : []);
   const itemDefinitions = session.getContentRegistry().items.getAll();
+  const equipmentOptions = Object.fromEntries(gameState.player.inventory.items.map((entry) => [entry.entryId ?? entry.itemId, Object.fromEntries((session.getContentRegistry().getItem(entry.itemId)?.equipmentSlots ?? []).map((slotId) => [slotId, session.canEquipInventoryEntry(entry.entryId ?? entry.itemId, slotId)]))]));
+  const playerProgression = session.getPlayerProgressionView();
   const characterCreationOptions = useMemo(() => session.getCharacterCreationOptions(), [session]);
   const questDossiers = (Object.values(gameState.quests) as import('@neon-ether/game-schema').QuestRuntimeState[]).map((quest) => ({
     runtime: quest,
@@ -192,6 +194,8 @@ export function useGameRuntime() {
     recipes,
     availableRecipeIds,
     itemDefinitions,
+    equipmentOptions,
+    playerProgression,
     characterCreationOptions,
     questDossiers,
     partyMembers,
@@ -236,6 +240,7 @@ export function useGameRuntime() {
     returnToOrigin: () => session.resolveOutcome({ type: 'returnToOrigin' }),
     selectMinigameCell:(row:number,column:number)=>session.selectMinigameCell(row,column),finishMinigame:()=>session.finishMinigame(),
     equipInventoryEntry: (entryId: string, slotId: string) => session.equipInventoryEntry(entryId, { id: slotId, acceptsCategories: [], acceptsTags: [] }),
+    useInventoryItem: (itemId: string) => session.useInventoryItem(itemId),
     unequipSlot: (slotId: string) => session.unequipSlot(slotId),
     dropInventoryItem: (itemId: string) => session.removeInventoryItem(itemId, 1),
     validateCharacterCreation: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.validateCharacterCreation(selection),

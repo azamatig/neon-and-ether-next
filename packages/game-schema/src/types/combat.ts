@@ -99,6 +99,7 @@ export const CombatActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('RangedAttack'), actorId: z.string(), targetId: z.string(), weaponId: z.string() }),
   z.object({ type: z.literal('MeleeAttack'), actorId: z.string(), targetId: z.string(), weaponId: z.string().optional() }),
   z.object({ type: z.literal('Ability'), actorId: z.string(), targetId: z.string(), abilityId: z.string() }),
+  z.object({ type: z.literal('UseItem'), actorId: z.string(), itemId: z.string() }),
   z.object({ type: z.literal('Move'), actorId: z.string(), position: CombatGridPositionSchema }),
   z.object({ type: z.literal('EndTurn'), actorId: z.string() }),
 ]);

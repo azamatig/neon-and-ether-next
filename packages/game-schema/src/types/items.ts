@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
 import { PrimaryStatSchema } from './stats.ts';
 import { EffectSchema } from './effects.ts';
+import { ConditionSchema } from './conditions.ts';
 
 export const ItemRaritySchema = z.enum(['Common','StreetGrade','MilitarySpec','Prototype','EtherArtifact']);
 export type ItemRarity = z.infer<typeof ItemRaritySchema>;
@@ -49,6 +50,9 @@ export const ItemSchema = BaseEntitySchema.extend({
   modifiers: z.array(ItemModifierSchema).default([]),
   equipEffects: z.array(EffectSchema).default([]),
   unequipEffects: z.array(EffectSchema).default([]),
+  useConditions: z.array(ConditionSchema).default([]),
+  useEffects: z.array(EffectSchema).default([]),
+  usableContexts: z.array(z.enum(['Exploration', 'Combat'])).default([]),
   grantedAbilityIds: z.array(z.string()).default([]),
   apUseCost: z.number().int().min(0).optional(), etherCost: z.number().int().min(0).optional(),
   damageRange: z.tuple([z.number().int().min(0),z.number().int().min(0)]).optional(), rangeTiles: z.number().int().min(0).optional(),

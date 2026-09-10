@@ -155,7 +155,17 @@
     "requirements": [],
     "modifiers": [],
     "equipEffects": [],
-    "unequipEffects": []
+    "unequipEffects": [],
+    "useConditions": [],
+    "useEffects": [
+      {
+        "type": "changeStat",
+        "stat": "currentEther",
+        "delta": 25,
+        "mode": "add"
+      }
+    ],
+    "usableContexts": ["Exploration", "Combat"]
   },
   {
     "id": "itm_cyberware_fiber",
@@ -329,7 +339,17 @@
     "modifiers": [],
     "equipEffects": [],
     "unequipEffects": [],
-    "apUseCost": 1
+    "apUseCost": 1,
+    "useConditions": [],
+    "useEffects": [
+      {
+        "type": "changeStat",
+        "stat": "currentHp",
+        "delta": 20,
+        "mode": "add"
+      }
+    ],
+    "usableContexts": ["Exploration", "Combat"]
   },
   {
     "id": "itm_prologue_ares_security_keycard",

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CombatAction, Combatant, CombatState, Item } from '@neon-ether/game-schema';
 import { type ResolvedCombatAction, type ResolvedCombatCommands } from '@neon-ether/game-runtime';
-import { Activity, Crosshair, Footprints, Shield, SkipForward, Swords, Zap } from 'lucide-react';
+import { Activity, Crosshair, Footprints, PackageOpen, Shield, SkipForward, Swords, Zap } from 'lucide-react';
 
 export interface TurnBasedCombatScreenProps {
   state: CombatState;
@@ -28,6 +28,7 @@ const actionIcon = (action: ResolvedCombatAction) => {
   if (action.type === 'Move' || action.type === 'AttemptFlee') return <Footprints />;
   if (action.type === 'EndTurn') return <SkipForward />;
   if (action.type === 'Ability') return <Zap />;
+  if (action.type === 'UseItem') return <PackageOpen />;
   return <Swords />;
 };
 
@@ -120,6 +121,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
           <div className="combat-action-list">{commands.actions.filter((action) => action.category === category).map((action) => <button key={action.id} className={selectedActionId === action.id ? 'is-selected' : ''} disabled={actor?.team !== 'Player' || !state.isActive || Boolean(action.disabledReason)} title={action.disabledReason} onClick={() => {
             if (action.type === 'EndTurn') { if (actor) onCommand({ type: 'EndTurn', actorId: actor.id }); return; }
             if (action.type === 'AttemptFlee') { onAttemptFlee(); return; }
+            if (action.type === 'UseItem') { if (actor && action.itemId) onCommand({ type: 'UseItem', actorId: actor.id, itemId: action.itemId }); return; }
             setSelectedActionId(action.id);
           }}>{actionIcon(action)}<span>{action.label}<small>{action.disabledReason ?? `${action.apCost} AP${action.etherCost ? ` · ${action.etherCost} ETH` : ''}`}</small></span></button>)}</div>
         </div>

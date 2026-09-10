@@ -10,6 +10,10 @@ const pistol = session.getState().player.inventory.items.find((entry) => entry.i
 assert(pistol?.entryId, 'Production starting ranged weapon is missing.');
 assert(session.unequipSlot('mainHand').success, 'Ranged weapon did not unequip.');
 assert(session.equipInventoryEntry(pistol.entryId, { id: 'mainHand', acceptsCategories: [], acceptsTags: [] }).success, 'Ranged weapon did not re-equip.');
+const rangedCombat = new GameSession(registry, 42);
+assert(rangedCombat.loadSave(session.serializeSave()).success, 'Ranged equipment setup did not load.');
+assert(rangedCombat.startCombatEncounter('enc_prologue_ares_freight_checkpoint', false) && rangedCombat.startTacticalCombat(), 'Ranged combat loadout did not initialize.');
+assert(rangedCombat.getState().combat.combatants[rangedCombat.getState().player.characterId].weaponId === 'wpn_thermal_pistol', 'Re-equipped ranged weapon did not reach the combat loadout.');
 assert(session.addInventoryItem('wpn_ether_baton').success, 'Melee weapon was not obtained.');
 const baton = session.getState().player.inventory.items.find((entry) => entry.itemId === 'wpn_ether_baton');
 assert(baton?.entryId, 'Melee weapon entry is missing.');
@@ -56,20 +60,35 @@ const used = loadedEquipment.executeCombatAction({ type: 'UseItem', actorId: pla
 assert(used.success, `Combat consumable failed: ${used.reason ?? 'unknown reason'}`);
 const afterUse = loadedEquipment.getState();
 assert(afterUse.combat.combatants[afterUse.player.characterId].currentHp > player.currentHp, 'Combat consumable did not restore HP.');
+assert(afterUse.combat.combatants[afterUse.player.characterId].currentAp === player.currentAp - 1, 'Combat consumable did not spend its authored AP cost.');
 assert((afterUse.player.inventory.items.find((entry) => entry.itemId === 'con_trauma_patch')?.quantity ?? 0) === beforeQuantity - 1, 'Combat consumable quantity did not decrease.');
+const loadedCombatState = new GameSession(registry, 100);
+assert(loadedCombatState.loadSave(loadedEquipment.serializeSave()).success, 'Post-consumable save did not load.');
+assert(loadedCombatState.getState().player.equipment.slots.mainHand === baton.entryId && loadedCombatState.getState().player.equipment.slots.body === coat.entryId, 'Post-combat equipment did not persist.');
+assert((loadedCombatState.getState().player.inventory.items.find((entry) => entry.itemId === 'con_trauma_patch')?.quantity ?? 0) === 0, 'Post-combat consumable quantity did not persist.');
+assert(loadedCombatState.getState().player.abilityIds.includes('ability_mindmancer_read_mind'), 'Unlocked ability did not persist.');
 
 const progression = new GameSession(registry, 77);
-assert(progression.executeEffects([{ type: 'grantRewards', xp: 120, credits: 0, items: [], skillXp: {}, perkPoints: 0 }]).success, 'XP reward failed.');
-assert(progression.getState().player.level === 2 && progression.getPlayerProgressionView().xpIntoLevel === 20, 'Prologue-sized XP did not level the player or preserve overflow XP.');
+const beforeProgression = progression.getState().player;
+const beforeProgressionView = progression.getPlayerProgressionView();
+const lockResolution = progression.resolveCombatVictory('enc_prologue_ares_freight_checkpoint', 3);
+assert(lockResolution?.xpGained === 120, 'Lock 3 Interception did not issue its authored 120 XP reward.');
+const afterProgression = progression.getState().player;
+assert(afterProgression.level === 2 && progression.getPlayerProgressionView().xpIntoLevel === 20, 'Lock 3 XP did not level the player or preserve overflow XP.');
+assert(afterProgression.attributePointsUnspent-beforeProgression.attributePointsUnspent===1&&afterProgression.skillPointsUnspent-beforeProgression.skillPointsUnspent===2&&afterProgression.perkPointsUnspent-beforeProgression.perkPointsUnspent===1,'Configured Level 2 progression rewards were not granted.');
+console.log(`120 XP TRACE: before=${beforeProgression.experience}, threshold=${beforeProgressionView.nextLevelXp}, after=${afterProgression.experience}, level=${afterProgression.level}, cumulative=${afterProgression.experience}, intoLevel=${progression.getPlayerProgressionView().xpIntoLevel}, rewards=1 attribute/2 skill/1 perk`);
 assert(progression.executeEffects([{ type: 'grantRewards', xp: 330, credits: 0, items: [], skillXp: {}, perkPoints: 0 }]).success, 'Large follow-up XP reward failed.');
 assert(progression.getState().player.level === 3, 'A large XP reward did not grant multiple configured levels.');
 assert(progression.getState().player.experience === 450, 'Accumulated XP was not preserved after leveling.');
 const loadedProgression = new GameSession(registry, 78);
-assert(loadedProgression.loadSave(progression.serializeSave()).success && loadedProgression.getState().player.level === 3, 'Progression was not preserved by save/load.');
+assert(loadedProgression.loadSave(progression.serializeSave()).success && loadedProgression.getState().player.level === 3 && loadedProgression.getState().player.experience === 450, 'Progression was not preserved by save/load.');
 
 const backgroundAbilityIds = registry.backgrounds.getAll().map((background) => background.startingEffects.find((effect) => effect.type === 'setAbilityUnlocked')?.abilityId);
 assert(backgroundAbilityIds.every((abilityId) => abilityId && registry.getAbility(abilityId)), 'A starting background is missing its authored signature ability.');
 assert(new Set(backgroundAbilityIds).size === backgroundAbilityIds.length, 'Starting backgrounds do not grant distinct signature abilities.');
+const mindmancerAbilityIds = new Set(registry.abilities.findByTag('Mindmancer').map((ability) => ability.id));
+assert(backgroundAbilityIds.every((abilityId) => !mindmancerAbilityIds.has(abilityId!)), 'A starting background grants a pre-bonding Mindmancer ability.');
+assert(registry.backgrounds.get('background_corporate_exile')?.startingEffects.some((effect) => effect.type === 'setAbilityUnlocked' && effect.abilityId === 'ability_tactical_scan'), 'Corporate Exile does not grant Tactical Scan.');
 assert(registry.encounters.findByTag('Prologue').every((encounter) => encounter.defeatOutcome), 'A Prologue encounter is missing its authored defeat outcome.');
 
 console.log('RPG core production-flow regressions passed.');

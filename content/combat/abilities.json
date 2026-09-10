@@ -1,5 +1,29 @@
 [
   {
+    "id": "ability_tactical_scan",
+    "name": "Tactical Scan",
+    "description": "Corporate threat-analysis training identifies a target's exposed defenses.",
+    "tags": [
+      "Technical",
+      "Corporate",
+      "Support"
+    ],
+    "apCost": 2,
+    "etherCost": 0,
+    "target": "Enemy",
+    "effects": [
+      {
+        "type": "ApplyStatus",
+        "min": 0,
+        "max": 0,
+        "statusEffectId": "status_tactically_scanned",
+        "durationTurns": 2
+      }
+    ],
+    "icon": "ScanLine",
+    "rangeTiles": 6
+  },
+  {
     "id": "ability_thermal_burst",
     "name": "Thermal Burst",
     "description": "A focused thermal round that burns through light plating.",

@@ -19,6 +19,7 @@
     "test:rpg-core": "bun scripts/test-rpg-core-stabilization.ts",
     "report:combat-balance": "bun scripts/report-prologue-combat-balance.ts",
     "test:editor-presets": "bun scripts/test-editor-presets.ts",
+    "test:editor-serialization": "bun scripts/test-editor-content-serialization.ts",
     "test:quest-walkthrough": "bun scripts/test-quest-walkthrough.ts",
     "test:telemetry": "bun scripts/test-development-telemetry.ts",
     "test:character-creation": "bun scripts/test-character-creation.ts",

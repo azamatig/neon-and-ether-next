@@ -17,6 +17,7 @@
     "test:pending-resolutions": "bun scripts/test-pending-resolutions.ts",
     "test:entity-presentation": "bun scripts/test-entity-name-presentation.ts",
     "test:rpg-core": "bun scripts/test-rpg-core-stabilization.ts",
+    "report:combat-balance": "bun scripts/report-prologue-combat-balance.ts",
     "test:editor-presets": "bun scripts/test-editor-presets.ts",
     "test:quest-walkthrough": "bun scripts/test-quest-walkthrough.ts",
     "test:telemetry": "bun scripts/test-development-telemetry.ts",

@@ -23,6 +23,7 @@ export interface ResolvedCombatAction {
   type: 'WeaponAttack' | 'MeleeAttack' | 'Ability' | 'UseItem' | 'Move' | 'AttemptFlee' | 'EndTurn';
   category: 'Attacks' | 'Skills' | 'Support';
   label: string;
+  description: string;
   apCost: number;
   etherCost: number;
   rangeTiles?: number;
@@ -33,6 +34,10 @@ export interface ResolvedCombatAction {
   targetIds: string[];
   targetRejections?: Record<string, string>;
   disabledReason?: string;
+  targetType?: 'Enemy' | 'Ally' | 'Self';
+  effectSummary?: string[];
+  requirements?: string[];
+  quantity?: number;
 }
 
 /** Framework-agnostic turn-based combat simulation. */
@@ -218,13 +223,15 @@ export class TurnBasedCombatEngine {
     }
     const actions: ResolvedCombatAction[] = [
       {
-        id: 'attack.weapon', type: 'WeaponAttack', category: 'Attacks', label: 'Weapon Attack',
+        id: 'attack.weapon', type: 'WeaponAttack', category: 'Attacks', label: rangedWeapon?.name ?? 'Weapon Attack', description: rangedWeapon?.description ?? 'Requires an equipped ranged weapon.',
         apCost: rangedWeapon?.apUseCost ?? 0, etherCost: rangedWeapon?.etherCost ?? 0, rangeTiles: attackRange, weaponId: rangedWeapon?.id, defeatType: rangedWeapon?.combatDefeatType, targetIds: attackTargetIds,
+        targetType:'Enemy',effectSummary:rangedWeapon?.damageRange?[`Deals ${rangedWeapon.damageRange[0]}–${rangedWeapon.damageRange[1]} damage.`]:[],requirements:[],
         disabledReason: !rangedWeapon ? 'Requires an equipped ranged weapon.' : actor.currentAp < (rangedWeapon.apUseCost ?? 0) ? 'Not enough AP.' : actor.currentEther < (rangedWeapon.etherCost ?? 0) ? 'Not enough Ether.' : attackTargetIds.length === 0 ? 'No target in range.' : undefined,
       },
       {
-        id: 'attack.melee', type: 'MeleeAttack', category: 'Attacks', label: 'Melee Attack',
+        id: 'attack.melee', type: 'MeleeAttack', category: 'Attacks', label: meleeWeapon?.name ?? 'Melee Attack', description: meleeWeapon?.description ?? 'Strike an adjacent enemy.',
         apCost: meleeWeapon?.apUseCost ?? 2, etherCost: meleeWeapon?.etherCost ?? 0, rangeTiles: meleeRange, weaponId: meleeWeapon?.id, defeatType: meleeWeapon?.combatDefeatType ?? 'NonLethal', targetIds: meleeTargetIds,
+        targetType:'Enemy',effectSummary:meleeWeapon?.damageRange?[`Deals ${meleeWeapon.damageRange[0]}–${meleeWeapon.damageRange[1]} damage.`]:['Deals unarmed damage.'],requirements:[],
         disabledReason: actor.currentAp < (meleeWeapon?.apUseCost ?? 2) ? 'Not enough AP.' : actor.currentEther < (meleeWeapon?.etherCost ?? 0) ? 'Not enough Ether.' : meleeTargetIds.length === 0 ? 'No adjacent target.' : undefined,
       },
       ...actor.abilityIds.flatMap((abilityId): ResolvedCombatAction[] => {
@@ -233,10 +240,13 @@ export class TurnBasedCombatEngine {
         const targetIds = abilityTargetIds[abilityId] ?? [];
         const category: ResolvedCombatAction['category'] = ability.target !== 'Enemy' || ability.tags.includes('Support')
           ? 'Support' : ability.tags.includes('Weapon') ? 'Attacks' : 'Skills';
-        return [{ id: `ability.${ability.id}`, type: 'Ability', category, label: ability.name, apCost: ability.apCost, etherCost: ability.etherCost, rangeTiles: ability.rangeTiles, abilityId: ability.id, targetIds, targetRejections: abilityTargetRejections[abilityId], disabledReason: actor.currentAp < ability.apCost ? 'Not enough AP.' : actor.currentEther < ability.etherCost ? 'Not enough Ether.' : targetIds.length === 0 ? Object.values(abilityTargetRejections[abilityId] ?? {})[0] ?? 'No valid target.' : undefined }];
+        const effectSummary=ability.effects.map((effect)=>effect.type==='Damage'?`Deals ${effect.min}–${effect.max} damage.`:effect.type==='Heal'?`Restores ${effect.min}–${effect.max} HP.`:effect.statusEffectId?`Applies ${this.content.getStatusEffect(effect.statusEffectId)?.name??'a status effect'}${effect.durationTurns?` for ${effect.durationTurns} turns`:''}.`:'Applies a status effect.');
+        const formatTag=(tag:string)=>tag.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^Has /,'');
+        const requirements=[...ability.requiredTargetTags.map((tag)=>`Target: ${formatTag(tag)}`),...ability.excludedTargetTags.map((tag)=>`Cannot target: ${formatTag(tag)}`)];
+        return [{ id: `ability.${ability.id}`, type: 'Ability', category, label: ability.name, description:ability.description, apCost: ability.apCost, etherCost: ability.etherCost, rangeTiles: ability.rangeTiles, abilityId: ability.id, targetType:ability.target,effectSummary,requirements, targetIds, targetRejections: abilityTargetRejections[abilityId], disabledReason: actor.currentAp < ability.apCost ? 'Not enough AP.' : actor.currentEther < ability.etherCost ? 'Not enough Ether.' : targetIds.length === 0 ? Object.values(abilityTargetRejections[abilityId] ?? {})[0] ?? 'No valid target.' : undefined }];
       }),
-      { id: 'move', type: 'Move', category: 'Support', label: 'Move', apCost: state.grid.movementApCost, etherCost: 0, targetIds: [], disabledReason: legalMoves.length === 0 ? 'No reachable cell.' : undefined },
-      { id: 'end-turn', type: 'EndTurn', category: 'Support', label: 'End Turn', apCost: 0, etherCost: 0, targetIds: [] },
+      { id: 'move', type: 'Move', category: 'Support', label: 'Move', description:'Reposition on the tactical grid.', apCost: state.grid.movementApCost, etherCost: 0, targetIds: [], disabledReason: legalMoves.length === 0 ? 'No reachable cell.' : undefined },
+      { id: 'end-turn', type: 'EndTurn', category: 'Support', label: 'End Turn', description:'Finish the active combatant’s turn.', apCost: 0, etherCost: 0, targetIds: [] },
     ];
     return { actorId, legalMoves, attackTargetIds, abilityTargetIds, actions };
   }

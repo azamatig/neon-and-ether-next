@@ -36,10 +36,12 @@ const actionIcon = (action: ResolvedCombatAction) => {
 export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ state, commands, items, onCommand, onAttemptFlee, resolveAbilityName, resolveStatusEffectName, resolveEncounterName }) => {
   const [category, setCategory] = useState<ActionCategory>('Attacks');
   const [selectedActionId, setSelectedActionId] = useState('attack.weapon');
+  const [hoveredActionId, setHoveredActionId] = useState<string>();
   const activeId = state.activeCombatantId ?? state.turnOrder[state.activeTurnIndex];
   const actor = state.combatants[activeId];
   const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
   const selectedAction = commands.actions.find((action) => action.id === selectedActionId);
+  const detailAction = commands.actions.find((action) => action.id === hoveredActionId) ?? (selectedAction?.category === category ? selectedAction : commands.actions.find((action) => action.category === category));
   const moveKeys = useMemo(() => new Set(commands.legalMoves.map((cell) => `${cell.x}:${cell.y}`)), [commands.legalMoves]);
   const targetIds = selectedAction?.targetIds ?? [];
   const targetSet = useMemo(() => new Set(targetIds), [targetIds]);
@@ -118,12 +120,13 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
         <div className="combat-commands">
           <div className="combat-interface-heading"><div><p>TACTICAL INTERFACE</p><h3>COMMANDS</h3></div><span>{actor?.team === 'Player' ? 'READY' : 'WAIT'}</span></div>
           <nav>{(['Attacks', 'Skills', 'Support'] as ActionCategory[]).map((value) => <button key={value} aria-pressed={category === value} className={category === value ? 'is-selected' : ''} onClick={() => setCategory(value)}>{value.toUpperCase()}</button>)}</nav>
-          <div className="combat-action-list">{commands.actions.filter((action) => action.category === category).map((action) => <button key={action.id} className={selectedActionId === action.id ? 'is-selected' : ''} disabled={actor?.team !== 'Player' || !state.isActive || Boolean(action.disabledReason)} title={action.disabledReason} onClick={() => {
+          <div className="combat-action-list">{commands.actions.filter((action) => action.category === category).map((action) => <button key={action.id} className={selectedActionId === action.id ? 'is-selected' : ''} disabled={actor?.team !== 'Player' || !state.isActive || Boolean(action.disabledReason)} title={action.disabledReason} onMouseEnter={()=>setHoveredActionId(action.id)} onMouseLeave={()=>setHoveredActionId(undefined)} onFocus={()=>setHoveredActionId(action.id)} onBlur={()=>setHoveredActionId(undefined)} onClick={() => {
             if (action.type === 'EndTurn') { if (actor) onCommand({ type: 'EndTurn', actorId: actor.id }); return; }
             if (action.type === 'AttemptFlee') { onAttemptFlee(); return; }
             if (action.type === 'UseItem') { if (actor && action.itemId) onCommand({ type: 'UseItem', actorId: actor.id, itemId: action.itemId }); return; }
             setSelectedActionId(action.id);
-          }}>{actionIcon(action)}<span>{action.label}<small>{action.disabledReason ?? `${action.apCost} AP${action.etherCost ? ` · ${action.etherCost} ETH` : ''}`}</small></span></button>)}</div>
+          }}>{actionIcon(action)}<span>{action.label}<small>{action.disabledReason ?? `${action.apCost} AP${action.etherCost ? ` · ${action.etherCost} ETH` : ''}${action.quantity !== undefined ? ` · Qty ${action.quantity}` : ''}`}</small></span></button>)}</div>
+          {detailAction&&<aside className="combat-action-detail" aria-live="polite"><header><strong>{detailAction.label}</strong><span>{detailAction.apCost} AP{detailAction.etherCost?` · ${detailAction.etherCost} Ether`:''}</span></header><p>{detailAction.description}</p><dl>{detailAction.rangeTiles!==undefined&&<div><dt>Range</dt><dd>{detailAction.rangeTiles===0?'Self':detailAction.rangeTiles}</dd></div>}{detailAction.targetType&&<div><dt>Target</dt><dd>{detailAction.targetType}</dd></div>}{detailAction.quantity!==undefined&&<div><dt>Quantity</dt><dd>{detailAction.quantity}</dd></div>}</dl>{detailAction.effectSummary?.map((summary)=><small key={summary}>{summary}</small>)}{detailAction.requirements?.map((requirement)=><em key={requirement}>{requirement}</em>)}{detailAction.disabledReason&&<b>{detailAction.disabledReason}</b>}</aside>}
         </div>
 
         <div className="combat-status"><strong>{selectedAction?.type === 'Move' ? 'SELECT A HIGHLIGHTED CELL' : 'SELECT A HIGHLIGHTED TARGET'}</strong><span>{selectedAction?.type === 'Move' ? commands.legalMoves.length : targetIds.length} VALID</span></div>

@@ -38,6 +38,8 @@ export interface CombatResultContainerProps {
     actionId: 'Search' | 'Restrain' | 'Capture' | 'Interrogate' | 'Release' | 'FinishOff'
   ) => void;
   onDismiss: () => void;
+  onLoadLastSave?: () => boolean;
+  onMainMenu?: () => void;
   resolveItemName: (itemId: string) => string;
 }
 
@@ -46,6 +48,8 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
   onTakeLoot,
   onExecutePostCombatAction,
   onDismiss,
+  onLoadLastSave,
+  onMainMenu,
   resolveItemName,
 }) => {
   const isVictory = resolution.victoryStatus === 'Victory';
@@ -53,6 +57,7 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
     resolution.availableLoot.map((s) => s.itemId)
   );
   const [activeTab, setActiveTab] = useState<'debrief' | 'loot' | 'prisoners'>('debrief');
+  const [defeatFeedback, setDefeatFeedback] = useState<string>();
 
   const toggleItemSelection = (itemId: string) => {
     if (selectedItems.includes(itemId)) {
@@ -83,7 +88,7 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
         headerRight={
           <div className="flex items-center gap-2">
             <Badge variant={isVictory ? 'emerald' : 'rose'} size="xs">
-              {resolution.victoryStatus.toUpperCase()}
+              {isVictory ? 'VICTORY' : 'DEFEATED'}
             </Badge>
             <Badge variant="cyan" size="xs">
               +{resolution.xpGained} XP
@@ -383,14 +388,15 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
           )}
 
           {/* Footer Proceed Button */}
-          <div className="flex justify-end pt-3 border-t border-zinc-800">
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-zinc-800">
+            {!isVictory&&<><strong className="mr-auto text-rose-300">DEFEATED</strong>{defeatFeedback&&<small className="text-rose-300">{defeatFeedback}</small>}{onLoadLastSave&&<Button variant="secondary" size="md" onClick={()=>{if(!onLoadLastSave())setDefeatFeedback('No valid save was found.')}}>LOAD LAST SAVE</Button>}{onMainMenu&&<Button variant="ghost" size="md" onClick={onMainMenu}>MAIN MENU</Button>}</>}
             <Button
               variant="primary"
               size="md"
               onClick={onDismiss}
               leftIcon={<ArrowRight className="w-4 h-4" />}
             >
-              PROCEED // CONCLUDE ENCOUNTER
+              {isVictory ? 'PROCEED // CONCLUDE ENCOUNTER' : 'ACCEPT DEFEAT'}
             </Button>
           </div>
         </div>

@@ -40,6 +40,7 @@ assert((loadedEquipment.getState().player.inventory.items.find((entry) => entry.
 const combatDamageSave = JSON.parse(loadedEquipment.serializeSave());
 combatDamageSave.state.player.vitals.currentHp = 10;
 assert(loadedEquipment.loadSave(JSON.stringify(combatDamageSave)).success, 'Combat damage test state did not load.');
+assert(loadedEquipment.executeEffects([{ type: 'setAbilityUnlocked', abilityId: 'ability_mindmancer_read_mind', unlocked: true }]).success, 'Ability test setup failed.');
 assert(loadedEquipment.startCombatEncounter('enc_prologue_ares_freight_checkpoint', false), 'Production combat did not start.');
 assert(loadedEquipment.startTacticalCombat(), 'Tactical combat roster was not created.');
 const beforeUse = loadedEquipment.getState();
@@ -47,6 +48,9 @@ const player = beforeUse.combat.combatants[beforeUse.player.characterId];
 assert(player && beforeUse.combat.activeCombatantId === player.id, 'Player turn was not available for the consumable regression.');
 const meleeAction = loadedEquipment.getResolvedCombatCommands().actions.find((action) => action.type === 'MeleeAttack');
 assert(meleeAction?.weaponId === 'wpn_ether_baton' && meleeAction.apCost === 2 && meleeAction.etherCost === 5, 'Melee combat action did not use equipped weapon metadata.');
+const abilityActions = loadedEquipment.getResolvedCombatCommands().actions.filter((action) => action.type === 'Ability');
+assert(abilityActions.length > 0 && abilityActions.every((action) => action.description && action.targetType && action.rangeTiles !== undefined && action.effectSummary?.length), 'Resolved combat abilities are missing player-facing details.');
+assert(abilityActions.find((action) => action.abilityId === 'ability_mindmancer_read_mind')?.effectSummary?.some((summary) => summary.includes('Mind Exposed')), 'Status effect summary did not resolve its authored display name.');
 const beforeQuantity = beforeUse.player.inventory.items.find((entry) => entry.itemId === 'con_trauma_patch')?.quantity ?? 0;
 const used = loadedEquipment.executeCombatAction({ type: 'UseItem', actorId: player.id, itemId: 'con_trauma_patch' });
 assert(used.success, `Combat consumable failed: ${used.reason ?? 'unknown reason'}`);
@@ -62,5 +66,10 @@ assert(progression.getState().player.level === 3, 'A large XP reward did not gra
 assert(progression.getState().player.experience === 450, 'Accumulated XP was not preserved after leveling.');
 const loadedProgression = new GameSession(registry, 78);
 assert(loadedProgression.loadSave(progression.serializeSave()).success && loadedProgression.getState().player.level === 3, 'Progression was not preserved by save/load.');
+
+const backgroundAbilityIds = registry.backgrounds.getAll().map((background) => background.startingEffects.find((effect) => effect.type === 'setAbilityUnlocked')?.abilityId);
+assert(backgroundAbilityIds.every((abilityId) => abilityId && registry.getAbility(abilityId)), 'A starting background is missing its authored signature ability.');
+assert(new Set(backgroundAbilityIds).size === backgroundAbilityIds.length, 'Starting backgrounds do not grant distinct signature abilities.');
+assert(registry.encounters.findByTag('Prologue').every((encounter) => encounter.defeatOutcome), 'A Prologue encounter is missing its authored defeat outcome.');
 
 console.log('RPG core production-flow regressions passed.');

@@ -1012,7 +1012,9 @@ export class GameSession {
         const item = this.contentRegistry.getItem(itemId);
         if (!item || item.category !== 'consumable' || !item.usableContexts.includes('Combat')) continue;
         const allowed = this.itemUseSystem.canUseDefinition(this.state, item, 'Combat');
-        commands.actions.push({ id: `item.${item.id}`, type: 'UseItem', category: 'Support', label: item.name, apCost: item.apUseCost ?? 0, etherCost: 0, itemId: item.id, targetIds: [], disabledReason: !allowed.success ? allowed.reason : actor.currentAp < (item.apUseCost ?? 0) ? 'Not enough AP.' : undefined });
+        const effectSummary=item.useEffects.map((effect)=>effect.type==='changeStat'&&effect.stat.toLowerCase()==='currenthp'&&effect.delta?`Restores ${effect.delta} HP.`:effect.type==='changeStat'&&effect.stat.toLowerCase()==='currentether'&&effect.delta?`Restores ${effect.delta} Ether.`:'Applies its authored effect.');
+        const quantity=this.state.player.inventory.items.filter((entry)=>entry.itemId===item.id).reduce((sum,entry)=>sum+entry.quantity,0);
+        commands.actions.push({ id: `item.${item.id}`, type: 'UseItem', category: 'Support', label: item.name, description:item.description, apCost: item.apUseCost ?? 0, etherCost: 0, itemId: item.id, targetType:'Self',effectSummary,requirements:item.useConditions.length?['Use conditions must be met.']:[],quantity, targetIds: [], disabledReason: !allowed.success ? allowed.reason : actor.currentAp < (item.apUseCost ?? 0) ? 'Not enough AP.' : undefined });
       }
     }
     const escapeApCost = encounter.escapeRules.check?.apCost ?? 0;
@@ -1021,6 +1023,7 @@ export class GameSession {
       type: 'AttemptFlee',
       category: 'Support',
       label: 'Attempt Flee',
+      description: 'Attempt to disengage from this encounter.',
       apCost: escapeApCost,
       etherCost: 0,
       targetIds: [],

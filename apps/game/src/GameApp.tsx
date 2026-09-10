@@ -16,6 +16,7 @@ import { InGameMenu, MainMenu } from './components/GameMenus.tsx';
 import { CharacterCreator } from './components/CharacterCreator.tsx';
 import{MatchValuesScreen}from'./components/MatchValuesScreen.tsx';
 import { BaseScreen, CraftingScreen, ExplorationHud, GameShell, PoiScreen, ShopScreen, WorldMapView } from '@neon-ether/shared-ui';
+import { applyVisualPreferences, readVisualPreferences } from './presentation/visual-preferences.ts';
 
 export const GameApp: React.FC = () => {
   const runtime = useGameRuntime();
@@ -25,6 +26,7 @@ export const GameApp: React.FC = () => {
   const [showMainMenu, setShowMainMenu] = useState(() => !new URLSearchParams(window.location.search).has('newGame'));
   const [showCreator, setShowCreator] = useState(false);
   useEffect(() => {
+    applyVisualPreferences(readVisualPreferences());
     const url = new URL(window.location.href);
     if (!url.searchParams.has('newGame')) return;
     url.searchParams.delete('newGame');

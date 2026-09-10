@@ -36,7 +36,7 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ state, resolvedP
   const itemMap = useMemo(() => new Map<string, Item>(items.map((item) => [item.id, item])), [items]);
   const selectedItem = selectedItemId ? itemMap.get(selectedItemId) : undefined;
   const selectedQuest = quests.find((quest) => quest.runtime.questId === selectedQuestId) ?? quests[0];
-  return <section className="ne-character-sheet" aria-label="Character sheet">
+  return <section className="ne-character-sheet" data-tab={tab} aria-label="Character sheet">
     <header><div><UserRound/><span><small>Personnel dossier</small><strong>{state.player.name}</strong></span></div><Button variant="ghost" size="sm" onClick={onClose} leftIcon={<ArrowLeft/>}>Close</Button></header>
     <Tabs value={tab} items={tabs} onChange={setTab} label="Character sheet sections" />
     <div className="ne-sheet-body">

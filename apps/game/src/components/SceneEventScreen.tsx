@@ -92,6 +92,7 @@ export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = 
   const title = props.mode === 'event' ? props.eventState.currentStep.title : undefined;
   const eventChoices = props.mode === 'event' ? props.eventState.currentStep.resolvedChoices.filter((choice) => choice.isVisible) : [];
   const canContinue = props.mode === 'event' && eventChoices.length === 0;
+  const isEtherScene = props.mode === 'event' && (props.eventState.event.tags.includes('Mindmancer') || props.eventState.event.presentation.ambientGlow === 'purple');
 
   useEffect(() => {
     if (!canContinue) return;
@@ -104,7 +105,7 @@ export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = 
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [canContinue, beatId, props]);
 
-  return <section className="ne-scene-screen" data-mode={props.mode} data-layout={props.mode === 'event' ? props.eventState.event.presentation.layoutStyle : 'dialogue'} aria-live="polite">
+  return <section className="ne-scene-screen" data-mode={props.mode} data-ether={isEtherScene} data-layout={props.mode === 'event' ? props.eventState.event.presentation.layoutStyle : 'dialogue'} aria-live="polite">
     <div className="ne-scene-art">
       {previousArtwork && <img className="ne-scene-art__image ne-scene-art__image--outgoing" src={previousArtwork} alt="" />}
       {artwork ? <img key={artwork} className="ne-scene-art__image" src={artwork} alt="" /> : <ImageOff aria-hidden="true" />}

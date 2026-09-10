@@ -15,5 +15,6 @@ export * from './components/EnvironmentalLayer.tsx';
 export * from './components/Foundation.tsx';
 export * from './components/ExplorationHud.tsx';
 export * from './components/GameShell.tsx';
+export * from './components/ScreenEffects.tsx';
 export * from './components/ShopScreen.tsx';
 export * from './components/CraftingScreen.tsx';

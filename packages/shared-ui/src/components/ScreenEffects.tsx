@@ -5,7 +5,6 @@ export const ScreenEffects = memo(() => (
   <div className="ne-screen-fx" aria-hidden="true">
     <span className="ne-screen-fx__scanlines" />
     <span className="ne-screen-fx__scan-pass" />
-    <span className="ne-screen-fx__static" />
     <span className="ne-screen-fx__vignette" />
   </div>
 ));

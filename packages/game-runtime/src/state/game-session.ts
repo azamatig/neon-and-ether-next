@@ -434,6 +434,8 @@ export class GameSession {
       isMerchant: false,
       isCompanion: false,
       level: p.level,
+      classId: p.classId,
+      specialPathIds: [...p.specialPathIds],
       attributes: effective.attributes,
       vitals: effective.derivedStats,
       skills: { ...p.skills },
@@ -461,7 +463,15 @@ export class GameSession {
     if (!blueprint && !runtime) return undefined;
     if (blueprint?.availabilityConditions.length && !this.evaluateConditions(blueprint.availabilityConditions).allMet) return undefined;
 
-    const base: CharacterDefinition = blueprint ?? {
+    const npcClass = blueprint?.classId ? this.contentRegistry.classes.get(blueprint.classId) : undefined;
+    const classResolvedBlueprint = blueprint ? {
+      ...blueprint,
+      skills: Object.fromEntries([...new Set([...Object.keys(blueprint.skills), ...Object.keys(npcClass?.startingSkillModifiers ?? {})])].map((id) => [id, (blueprint.skills[id] ?? 0) + (npcClass?.startingSkillModifiers[id] ?? 0)])),
+      temporaryModifiers: [...blueprint.temporaryModifiers, ...(npcClass?.startingModifiers ?? [])],
+      traits: [...new Set([...blueprint.traits, ...(npcClass?.grantedTraits ?? [])])],
+      abilityIds: [...new Set([...blueprint.abilityIds, ...(npcClass?.startingAbilityIds ?? [])])],
+    } : undefined;
+    const base: CharacterDefinition = classResolvedBlueprint ?? {
       id: npcId,
       name: runtime?.npcId ?? 'Unknown NPC',
       description: 'Sector resident.',
@@ -473,6 +483,8 @@ export class GameSession {
       isMerchant: runtime?.isMerchant ?? false,
       isCompanion: runtime?.isCompanion ?? false,
       level: 1,
+      classId: undefined,
+      specialPathIds: [],
       attributes: { body: 10, reflexes: 10, mind: 10, etherTech: 10, presence: 10 },
       skills: {},
       perks: [],
@@ -499,22 +511,24 @@ export class GameSession {
       availabilityConditions: [],
     };
 
-    if (!runtime) return base;
+    const effectiveBase = new CharacterStatsSystem().resolve(base);
+    const resolvedBase = { ...base, attributes:effectiveBase.attributes, vitals:effectiveBase.derivedStats };
+    if (!runtime) return resolvedBase;
 
     return {
-      ...base,
-      isMerchant: runtime.isMerchant ?? base.isMerchant,
-      isCompanion: runtime.isCompanion ?? base.isCompanion,
-      defaultBehavior: (runtime.behaviorOverride as any) ?? base.defaultBehavior,
-      dialogueTreeId: runtime.dialogueTreeIdOverride ?? base.dialogueTreeId,
+      ...resolvedBase,
+      isMerchant: runtime.isMerchant ?? resolvedBase.isMerchant,
+      isCompanion: runtime.isCompanion ?? resolvedBase.isCompanion,
+      defaultBehavior: (runtime.behaviorOverride as any) ?? resolvedBase.defaultBehavior,
+      dialogueTreeId: runtime.dialogueTreeIdOverride ?? resolvedBase.dialogueTreeId,
       position: { ...runtime.position },
       facing: runtime.facing ?? base.facing,
       vitals: {
-        ...base.vitals,
+        ...resolvedBase.vitals,
         currentHp: runtime.currentHp,
-        maxHp: runtime.maxHp ?? base.vitals.maxHp,
+        maxHp: runtime.maxHp ?? resolvedBase.vitals.maxHp,
       },
-      inventory: runtime.inventory ? runtime.inventory.items.map((slot) => ({ ...slot })) : base.inventory,
+      inventory: runtime.inventory ? runtime.inventory.items.map((slot) => ({ ...slot })) : resolvedBase.inventory,
       credits: runtime.inventory?.credits ?? 0,
     };
   }

@@ -133,10 +133,11 @@ export class TurnBasedCombatEngine {
       const npc = this.content.getNPC(npcId);
       const runtime = gameState.npcs[npcId];
       if (!npc || runtime?.isAlive === false) return;
-      const effective = new CharacterStatsSystem().resolve(npc);
+      const npcClass = npc.classId ? this.content.classes.get(npc.classId) : undefined;
+      const effective = new CharacterStatsSystem().resolve({ ...npc, temporaryModifiers:[...npc.temporaryModifiers, ...(npcClass?.startingModifiers ?? [])] });
       const inventory = runtime?.inventory?.items ?? npc.inventory;
       const equipped = inventory.filter((slot) => slot.isEquipped).map((slot) => this.content.getItem(slot.itemId)).filter((item) => item !== undefined);
-      const abilities = new Set([...npc.abilityIds, ...equipped.flatMap((item) => item.grantedAbilityIds)]);
+      const abilities = new Set([...npc.abilityIds, ...(npcClass?.startingAbilityIds ?? []), ...equipped.flatMap((item) => item.grantedAbilityIds)]);
       combatants[npcId] = {
         id: npcId, sourceId: npcId, name: npc.name, team: 'Player',
         bodyImage: npc.combatImage, portraitIcon: npc.portraitIcon,

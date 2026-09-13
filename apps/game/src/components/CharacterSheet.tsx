@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import type { CharacterDefinition, EquipmentSlot, GameState, Item, NpcRuntimeState, Quest } from '@neon-ether/game-schema';
+import type { CharacterDefinition, ClassDefinition, EquipmentSlot, GameState, Item, NpcRuntimeState, Quest, SpecialPathDefinition } from '@neon-ether/game-schema';
 import type { InventoryCommandResult, ProgressionView } from '@neon-ether/game-runtime';
 import { ArrowLeft, Check, Coins, PackageOpen, Shield, UserRound } from 'lucide-react';
 import { Button, ProgressBar, Tabs } from '@neon-ether/shared-ui';
@@ -11,6 +11,8 @@ type PartyMember = { runtime: NpcRuntimeState; character?: CharacterDefinition }
 interface CharacterSheetProps {
   state: GameState;
   resolvedPlayer: CharacterDefinition;
+  primaryClass?: ClassDefinition;
+  specialPaths: SpecialPathDefinition[];
   items: Item[];
   quests: QuestDossier[];
   party: PartyMember[];
@@ -30,7 +32,7 @@ const tabs = [
   { value: 'quests', label: 'Quests' },
 ] as const;
 
-export const CharacterSheet: React.FC<CharacterSheetProps> = ({ state, resolvedPlayer, items, quests, party, progression, equipmentOptions, equipmentSlots, onClose, onEquip, onUnequip, onUse, onDrop }) => {
+export const CharacterSheet: React.FC<CharacterSheetProps> = ({ state, resolvedPlayer, primaryClass, specialPaths, items, quests, party, progression, equipmentOptions, equipmentSlots, onClose, onEquip, onUnequip, onUse, onDrop }) => {
   const [tab, setTab] = useState<SheetTab>('character');
   const [selectedItemId, setSelectedItemId] = useState<string>();
   const [selectedQuestId, setSelectedQuestId] = useState<string>();
@@ -41,7 +43,7 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ state, resolvedP
     <header><div><UserRound/><span><small>Personnel dossier</small><strong>{state.player.name}</strong></span></div><Button variant="ghost" size="sm" onClick={onClose} leftIcon={<ArrowLeft/>}>Close</Button></header>
     <Tabs value={tab} items={tabs} onChange={setTab} label="Character sheet sections" />
     <div className="ne-sheet-body">
-      {tab === 'character' && <CharacterTab state={state} resolvedPlayer={resolvedPlayer} progression={progression}/>}
+      {tab === 'character' && <CharacterTab state={state} resolvedPlayer={resolvedPlayer} progression={progression} primaryClass={primaryClass} specialPaths={specialPaths}/>}
       {tab === 'inventory' && <InventoryTab state={state} itemMap={itemMap} equipmentOptions={equipmentOptions} selectedId={selectedItemId} onSelect={setSelectedItemId} selected={selectedItem} onEquip={onEquip} onUse={onUse} onDrop={onDrop}/>}
       {tab === 'equipment' && <EquipmentTab state={state} itemMap={itemMap} equipmentSlots={equipmentSlots} onUnequip={onUnequip}/>}
       {tab === 'party' && <PartyTab state={state} party={party}/>}
@@ -50,8 +52,8 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ state, resolvedP
   </section>;
 };
 
-const CharacterTab: React.FC<{state:GameState;resolvedPlayer:CharacterDefinition;progression:ProgressionView}> = ({state,resolvedPlayer,progression}) => {
- const {player}=state; return <div className="ne-dossier-grid"><aside className="ne-dossier-identity"><div className="ne-dossier-portrait"><UserRound/></div><h1>{player.name}</h1><p>{player.title}</p><span>Level {player.level}</span><ProgressBar label={`Experience · ${progression.totalXp} total XP`} value={progression.xpIntoLevel} max={progression.xpForNextLevel??Math.max(1,progression.xpIntoLevel)} tone="ether"/><div className="ne-money"><Coins/> {player.inventory.credits} credits</div></aside><section><SheetSection title="Attributes"><div className="ne-attribute-grid">{Object.entries(resolvedPlayer.attributes).map(([name,value])=><div key={name}><small>{humanize(name)}</small><strong>{value}</strong></div>)}</div></SheetSection><SheetSection title="Vitals & derived stats"><div className="ne-stat-grid">{Object.entries(resolvedPlayer.vitals).map(([name,value])=><div key={name}><span>{humanize(name)}</span><strong>{value}</strong></div>)}</div></SheetSection><SheetSection title="Skills"><div className="ne-chip-list">{Object.entries(player.skills).map(([name,value])=><span key={name}>{humanize(name)} <b>{value}</b></span>)}{Object.keys(player.skills).length===0&&<em>No trained skills recorded.</em>}</div></SheetSection><SheetSection title="Traits & perks"><div className="ne-chip-list">{[...player.traits,...player.perks].map(value=><span key={value}>{value}</span>)}{player.traits.length+player.perks.length===0&&<em>No traits or perks acquired.</em>}</div></SheetSection><SheetSection title="Status" tone={player.activeStatusEffects.length+player.statusEffects.length?'danger':'success'}><div className="ne-chip-list">{player.activeStatusEffects.map(status=><span key={status.id}>{status.name} · {status.durationTurns}</span>)}{player.statusEffects.map(status=><span key={status.id}>{humanize(status.id)} · {status.durationTurns}</span>)}{player.activeStatusEffects.length+player.statusEffects.length===0&&<em>Condition stable. No persistent effects.</em>}</div></SheetSection></section></div>;
+const CharacterTab: React.FC<{state:GameState;resolvedPlayer:CharacterDefinition;progression:ProgressionView;primaryClass?:ClassDefinition;specialPaths:SpecialPathDefinition[]}> = ({state,resolvedPlayer,progression,primaryClass,specialPaths}) => {
+ const {player}=state; return <div className="ne-dossier-grid"><aside className="ne-dossier-identity"><div className="ne-dossier-portrait"><UserRound/></div><h1>{player.name}</h1><p>{player.title}</p><span>Level {player.level}</span><small>Primary class</small><strong>{primaryClass?.name??'Unassigned'}</strong>{specialPaths.length>0&&<><small>Special path</small>{specialPaths.map(path=><strong key={path.id}>{path.name}</strong>)}</>}<ProgressBar label={`Experience · ${progression.totalXp} total XP`} value={progression.xpIntoLevel} max={progression.xpForNextLevel??Math.max(1,progression.xpIntoLevel)} tone="ether"/><div className="ne-money"><Coins/> {player.inventory.credits} credits</div></aside><section><SheetSection title="Attributes"><div className="ne-attribute-grid">{Object.entries(resolvedPlayer.attributes).map(([name,value])=><div key={name}><small>{humanize(name)}</small><strong>{value}</strong></div>)}</div></SheetSection><SheetSection title="Vitals & derived stats"><div className="ne-stat-grid">{Object.entries(resolvedPlayer.vitals).map(([name,value])=><div key={name}><span>{humanize(name)}</span><strong>{value}</strong></div>)}</div></SheetSection><SheetSection title="Skills"><div className="ne-chip-list">{Object.entries(player.skills).map(([name,value])=><span key={name}>{humanize(name)} <b>{value}</b></span>)}{Object.keys(player.skills).length===0&&<em>No trained skills recorded.</em>}</div></SheetSection><SheetSection title="Traits & perks"><div className="ne-chip-list">{[...player.traits,...player.perks].map(value=><span key={value}>{value}</span>)}{player.traits.length+player.perks.length===0&&<em>No traits or perks acquired.</em>}</div></SheetSection><SheetSection title="Status" tone={player.activeStatusEffects.length+player.statusEffects.length?'danger':'success'}><div className="ne-chip-list">{player.activeStatusEffects.map(status=><span key={status.id}>{status.name} · {status.durationTurns}</span>)}{player.statusEffects.map(status=><span key={status.id}>{humanize(status.id)} · {status.durationTurns}</span>)}{player.activeStatusEffects.length+player.statusEffects.length===0&&<em>Condition stable. No persistent effects.</em>}</div></SheetSection></section></div>;
 };
 
 const InventoryTab:React.FC<{state:GameState;itemMap:Map<string,Item>;equipmentOptions:Record<string,Record<string,InventoryCommandResult>>;selectedId?:string;selected?:Item;onSelect:(id:string)=>void;onEquip:(entry:string,slot:string)=>InventoryCommandResult;onUse:(id:string)=>InventoryCommandResult;onDrop:(id:string)=>void}>=({state,itemMap,equipmentOptions,selectedId,selected,onSelect,onEquip,onUse,onDrop})=>{

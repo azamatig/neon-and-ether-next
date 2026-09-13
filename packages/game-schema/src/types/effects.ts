@@ -256,6 +256,9 @@ export type ApplyStatusEffect=z.infer<typeof ApplyStatusEffectSchema>;
 /** Generic persistent character ability unlock; stored in PlayerState and SaveGame. */
 export const SetAbilityUnlockedEffectSchema=z.object({type:z.literal('setAbilityUnlocked'),abilityId:z.string().min(1),unlocked:z.boolean().default(true),targetCharacterId:z.string().optional()});
 export type SetAbilityUnlockedEffect=z.infer<typeof SetAbilityUnlockedEffectSchema>;
+/** Generic persistent special-path membership; abilities remain independent unlock effects. */
+export const SetSpecialPathUnlockedEffectSchema=z.object({type:z.literal('setSpecialPathUnlocked'),specialPathId:z.string().min(1),unlocked:z.boolean().default(true)});
+export type SetSpecialPathUnlockedEffect=z.infer<typeof SetSpecialPathUnlockedEffectSchema>;
 
 /**
  * Universal Effect Discriminated Union.
@@ -289,6 +292,7 @@ export const EffectSchema = z.discriminatedUnion('type', [
   ChangeWeatherEffectSchema,
   ApplyStatusEffectSchema,
   SetAbilityUnlockedEffectSchema,
+  SetSpecialPathUnlockedEffectSchema,
 ]);
 
 export type Effect = z.infer<typeof EffectSchema>;

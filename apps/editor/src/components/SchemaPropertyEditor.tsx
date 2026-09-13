@@ -67,6 +67,8 @@ function referenceCollection(path: string[], content: GameContent): Array<{ id: 
   if (/factionId$/i.test(field)) return content.factions;
   if (/dialogueTreeId$/i.test(field)) return content.dialogues.map((entity) => ({ id: entity.id, name: entity.title }));
   if (/abilityId(s)?$/i.test(field)) return content.abilities;
+  if (/specialPathId(s)?$/i.test(field)) return content.specialPaths;
+  if (/classId$/i.test(field)) return content.classes;
   if (/combatAIProfileId$/i.test(field)) return content.combatAIProfiles;
   if (/itemId$|equippedWeaponId$|resultItemId$/i.test(field)) return content.items;
   if (/enemyId$/i.test(field)) return content.enemies;

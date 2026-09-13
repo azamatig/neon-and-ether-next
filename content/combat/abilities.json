@@ -99,7 +99,8 @@
     "tags": [
       "Mindmancer",
       "Mental",
-      "SentientOnly"
+      "SentientOnly",
+      "Perception"
     ],
     "apCost": 2,
     "etherCost": 4,
@@ -128,7 +129,8 @@
     "tags": [
       "Mindmancer",
       "Mental",
-      "SentientOnly"
+      "SentientOnly",
+      "Influence"
     ],
     "apCost": 3,
     "etherCost": 8,
@@ -157,7 +159,8 @@
     "tags": [
       "Mindmancer",
       "Mental",
-      "SentientOnly"
+      "SentientOnly",
+      "Memory"
     ],
     "apCost": 3,
     "etherCost": 10,
@@ -191,7 +194,8 @@
     "tags": [
       "Mindmancer",
       "Mental",
-      "SentientOnly"
+      "SentientOnly",
+      "Suppression"
     ],
     "apCost": 4,
     "etherCost": 12,

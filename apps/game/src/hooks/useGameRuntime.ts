@@ -115,6 +115,8 @@ export function useGameRuntime() {
   const itemDefinitions = session.getContentRegistry().items.getAll();
   const equipmentOptions = Object.fromEntries(gameState.player.inventory.items.map((entry) => [entry.entryId ?? entry.itemId, Object.fromEntries((session.getContentRegistry().getItem(entry.itemId)?.equipmentSlots ?? []).map((slotId) => [slotId, session.canEquipInventoryEntry(entry.entryId ?? entry.itemId, slotId)]))]));
   const equipmentSlots = session.getEquipmentSlots();
+  const primaryClass = gameState.player.classId ? session.getContentRegistry().classes.get(gameState.player.classId) : undefined;
+  const specialPaths = gameState.player.specialPathIds.flatMap((id) => { const definition = session.getContentRegistry().specialPaths.get(id); return definition ? [definition] : []; });
   const playerProgression = session.getPlayerProgressionView();
   const characterCreationOptions = useMemo(() => session.getCharacterCreationOptions(), [session]);
   const questDossiers = (Object.values(gameState.quests) as import('@neon-ether/game-schema').QuestRuntimeState[]).map((quest) => ({
@@ -197,6 +199,8 @@ export function useGameRuntime() {
     itemDefinitions,
     equipmentOptions,
     equipmentSlots,
+    primaryClass,
+    specialPaths,
     playerProgression,
     characterCreationOptions,
     generateCharacterName: () => session.generateCharacterName(),

@@ -21,6 +21,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     statusEffect: new Set(content.statusEffects.map((value) => value.id)),
     ability:new Set(content.abilities.map(value=>value.id)),
     minigame:new Set(content.minigames.map(value=>value.id)),
+    class:new Set(content.classes.map(value=>value.id)), specialPath:new Set(content.specialPaths.map(value=>value.id)),
   };
   const missing = (set: ReadonlySet<string>, id: string | undefined, kind: string, owner: Owner) => {
     if (id && !set.has(id)) issues.push({ severity: 'error', category: owner.category, targetId: owner.targetId, field: owner.field, message: `Missing ${kind} reference '${id}'` });
@@ -41,6 +42,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if(current.type==='factionReputationTier'){const faction=content.factions.find((entry)=>entry.id===current.factionId);if(faction&&!faction.reputationTiers.some((tier)=>tier.id===current.tierId))issues.push({severity:'error',category:owner.category,targetId:owner.targetId,field:owner.field,message:`Faction '${current.factionId}' has no reputation tier '${current.tierId}'`});}
     if (current.type === 'baseRoomExists') missing(ids.room, current.roomId, 'room', owner);
     if (current.type === 'currentWeather') missing(ids.weather, current.weatherId, 'weather', owner);
+    if (current.type === 'specialPathUnlocked') missing(ids.specialPath, current.specialPathId, 'special path', owner);
   };
   const effect = (value: Effect, owner: Owner): void => {
     const parsed = EffectSchema.safeParse(value);
@@ -68,6 +70,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if (current.type === 'changeWeather') missing(ids.weatherProfile, current.weatherProfileId, 'weather profile', owner);
     if (current.type === 'applyStatusEffect') missing(ids.statusEffect, current.statusEffectId, 'status effect', owner);
     if(current.type==='setAbilityUnlocked')missing(ids.ability,current.abilityId,'ability',owner);
+    if(current.type==='setSpecialPathUnlocked')missing(ids.specialPath,current.specialPathId,'special path',owner);
   };
   const outcome = (value: GameplayOutcome | undefined, owner: Owner): void => {
     if (!value) return;
@@ -112,6 +115,12 @@ export function validateContentGraph(content: GameContent, options: ContentValid
   detectCycles(new Map(content.baseUpgrades.map((upgrade)=>[upgrade.id,upgrade.nextUpgradeId?[upgrade.nextUpgradeId]:[]])),(cycle)=>issues.push({severity:'error',category:'BaseUpgrade',targetId:cycle[0],field:'nextUpgradeId',message:`Circular base upgrade chain: ${cycle.join(' -> ')}`}));
   for(const recipe of content.recipes) lists(recipe.conditions,recipe.effects,{category:'Recipe',targetId:recipe.id,field:'recipe'});
   for(const npc of content.npcs) missing(ids.progression,npc.progressionDefinitionId,'progression definition',{category:'NPC',targetId:npc.id,field:'progressionDefinitionId'});
+  for(const npc of content.npcs){missing(ids.class,npc.classId,'class',{category:'NPC',targetId:npc.id,field:'classId'});npc.specialPathIds.forEach((id)=>missing(ids.specialPath,id,'special path',{category:'NPC',targetId:npc.id,field:'specialPathIds'}));npc.abilityIds.forEach((id)=>missing(ids.ability,id,'ability',{category:'NPC',targetId:npc.id,field:'abilityIds'}));if(npc.isPlayer&&npc.classId&&content.classes.find((entry)=>entry.id===npc.classId)?.availability==='NPC')issues.push({severity:'error',category:'NPC',targetId:npc.id,field:'classId',message:'Starting Player definition cannot use an NPC-only class'});}
+  const mindmancerAbilityIds=new Set(content.abilities.filter((ability)=>ability.tags.includes('Mindmancer')).map((ability)=>ability.id));
+  for(const definition of content.classes){const owner={category:'Class' as const,targetId:definition.id,field:'class'};lists(definition.requirements,definition.startingEffects,owner);definition.startingAbilityIds.forEach((id)=>missing(ids.ability,id,'ability',{...owner,field:'startingAbilityIds'}));definition.startingEquipment.forEach((entry)=>missing(ids.item,entry.itemId,'item',{...owner,field:'startingEquipment'}));const granted=[...definition.startingAbilityIds,...definition.startingEffects.filter((entry)=>entry.type==='setAbilityUnlocked').map((entry)=>entry.abilityId)];if(definition.availability!=='NPC'&&granted.some((id)=>mindmancerAbilityIds.has(id)))issues.push({severity:'error',category:'Class',targetId:definition.id,field:'startingAbilityIds',message:'Starting Player class cannot grant a Mindmancer ability'});}
+  for(const path of content.specialPaths){const owner={category:'SpecialPath' as const,targetId:path.id,field:'specialPath'};lists(path.unlockConditions,[],owner);for(const entry of path.progression){missing(ids.ability,entry.abilityId,'ability',{...owner,field:'progression.abilityId'});lists(entry.unlockConditions,[],{...owner,field:`progression.${entry.abilityId}`});}}
+  for(const ability of content.abilities)for(const entry of ability.effects)missing(ids.statusEffect,entry.statusEffectId,'status effect',{category:'Ability',targetId:ability.id,field:'effects.statusEffectId'});
+  for(const background of content.backgrounds){const grants=background.startingEffects.filter((entry)=>entry.type==='setAbilityUnlocked').map((entry)=>entry.abilityId);if(grants.some((id)=>mindmancerAbilityIds.has(id)))issues.push({severity:'error',category:'Background',targetId:background.id,field:'startingEffects',message:'Starting Background cannot grant a Mindmancer ability'});}
   for(const npc of content.npcs){missing(ids.faction,npc.factionId,'faction',{category:'NPC',targetId:npc.id,field:'factionId'});npc.factionIds.forEach((id)=>missing(ids.faction,id,'faction',{category:'NPC',targetId:npc.id,field:'factionIds'}));}
   for(const enemy of content.enemies){missing(ids.faction,enemy.factionId,'faction',{category:'Enemy',targetId:enemy.id,field:'factionId'});enemy.factionIds.forEach((id)=>missing(ids.faction,id,'faction',{category:'Enemy',targetId:enemy.id,field:'factionIds'}));}
   for(const npc of content.npcs) missing(ids.shop,npc.shopId,'shop',{category:'NPC',targetId:npc.id,field:'shopId'});

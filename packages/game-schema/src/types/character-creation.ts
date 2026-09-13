@@ -8,6 +8,8 @@ import { EquipmentSlotSchema } from './items.ts';
 export const CharacterCreationAttributeRuleSchema = z.object({ attribute: AttributeKeySchema, minimum: z.number().int().min(1), maximum: z.number().int().min(1), costPerPoint: z.number().int().min(1).default(1) });
 export const CharacterCreationSkillRuleSchema = z.object({ skillId: z.string().min(1), name: z.string().min(1), minimum: z.number().int().min(0).default(0), maximum: z.number().int().min(0), costPerRank: z.number().int().min(1).default(1) });
 export const StartingItemSchema = z.object({ itemId: z.string().min(1), quantity: z.number().int().min(1).default(1) });
+export const CharacterAvailabilitySchema = z.enum(['Player', 'NPC', 'Both']);
+export const CharacterArchetypeRaritySchema = z.enum(['common', 'uncommon', 'rare', 'unique']);
 
 export const RaceDefinitionSchema = BaseEntitySchema.extend({
   artwork: z.string().optional(), isAvailable: z.boolean().default(true), requirements: z.array(ConditionSchema).default([]),
@@ -17,12 +19,21 @@ export const RaceDefinitionSchema = BaseEntitySchema.extend({
 export type RaceDefinition = z.infer<typeof RaceDefinitionSchema>;
 
 export const ClassDefinitionSchema = BaseEntitySchema.extend({
-  artwork: z.string().optional(), isAvailable: z.boolean().default(true), requirements: z.array(ConditionSchema).default([]),
+  artwork: z.string().optional(), availability: CharacterAvailabilitySchema.default('Both'), rarity: CharacterArchetypeRaritySchema.default('common'), requirements: z.array(ConditionSchema).default([]),
   startingAbilityIds: z.array(z.string()).default([]), startingSkillModifiers: z.record(z.string(), z.number().int()).default({}),
   startingModifiers: z.array(CharacterStatModifierSchema).default([]), startingEquipment: z.array(StartingItemSchema).default([]),
   grantedTraits: z.array(z.string()).default([]), startingEffects: z.array(EffectSchema).default([]), progressionConfigId: z.string().optional(),
 });
 export type ClassDefinition = z.infer<typeof ClassDefinitionSchema>;
+
+export const SpecialPathProgressionEntrySchema = z.object({
+  abilityId: z.string().min(1), group: z.string().min(1).optional(), unlockConditions: z.array(ConditionSchema).default([]),
+});
+export const SpecialPathDefinitionSchema = BaseEntitySchema.extend({
+  availability: CharacterAvailabilitySchema.default('Both'), rarity: CharacterArchetypeRaritySchema.default('rare'),
+  unlockConditions: z.array(ConditionSchema).default([]), progression: z.array(SpecialPathProgressionEntrySchema).default([]),
+});
+export type SpecialPathDefinition = z.infer<typeof SpecialPathDefinitionSchema>;
 
 export const NamePoolDefinitionSchema = BaseEntitySchema.extend({
   firstNames: z.array(z.string().trim().min(1)).min(1), surnames: z.array(z.string().trim().min(1)).default([]), style: z.string().optional(),

@@ -159,6 +159,8 @@ export type TimeCondition = z.infer<typeof TimeConditionSchema>;
 export const CurrentWeatherConditionSchema = z.object({ type:z.literal('currentWeather'), weatherId:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
 export const WeatherTagConditionSchema = z.object({ type:z.literal('weatherTag'), tag:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
 export const EnvironmentTagConditionSchema = z.object({ type:z.literal('environmentTag'), tag:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
+export const SpecialPathUnlockedConditionSchema = z.object({ type:z.literal('specialPathUnlocked'), specialPathId:z.string().min(1), unlocked:z.boolean().default(true) });
+export type SpecialPathUnlockedCondition = z.infer<typeof SpecialPathUnlockedConditionSchema>;
 
 /**
  * Base atomic condition types union.
@@ -183,6 +185,7 @@ export const AtomicConditionSchema = z.discriminatedUnion('type', [
   CurrentWeatherConditionSchema,
   WeatherTagConditionSchema,
   EnvironmentTagConditionSchema,
+  SpecialPathUnlockedConditionSchema,
 ]);
 
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;

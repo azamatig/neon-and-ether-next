@@ -11,6 +11,7 @@ import perksData from './character-creation/perks.json';
 import newGameDefinitionsData from './character-creation/new-game.json';
 import racesData from './character-creation/races.json';
 import classesData from './character-creation/classes.json';
+import specialPathsData from './character-creation/special-paths.json';
 import namePoolsData from './character-creation/name-pools.json';
 import shopsData from './shops/shops.json';
 import itemsData from './items/items.json';
@@ -47,6 +48,7 @@ export const gameContent: GameContent = GameContentSchema.parse({
   newGameDefinitions: newGameDefinitionsData,
   races: racesData,
   classes: classesData,
+  specialPaths: specialPathsData,
   namePools: namePoolsData,
   minigames:minigamesData,
   npcs: charactersData,

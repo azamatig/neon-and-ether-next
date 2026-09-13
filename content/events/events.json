@@ -2034,6 +2034,11 @@
             "value": true
           },
           {
+            "type": "setSpecialPathUnlocked",
+            "specialPathId": "special_path_mindmancer",
+            "unlocked": true
+          },
+          {
             "type": "addItem",
             "itemId": "itm_prologue_mindmancer_resonance",
             "quantity": 1

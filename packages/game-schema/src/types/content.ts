@@ -17,7 +17,7 @@ import { BaseJobDefinitionSchema, CharacterManagementRuleSchema, PartySlotDefini
 import { ProgressionDefinitionSchema } from './progression.ts';
 import { BaseUpgradeDefinitionSchema, PlayerBaseDefinitionSchema } from './base-management.ts';
 import { WeatherDefinitionSchema, WeatherProfileSchema } from './weather.ts';
-import { BackgroundDefinitionSchema, ClassDefinitionSchema, NamePoolDefinitionSchema, NewGameDefinitionSchema, PerkDefinitionSchema, RaceDefinitionSchema } from './character-creation.ts';
+import { BackgroundDefinitionSchema, ClassDefinitionSchema, NamePoolDefinitionSchema, NewGameDefinitionSchema, PerkDefinitionSchema, RaceDefinitionSchema, SpecialPathDefinitionSchema } from './character-creation.ts';
 import {MinigameDefinitionSchema} from './minigame.ts';
 
 export const GameContentSchema = z.object({
@@ -28,6 +28,7 @@ export const GameContentSchema = z.object({
   backgrounds: z.array(BackgroundDefinitionSchema).default([]),
   races: z.array(RaceDefinitionSchema).default([]),
   classes: z.array(ClassDefinitionSchema).default([]),
+  specialPaths: z.array(SpecialPathDefinitionSchema).default([]),
   namePools: z.array(NamePoolDefinitionSchema).default([]),
   perks: z.array(PerkDefinitionSchema).default([]),
   newGameDefinitions: z.array(NewGameDefinitionSchema).default([]),

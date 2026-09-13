@@ -3,6 +3,7 @@ import { BaseEntitySchema } from './base.ts';
 import { ConditionSchema } from './conditions.ts';
 import { EffectSchema } from './effects.ts';
 import { AttributeKeySchema, CharacterStatModifierSchema } from './stats.ts';
+import { EquipmentSlotSchema } from './items.ts';
 
 export const CharacterCreationAttributeRuleSchema = z.object({ attribute: AttributeKeySchema, minimum: z.number().int().min(1), maximum: z.number().int().min(1), costPerPoint: z.number().int().min(1).default(1) });
 export const CharacterCreationSkillRuleSchema = z.object({ skillId: z.string().min(1), name: z.string().min(1), minimum: z.number().int().min(0).default(0), maximum: z.number().int().min(0), costPerRank: z.number().int().min(1).default(1) });
@@ -51,6 +52,7 @@ export const NewGameDefinitionSchema = BaseEntitySchema.extend({
   skillPointBudget: z.number().int().min(0).default(0), skillRules: z.array(CharacterCreationSkillRuleSchema).default([]),
   startingPerkCount: z.number().int().min(0).default(0), requireAllPointsSpent: z.boolean().default(true),
   defaultRaceId: z.string().min(1), namePoolIds: z.array(z.string()).min(1),
+  equipmentSlots: z.array(EquipmentSlotSchema).default([]),
   startingQuestIds: z.array(z.string()).default([]), startingTime: z.object({ day:z.number().int().min(1), hour:z.number().int().min(0).max(23), minute:z.number().int().min(0).max(59) }).optional(),
 });
 export type NewGameDefinition = z.infer<typeof NewGameDefinitionSchema>;

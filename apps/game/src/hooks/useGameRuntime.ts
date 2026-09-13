@@ -114,6 +114,7 @@ export function useGameRuntime() {
   const availableRecipeIds = new Set(gameState.world.activeScreen === 'Workbench' ? session.getAvailableRecipes(craftingContext).map((recipe) => recipe.id) : []);
   const itemDefinitions = session.getContentRegistry().items.getAll();
   const equipmentOptions = Object.fromEntries(gameState.player.inventory.items.map((entry) => [entry.entryId ?? entry.itemId, Object.fromEntries((session.getContentRegistry().getItem(entry.itemId)?.equipmentSlots ?? []).map((slotId) => [slotId, session.canEquipInventoryEntry(entry.entryId ?? entry.itemId, slotId)]))]));
+  const equipmentSlots = session.getEquipmentSlots();
   const playerProgression = session.getPlayerProgressionView();
   const characterCreationOptions = useMemo(() => session.getCharacterCreationOptions(), [session]);
   const questDossiers = (Object.values(gameState.quests) as import('@neon-ether/game-schema').QuestRuntimeState[]).map((quest) => ({
@@ -195,6 +196,7 @@ export function useGameRuntime() {
     availableRecipeIds,
     itemDefinitions,
     equipmentOptions,
+    equipmentSlots,
     playerProgression,
     characterCreationOptions,
     generateCharacterName: () => session.generateCharacterName(),

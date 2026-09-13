@@ -8,8 +8,8 @@ const session = new GameSession(registry, 41);
 
 const pistol = session.getState().player.inventory.items.find((entry) => entry.itemId === 'wpn_thermal_pistol');
 assert(pistol?.entryId, 'Production starting ranged weapon is missing.');
-assert(session.unequipSlot('mainHand').success, 'Ranged weapon did not unequip.');
-assert(session.equipInventoryEntry(pistol.entryId, { id: 'mainHand', acceptsCategories: [], acceptsTags: [] }).success, 'Ranged weapon did not re-equip.');
+assert(session.unequipSlot('primaryWeapon').success, 'Ranged weapon did not unequip.');
+assert(session.equipInventoryEntry(pistol.entryId, { id: 'primaryWeapon', acceptsCategories: [], acceptsTags: [] }).success, 'Ranged weapon did not re-equip.');
 const rangedCombat = new GameSession(registry, 42);
 assert(rangedCombat.loadSave(session.serializeSave()).success, 'Ranged equipment setup did not load.');
 assert(rangedCombat.startCombatEncounter('enc_prologue_ares_freight_checkpoint', false) && rangedCombat.startTacticalCombat(), 'Ranged combat loadout did not initialize.');
@@ -17,18 +17,37 @@ assert(rangedCombat.getState().combat.combatants[rangedCombat.getState().player.
 assert(session.addInventoryItem('wpn_ether_baton').success, 'Melee weapon was not obtained.');
 const baton = session.getState().player.inventory.items.find((entry) => entry.itemId === 'wpn_ether_baton');
 assert(baton?.entryId, 'Melee weapon entry is missing.');
-assert(session.equipInventoryEntry(baton.entryId, { id: 'mainHand', acceptsCategories: [], acceptsTags: [] }).success, 'Melee weapon did not equip in its authored slot.');
-assert(session.getState().player.equipment.slots.mainHand === baton.entryId, 'Melee weapon did not replace the ranged weapon.');
+assert(session.equipInventoryEntry(baton.entryId, { id: 'meleeWeapon', acceptsCategories: [], acceptsTags: [] }).success, 'Melee weapon did not equip in its authored slot.');
+assert(session.getState().player.equipment.slots.meleeWeapon === baton.entryId && session.getState().player.equipment.slots.primaryWeapon === pistol.entryId, 'Melee and ranged weapons were not equipped simultaneously.');
 assert(session.addInventoryItem('arm_rainweave_coat').success, 'Armor was not obtained.');
 const coat = session.getState().player.inventory.items.find((entry) => entry.itemId === 'arm_rainweave_coat');
 assert(coat?.entryId, 'Armor entry is missing.');
 assert(session.equipInventoryEntry(coat.entryId, { id: 'body', acceptsCategories: [], acceptsTags: [] }).success, 'Armor did not equip.');
 assert(session.getResolvedPlayerCharacter().vitals.armorRating === session.getState().player.vitals.armorRating + 2, 'Equipped armor modifier was not resolved.');
 
+assert(session.addInventoryItem('ring_signal_loop', 2).success, 'Rings were not obtained.');
+const rings = session.getState().player.inventory.items.filter((entry) => entry.itemId === 'ring_signal_loop');
+assert(rings.length === 2 && session.equipInventoryEntry(rings[0].entryId!, { id: 'ring1', acceptsCategories: [], acceptsTags: [] }).success && session.equipInventoryEntry(rings[1].entryId!, { id: 'ring2', acceptsCategories: [], acceptsTags: [] }).success, 'Two authored ring slots did not accept separate rings.');
+assert(session.addInventoryItem('fet_ashglass_eye').success, 'Fetish was not obtained.');
+const fetish = session.getState().player.inventory.items.find((entry) => entry.itemId === 'fet_ashglass_eye');
+assert(fetish?.entryId && session.equipInventoryEntry(fetish.entryId, { id: 'fetish', acceptsCategories: [], acceptsTags: [] }).success, 'Fetish did not equip.');
+assert(session.addInventoryItem('cyb_neural_jack_v1').success, 'Implant was not obtained.');
+const implant = session.getState().player.inventory.items.find((entry) => entry.itemId === 'cyb_neural_jack_v1');
+assert(implant?.entryId && session.equipInventoryEntry(implant.entryId, { id: 'implantNeural', acceptsCategories: [], acceptsTags: [] }).success, 'Neural implant did not equip.');
+
+const legacySave = JSON.parse(session.serializeSave());
+legacySave.state.player.equipment.slots.mainHand = pistol.entryId;
+delete legacySave.state.player.equipment.slots.primaryWeapon;
+legacySave.state.player.inventory.items.find((entry: { entryId?: string }) => entry.entryId === pistol.entryId).slotId = 'mainHand';
+const migratedEquipment = new GameSession(registry, 98);
+assert(migratedEquipment.loadSave(JSON.stringify(legacySave)).success, 'Legacy main-hand save did not load.');
+assert(migratedEquipment.getState().player.equipment.slots.primaryWeapon === pistol.entryId && !('mainHand' in migratedEquipment.getState().player.equipment.slots), 'Legacy main-hand equipment was not migrated to its authored weapon slot.');
+
 const loadedEquipment = new GameSession(registry, 99);
 assert(loadedEquipment.loadSave(session.serializeSave()).success, 'Equipment save did not load.');
-assert(loadedEquipment.getState().player.equipment.slots.mainHand === baton.entryId, 'Melee equipment was not preserved by save/load.');
+assert(loadedEquipment.getState().player.equipment.slots.meleeWeapon === baton.entryId && loadedEquipment.getState().player.equipment.slots.primaryWeapon === pistol.entryId, 'Melee/ranged equipment was not preserved by save/load.');
 assert(loadedEquipment.getState().player.equipment.slots.body === coat.entryId, 'Armor equipment was not preserved by save/load.');
+assert(loadedEquipment.getState().player.equipment.slots.ring1 === rings[0].entryId && loadedEquipment.getState().player.equipment.slots.ring2 === rings[1].entryId && loadedEquipment.getState().player.equipment.slots.fetish === fetish.entryId && loadedEquipment.getState().player.equipment.slots.implantNeural === implant.entryId, 'Accessory equipment was not preserved by save/load.');
 
 assert(loadedEquipment.addInventoryItem('con_trauma_patch', 2).success, 'Healing consumables were not obtained.');
 const fullHealthQuantity = loadedEquipment.getState().player.inventory.items.find((entry) => entry.itemId === 'con_trauma_patch')?.quantity;
@@ -51,6 +70,7 @@ const beforeUse = loadedEquipment.getState();
 const player = beforeUse.combat.combatants[beforeUse.player.characterId];
 assert(player && beforeUse.combat.activeCombatantId === player.id, 'Player turn was not available for the consumable regression.');
 const meleeAction = loadedEquipment.getResolvedCombatCommands().actions.find((action) => action.type === 'MeleeAttack');
+assert(beforeUse.combat.combatants[beforeUse.player.characterId].weaponId === 'wpn_thermal_pistol' && beforeUse.combat.combatants[beforeUse.player.characterId].meleeWeaponId === 'wpn_ether_baton', 'Combat loadout did not preserve both weapon slots.');
 assert(meleeAction?.weaponId === 'wpn_ether_baton' && meleeAction.apCost === 2 && meleeAction.etherCost === 5, 'Melee combat action did not use equipped weapon metadata.');
 const abilityActions = loadedEquipment.getResolvedCombatCommands().actions.filter((action) => action.type === 'Ability');
 assert(abilityActions.length > 0 && abilityActions.every((action) => action.description && action.targetType && action.rangeTiles !== undefined && action.effectSummary?.length), 'Resolved combat abilities are missing player-facing details.');
@@ -64,7 +84,7 @@ assert(afterUse.combat.combatants[afterUse.player.characterId].currentAp === pla
 assert((afterUse.player.inventory.items.find((entry) => entry.itemId === 'con_trauma_patch')?.quantity ?? 0) === beforeQuantity - 1, 'Combat consumable quantity did not decrease.');
 const loadedCombatState = new GameSession(registry, 100);
 assert(loadedCombatState.loadSave(loadedEquipment.serializeSave()).success, 'Post-consumable save did not load.');
-assert(loadedCombatState.getState().player.equipment.slots.mainHand === baton.entryId && loadedCombatState.getState().player.equipment.slots.body === coat.entryId, 'Post-combat equipment did not persist.');
+assert(loadedCombatState.getState().player.equipment.slots.meleeWeapon === baton.entryId && loadedCombatState.getState().player.equipment.slots.primaryWeapon === pistol.entryId && loadedCombatState.getState().player.equipment.slots.body === coat.entryId, 'Post-combat equipment did not persist.');
 assert((loadedCombatState.getState().player.inventory.items.find((entry) => entry.itemId === 'con_trauma_patch')?.quantity ?? 0) === 0, 'Post-combat consumable quantity did not persist.');
 assert(loadedCombatState.getState().player.abilityIds.includes('ability_mindmancer_read_mind'), 'Unlocked ability did not persist.');
 

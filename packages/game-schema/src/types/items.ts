@@ -27,6 +27,7 @@ export type ItemRequirement = z.infer<typeof ItemRequirementSchema>;
 
 export const EquipmentSlotSchema = z.object({
   id: z.string().min(1),
+  name: z.string().min(1).optional(),
   acceptsCategories: z.array(ItemCategorySchema).default([]),
   acceptsTags: z.array(z.string()).default([]),
 });

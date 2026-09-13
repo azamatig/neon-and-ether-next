@@ -97,6 +97,92 @@
     "defaultRaceId": "race_human",
     "namePoolIds": [
       "name_pool_human_generic"
+    ],
+    "equipmentSlots": [
+      {
+        "id": "primaryWeapon",
+        "name": "Primary Weapon",
+        "acceptsCategories": [
+          "weapon"
+        ],
+        "acceptsTags": []
+      },
+      {
+        "id": "meleeWeapon",
+        "name": "Melee Weapon",
+        "acceptsCategories": [
+          "weapon"
+        ],
+        "acceptsTags": []
+      },
+      {
+        "id": "body",
+        "name": "Body",
+        "acceptsCategories": [
+          "armor"
+        ],
+        "acceptsTags": []
+      },
+      {
+        "id": "ring1",
+        "name": "Ring I",
+        "acceptsCategories": [
+          "misc"
+        ],
+        "acceptsTags": [
+          "Ring"
+        ]
+      },
+      {
+        "id": "ring2",
+        "name": "Ring II",
+        "acceptsCategories": [
+          "misc"
+        ],
+        "acceptsTags": [
+          "Ring"
+        ]
+      },
+      {
+        "id": "fetish",
+        "name": "Fetish",
+        "acceptsCategories": [
+          "misc"
+        ],
+        "acceptsTags": [
+          "Fetish"
+        ]
+      },
+      {
+        "id": "implantNeural",
+        "name": "Neural Implant",
+        "acceptsCategories": [
+          "armor"
+        ],
+        "acceptsTags": [
+          "Implants"
+        ]
+      },
+      {
+        "id": "implantBody",
+        "name": "Body Implant",
+        "acceptsCategories": [
+          "armor"
+        ],
+        "acceptsTags": [
+          "Implants"
+        ]
+      },
+      {
+        "id": "implantUtility",
+        "name": "Utility Implant",
+        "acceptsCategories": [
+          "armor"
+        ],
+        "acceptsTags": [
+          "Implants"
+        ]
+      }
     ]
   }
 ]

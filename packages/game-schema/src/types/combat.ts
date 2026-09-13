@@ -81,6 +81,7 @@ export const CombatantSchema = z.object({
   initiative: z.number(),
   armor: z.number().int().min(0),
   weaponId: z.string().optional(),
+  meleeWeaponId: z.string().optional(),
   armorItemIds: z.array(z.string()).default([]),
   abilityIds: z.array(z.string()).default([]),
   aiProfileId: z.string().optional(),

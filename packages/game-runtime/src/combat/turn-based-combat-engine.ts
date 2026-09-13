@@ -65,7 +65,9 @@ export class TurnBasedCombatEngine {
       ...gameState.player.abilityIds,
       ...equippedItems.flatMap((item) => item.grantedAbilityIds),
     ]);
-    const weapon = equippedItems.find((item) => item.category === 'weapon');
+    const equippedEntry = (slotId: string) => gameState.player.inventory.items.find((entry) => entry.entryId === gameState.player.equipment.slots[slotId]);
+    const primaryWeapon = this.content.getItem(equippedEntry('primaryWeapon')?.itemId ?? '');
+    const meleeWeapon = this.content.getItem(equippedEntry('meleeWeapon')?.itemId ?? '');
     const armor = equippedItems.filter((item) => item.category === 'armor');
     const effectivePlayer = new CharacterStatsSystem().resolve(gameState.player);
     const playerBodyImage = this.content.newGameDefinitions.getAll()
@@ -108,7 +110,8 @@ export class TurnBasedCombatEngine {
         maxAp: effectivePlayer.derivedStats.actionPointsMax,
         initiative: effectivePlayer.derivedStats.initiative,
         armor: effectivePlayer.derivedStats.armorRating,
-        weaponId: weapon?.id,
+        weaponId: primaryWeapon?.id,
+        meleeWeaponId: meleeWeapon?.id,
         armorItemIds: armor.map((item) => item.id),
         abilityIds: [...playerAbilities],
         statuses: [
@@ -143,7 +146,8 @@ export class TurnBasedCombatEngine {
         maxEther: effective.derivedStats.maxEther,
         currentAp: effective.derivedStats.actionPointsMax, maxAp: effective.derivedStats.actionPointsMax,
         initiative: effective.derivedStats.initiative, armor: effective.derivedStats.armorRating,
-        weaponId: equipped.find((item) => item.category === 'weapon')?.id,
+        weaponId: equipped.find((item) => item.combatAttackType === 'Ranged')?.id,
+        meleeWeaponId: equipped.find((item) => item.combatAttackType === 'Melee')?.id,
         armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
         abilityIds: [...abilities], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null, resolutionState: 'Alive',
         position: claimDeployment('Player', index + 1), movementRange: 3, movementRemaining: 3,
@@ -167,7 +171,9 @@ export class TurnBasedCombatEngine {
           currentEther: effectiveEnemy.derivedStats.currentEther, maxEther: effectiveEnemy.derivedStats.maxEther,
           currentAp: effectiveEnemy.derivedStats.actionPointsMax, maxAp: effectiveEnemy.derivedStats.actionPointsMax,
           initiative: effectiveEnemy.derivedStats.initiative, armor: effectiveEnemy.derivedStats.armorRating,
-          weaponId: enemy.equippedWeaponId, armorItemIds: [], abilityIds: enemy.abilityIds,
+          weaponId: this.content.getItem(enemy.equippedWeaponId ?? '')?.combatAttackType === 'Ranged' ? enemy.equippedWeaponId : undefined,
+          meleeWeaponId: this.content.getItem(enemy.equippedWeaponId ?? '')?.combatAttackType === 'Melee' ? enemy.equippedWeaponId : undefined,
+          armorItemIds: [], abilityIds: enemy.abilityIds,
           aiProfileId: enemy.combatAIProfileId, statuses: enemy.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, resolutionState: 'Alive',
           position: deployment, movementRange: 3, movementRemaining: 3,
         };
@@ -204,7 +210,8 @@ export class TurnBasedCombatEngine {
     const living = Object.values(state.combatants).filter((unit) => !unit.isDefeated);
     const weapon = actor.weaponId ? this.content.getItem(actor.weaponId) : undefined;
     const rangedWeapon = weapon?.combatAttackType === 'Ranged' ? weapon : undefined;
-    const meleeWeapon = weapon?.combatAttackType === 'Melee' ? weapon : undefined;
+    const dedicatedMeleeWeapon = actor.meleeWeaponId ? this.content.getItem(actor.meleeWeaponId) : undefined;
+    const meleeWeapon = dedicatedMeleeWeapon ?? (weapon?.combatAttackType === 'Melee' ? weapon : undefined);
     const attackRange = rangedWeapon?.rangeTiles ?? 0;
     const attackTargetIds = rangedWeapon ? living.filter((unit) => unit.team !== actor.team && this.distance(actor, unit) <= attackRange && this.hasLineOfSight(state, actor, unit)).map((unit) => unit.id) : [];
     const meleeRange = meleeWeapon?.rangeTiles ?? 1;

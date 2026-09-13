@@ -241,7 +241,9 @@ export class GameSession {
     return result;
   }
   public equipInventoryEntry(entryId: string, slot: EquipmentSlot): InventoryCommandResult {
-    const result = this.inventorySystem.equip(this.state, entryId, slot);
+    const authoredSlot = this.getEquipmentSlots().find((candidate) => candidate.id === slot.id);
+    if (!authoredSlot) return { success: false, reason: 'Equipment slot is unavailable.' };
+    const result = this.inventorySystem.equip(this.state, entryId, authoredSlot);
     if (result.success) this.events.emit('STATE_CHANGED', this.state);
     return result;
   }
@@ -249,8 +251,11 @@ export class GameSession {
     const entry = this.state.player.inventory.items.find((candidate) => candidate.entryId === entryId);
     const item = entry ? this.contentRegistry.getItem(entry.itemId) : undefined;
     if (!entry || !item) return { success: false, reason: 'Inventory item is unavailable.' };
-    return this.inventorySystem.canEquip(this.state, item, { id: slotId, acceptsCategories: [], acceptsTags: [] });
+    const slot = this.getEquipmentSlots().find((candidate) => candidate.id === slotId);
+    if (!slot) return { success: false, reason: 'Equipment slot is unavailable.' };
+    return this.inventorySystem.canEquip(this.state, item, slot);
   }
+  public getEquipmentSlots(): EquipmentSlot[] { return this.contentRegistry.newGameDefinitions.getAll()[0]?.equipmentSlots ?? []; }
   public useInventoryItem(itemId: string): ItemUseResult {
     const result = this.itemUseSystem.use(this.state, itemId, 'Exploration');
     if (result.success && result.nextState) { this.state = result.nextState; this.outcomeEngine.bindState(this.state); this.events.emit('STATE_CHANGED', this.state); }

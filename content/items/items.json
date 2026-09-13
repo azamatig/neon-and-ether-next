@@ -28,7 +28,7 @@
     "stackable": false,
     "maxStack": 1,
     "equipmentSlots": [
-      "mainHand"
+      "primaryWeapon"
     ],
     "requirements": [
       {
@@ -71,7 +71,7 @@
     "stackable": false,
     "maxStack": 1,
     "equipmentSlots": [
-      "mainHand"
+      "meleeWeapon"
     ],
     "requirements": [
       {
@@ -120,7 +120,7 @@
     "stackable": false,
     "maxStack": 1,
     "equipmentSlots": [
-      "body"
+      "implantNeural"
     ],
     "requirements": [
       {
@@ -444,7 +444,7 @@
     "stackable": false,
     "maxStack": 1,
     "equipmentSlots": [
-      "neural"
+      "implantNeural"
     ],
     "requirements": [],
     "modifiers": [
@@ -481,5 +481,131 @@
     "unequipEffects": [],
     "grantedAbilityIds": [],
     "icon": "Brain"
+  },
+  {
+    "id": "fet_bone_signal_charm",
+    "name": "Bone Signal Charm",
+    "description": "A ward of conductive bone that steadies the wearer against hostile ether resonance.",
+    "tags": [
+      "Fetish",
+      "Ether",
+      "Ward"
+    ],
+    "category": "misc",
+    "rarity": "StreetGrade",
+    "weightKg": 0.1,
+    "valueCredits": 180,
+    "icon": "Radio",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "fetish"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "etherResistance",
+        "operation": "add",
+        "value": 2
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "fet_ashglass_eye",
+    "name": "Ashglass Eye",
+    "description": "A smoked lens trinket that highlights tactical flaws in hostile silhouettes.",
+    "tags": [
+      "Fetish",
+      "Technical",
+      "Tactical"
+    ],
+    "category": "misc",
+    "rarity": "MilitarySpec",
+    "weightKg": 0.1,
+    "valueCredits": 360,
+    "icon": "Eye",
+    "grantedAbilityIds": [
+      "ability_tactical_scan"
+    ],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "fetish"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "initiative",
+        "operation": "add",
+        "value": 1
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "fet_spirit_anchor",
+    "name": "Spirit Anchor",
+    "description": "A compact hex coil that stabilizes conventional ether reserves.",
+    "tags": [
+      "Fetish",
+      "Ether",
+      "Utility"
+    ],
+    "category": "misc",
+    "rarity": "Prototype",
+    "weightKg": 0.2,
+    "valueCredits": 540,
+    "icon": "Anchor",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "fetish"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "maxEther",
+        "operation": "add",
+        "value": 4
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "ring_signal_loop",
+    "name": "Signal Loop",
+    "description": "A conductive smart-ring tuned for rapid technical response.",
+    "tags": [
+      "Ring",
+      "Technical"
+    ],
+    "category": "misc",
+    "rarity": "Common",
+    "weightKg": 0.05,
+    "valueCredits": 120,
+    "icon": "Circle",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "ring1",
+      "ring2"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "etherTech",
+        "operation": "add",
+        "value": 1
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
   }
 ]

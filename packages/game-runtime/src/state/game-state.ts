@@ -321,6 +321,8 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         }),
       })
     : createInitialPlayerState({ inventory: createInitialInventoryState({ items: [] }) });
+  const equipmentSlots = content.newGameDefinitions[0]?.equipmentSlots ?? [];
+  player.equipment.slots = Object.fromEntries(equipmentSlots.map((slot) => [slot.id, null]));
 
   const pois = Object.fromEntries(content.pois.map((poi) => [poi.id, {
     poiId: poi.id,

@@ -16,12 +16,27 @@ export class InventorySystem {
   /** Normalizes legacy entries and rebuilds equipment-derived stats on session load. */
   public hydrate(state: GameState): void {
     state.player.inventory.items.forEach((entry, index) => { entry.entryId ??= `${entry.itemId}:${index + 1}`; });
-    if (!Object.values(state.player.equipment.slots).some(Boolean)) {
-      for (const entry of state.player.inventory.items.filter((candidate) => candidate.isEquipped)) {
-        const slotId = this.content.getItem(entry.itemId)?.equipmentSlots[0];
-        if (slotId && !state.player.equipment.slots[slotId]) { entry.slotId = slotId; state.player.equipment.slots[slotId] = entry.entryId!; }
-        else entry.isEquipped = false;
-      }
+    const authoredSlots = this.content.newGameDefinitions.getAll()[0]?.equipmentSlots ?? [];
+    for (const slot of authoredSlots) state.player.equipment.slots[slot.id] ??= null;
+    const legacyEntryId = state.player.equipment.slots.mainHand;
+    if (legacyEntryId) {
+      const entry = this.findEntry(state.player.inventory, legacyEntryId);
+      const item = entry && this.content.getItem(entry.itemId);
+      const target = item?.combatAttackType === 'Melee' ? 'meleeWeapon' : 'primaryWeapon';
+      if (entry && item?.equipmentSlots.includes(target) && !state.player.equipment.slots[target]) {
+        state.player.equipment.slots[target] = entry.entryId!;
+        entry.slotId = target;
+        entry.isEquipped = true;
+      } else if (entry) { entry.isEquipped = false; delete entry.slotId; }
+    }
+    delete state.player.equipment.slots.mainHand;
+    for (const entry of state.player.inventory.items.filter((candidate) => candidate.isEquipped)) {
+      const item = this.content.getItem(entry.itemId);
+      const currentSlot = entry.slotId && item?.equipmentSlots.includes(entry.slotId) ? entry.slotId : undefined;
+      const slotId = currentSlot ?? item?.equipmentSlots.find((candidate) => !state.player.equipment.slots[candidate]);
+      if (slotId && (!state.player.equipment.slots[slotId] || state.player.equipment.slots[slotId] === entry.entryId)) {
+        entry.slotId = slotId; state.player.equipment.slots[slotId] = entry.entryId!;
+      } else { entry.isEquipped = false; delete entry.slotId; }
     }
     this.recomputeModifiers(state.player);
   }

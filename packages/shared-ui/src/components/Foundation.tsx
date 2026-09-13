@@ -14,7 +14,7 @@ export const IconButton: React.FC<ButtonProps & { label: string }> = ({ label, c
 
 export interface TabsProps<T extends string> { value: T; items: ReadonlyArray<{ value: T; label: string; disabled?: boolean }>; onChange: (value: T) => void; label: string; }
 export function Tabs<T extends string>({ value, items, onChange, label }: TabsProps<T>) {
-  return <div role="tablist" aria-label={label} className="ne-tabs">{items.map(item => <button type="button" role="tab" aria-selected={value === item.value} disabled={item.disabled} key={item.value} onClick={() => onChange(item.value)}>{item.label}</button>)}</div>;
+  return <div role="tablist" aria-label={label} className="ne-tabs">{items.map(item => <button type="button" role="tab" data-value={item.value} aria-selected={value === item.value} disabled={item.disabled} key={item.value} onClick={() => onChange(item.value)}>{item.label}</button>)}</div>;
 }
 
 export const StatusBadge: React.FC<BadgeProps & { status?: 'success'|'warning'|'danger'|'neutral' }> = ({ status='neutral', ...props }) => <Badge {...props} variant={status === 'success' ? 'emerald' : status === 'warning' ? 'amber' : status === 'danger' ? 'rose' : 'zinc'} />;

@@ -1,0 +1,7 @@
+[
+  {"id":"race_human","name":"Human","description":"Adaptable people found throughout every district and frontier settlement.","tags":["human","playable"],"isAvailable":true,"requirements":[],"attributeModifiers":[],"skillModifiers":{},"grantedTraits":["Human"],"grantedAbilityIds":[],"startingEffects":[]},
+  {"id":"race_elf","name":"Elf","description":"A future playable ancestry with heightened reflex and ether affinity.","tags":["elf","future"],"isAvailable":false,"requirements":[],"attributeModifiers":[],"skillModifiers":{},"grantedTraits":[],"grantedAbilityIds":[],"startingEffects":[]},
+  {"id":"race_orc","name":"Orc","description":"A future playable ancestry known for physical resilience.","tags":["orc","future"],"isAvailable":false,"requirements":[],"attributeModifiers":[],"skillModifiers":{},"grantedTraits":[],"grantedAbilityIds":[],"startingEffects":[]},
+  {"id":"race_dwarf","name":"Dwarf","description":"A future playable ancestry with technical and defensive traditions.","tags":["dwarf","future"],"isAvailable":false,"requirements":[],"attributeModifiers":[],"skillModifiers":{},"grantedTraits":[],"grantedAbilityIds":[],"startingEffects":[]},
+  {"id":"race_dark_elf","name":"Dark Elf","description":"A future playable ancestry shaped by shadowed ether environments.","tags":["dark-elf","future"],"isAvailable":false,"requirements":[],"attributeModifiers":[],"skillModifiers":{},"grantedTraits":[],"grantedAbilityIds":[],"startingEffects":[]}
+]

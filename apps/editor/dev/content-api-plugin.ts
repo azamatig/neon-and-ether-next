@@ -24,6 +24,9 @@ const EDITABLE_FILES = {
   weatherDefinitions: 'content/weather/weather.json',
   weatherProfiles: 'content/weather/profiles.json',
   backgrounds: 'content/character-creation/backgrounds.json',
+  races: 'content/character-creation/races.json',
+  classes: 'content/character-creation/classes.json',
+  namePools: 'content/character-creation/name-pools.json',
   minigames:'content/minigames/minigames.json',
 } as const;
 
@@ -157,11 +160,11 @@ async function readJson(root: string, category: EditableCategory): Promise<unkno
 }
 
 async function readEditableContent(root: string, gameContent: Record<string, unknown>) {
-  const [items, npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, baseUpgrades, baseJobs, recipes, shops, factions, weatherDefinitions, weatherProfiles, backgrounds,minigames] = await Promise.all([
+  const [items, npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, baseUpgrades, baseJobs, recipes, shops, factions, weatherDefinitions, weatherProfiles, backgrounds,races,classes,namePools,minigames] = await Promise.all([
     readJson(root, 'items'), readJson(root, 'npcs'), readJson(root, 'enemies'), readJson(root, 'pois'), readJson(root, 'events'), readJson(root, 'quests'), readJson(root, 'maps'),
-    readJson(root, 'encounters'), readJson(root, 'rooms'), readJson(root, 'bases'), readJson(root, 'baseUpgrades'), readJson(root, 'baseJobs'), readJson(root, 'recipes'), readJson(root, 'shops'), readJson(root, 'factions'), readJson(root, 'weatherDefinitions'), readJson(root, 'weatherProfiles'), readJson(root, 'backgrounds'),readJson(root,'minigames'),
+    readJson(root, 'encounters'), readJson(root, 'rooms'), readJson(root, 'bases'), readJson(root, 'baseUpgrades'), readJson(root, 'baseJobs'), readJson(root, 'recipes'), readJson(root, 'shops'), readJson(root, 'factions'), readJson(root, 'weatherDefinitions'), readJson(root, 'weatherProfiles'), readJson(root, 'backgrounds'),readJson(root,'races'),readJson(root,'classes'),readJson(root,'namePools'),readJson(root,'minigames'),
   ]);
-  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, baseUpgrades, baseJobs, recipes, shops, factions, weatherDefinitions, weatherProfiles, backgrounds,minigames };
+  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, baseUpgrades, baseJobs, recipes, shops, factions, weatherDefinitions, weatherProfiles, backgrounds,races,classes,namePools,minigames };
 }
 
 async function readKnownAssets(root: string): Promise<string[]> {

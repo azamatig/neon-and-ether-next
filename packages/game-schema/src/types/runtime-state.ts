@@ -62,6 +62,8 @@ export const PlayerStateSchema = z.object({
   age: z.number().int().min(1).optional(),
   portraitId: z.string().optional(),
   backgroundId: z.string().optional(),
+  raceId: z.string().optional(),
+  classId: z.string().optional(),
   title: z.string().default('Drifter'),
   level: z.number().int().min(1).default(1),
   experience: z.number().int().min(0).default(0),

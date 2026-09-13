@@ -93,6 +93,10 @@
       "day": 1,
       "hour": 20,
       "minute": 0
-    }
+    },
+    "defaultRaceId": "race_human",
+    "namePoolIds": [
+      "name_pool_human_generic"
+    ]
   }
 ]

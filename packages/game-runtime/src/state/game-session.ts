@@ -202,8 +202,11 @@ export class GameSession {
 
   public getCharacterCreationOptions() {
     const initializer = new NewGameInitializer(this.contentRegistry);
-    return { definition: initializer.getDefinition(), backgrounds: this.contentRegistry.backgrounds.getAll(), perks: this.contentRegistry.perks.getAll() };
+    return { definition: initializer.getDefinition(), races: this.contentRegistry.races.getAll(), classes: this.contentRegistry.classes.getAll(), backgrounds: this.contentRegistry.backgrounds.getAll(), perks: this.contentRegistry.perks.getAll() };
   }
+  public generateCharacterName():string { return new NewGameInitializer(this.contentRegistry).generateName(); }
+  public adjustCharacterCreationAttribute(selection:CharacterCreationSelection,attribute:keyof CharacterCreationSelection['attributes'],delta:number):CharacterCreationSelection { return new NewGameInitializer(this.contentRegistry).adjustAttribute(selection,attribute,delta); }
+  public adjustCharacterCreationSkill(selection:CharacterCreationSelection,skillId:string,delta:number):CharacterCreationSelection { return new NewGameInitializer(this.contentRegistry).adjustSkill(selection,skillId,delta); }
   public validateCharacterCreation(selection: CharacterCreationSelection): CharacterCreationValidation {
     return new NewGameInitializer(this.contentRegistry).validate(selection);
   }

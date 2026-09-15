@@ -14,7 +14,7 @@ export const CharacterArchetypeRaritySchema = z.enum(['common', 'uncommon', 'rar
 export const RaceDefinitionSchema = BaseEntitySchema.extend({
   artwork: z.string().optional(), availability: CharacterAvailabilitySchema.default('Both'), rarity: CharacterArchetypeRaritySchema.default('common'), requirements: z.array(ConditionSchema).default([]),
   attributeModifiers: z.array(CharacterStatModifierSchema).default([]), skillModifiers: z.record(z.string(), z.number().int()).default({}),
-  grantedTraits: z.array(z.string()).default([]), grantedAbilityIds: z.array(z.string()).default([]), startingEffects: z.array(EffectSchema).default([]),
+  grantedTraits: z.array(z.string()).default([]), capabilityTags: z.array(z.string()).default([]), grantedAbilityIds: z.array(z.string()).default([]), startingEffects: z.array(EffectSchema).default([]),
   parentRaceIds: z.array(z.string().min(1)).default([]), lineageMetadata: z.record(z.string(), z.string()).default({}),
 });
 export type RaceDefinition = z.infer<typeof RaceDefinitionSchema>;

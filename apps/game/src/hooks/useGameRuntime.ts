@@ -11,6 +11,7 @@ import {
   ResolvedPOI,
   SaveGame,
   SaveLoadResult,
+  serializeSaveGame,
   StatCheckResolution,
 } from '@neon-ether/game-runtime';
 import { GAME_CONTENT_MANIFEST } from '@neon-ether/content';
@@ -133,16 +134,16 @@ export function useGameRuntime() {
 
   // --- Persistence & Savegame Handlers ---
 
-  const saveToLocalSlot = (slotName: string = 'Slot 1'): SaveGame => {
-    const saveGame = session.createSaveGame(slotName);
-    const jsonStr = session.serializeSave(true);
-    localStorage.setItem(`neon_save_${slotName}`, jsonStr);
+  const saveToLocalSlot = (slotId: string = 'manual-1'): SaveGame => {
+    const slotName = `Manual Slot ${slotId.replace('manual-','')}`;
+    const saveGame = session.createSaveGame(slotName, 'Manual', slotId);
+    localStorage.setItem(`neon_save_${slotId}`, serializeSaveGame(saveGame, true));
     setSaveStatus(`Saved to [${slotName}] at ${new Date().toLocaleTimeString()}`);
     session.logJournal('System', `Game state saved to storage slot "${slotName}".`);
     return saveGame;
   };
 
-  const loadFromLocalSlot = (slotName: string = 'Slot 1'): SaveLoadResult => {
+  const loadFromLocalSlot = (slotName: string = 'manual-1'): SaveLoadResult => {
     const jsonStr = localStorage.getItem(`neon_save_${slotName}`);
     if (!jsonStr) {
       setSaveStatus(`No save data found in [${slotName}]`);

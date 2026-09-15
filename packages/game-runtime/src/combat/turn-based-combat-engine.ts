@@ -115,7 +115,7 @@ export class TurnBasedCombatEngine {
         meleeWeaponId: meleeWeapon?.id,
         armorItemIds: armor.map((item) => item.id),
         abilityIds: [...playerAbilities],
-        capabilityTags: [...new Set([...(playerDefinition?.tags ?? []), ...gameState.player.traits, ...(playerRace?.tags ?? []), ...(playerRace?.grantedTraits ?? [])])],
+        capabilityTags: [...new Set([...(playerDefinition?.tags ?? []), ...gameState.player.capabilityTags, ...gameState.player.traits, ...(playerRace?.tags ?? []), ...(playerRace?.capabilityTags ?? [])])],
         statuses: [
           ...gameState.player.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })),
           ...gameState.player.activeStatusEffects
@@ -154,7 +154,7 @@ export class TurnBasedCombatEngine {
         weaponId: equipped.find((item) => item.combatAttackType === 'Ranged')?.id,
         meleeWeaponId: equipped.find((item) => item.combatAttackType === 'Melee')?.id,
         armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
-        abilityIds: [...abilities], capabilityTags:[...new Set([...npc.tags,...npc.traits,...(npcRace?.tags??[]),...(npcRace?.grantedTraits??[])])], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null, resolutionState: 'Alive',
+        abilityIds: [...abilities], capabilityTags:[...new Set([...npc.tags,...npc.traits,...(npcRace?.tags??[]),...(npcRace?.capabilityTags??[])])], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null, resolutionState: 'Alive',
         position: claimDeployment('Player', index + 1), movementRange: 3, movementRemaining: 3,
       };
     });

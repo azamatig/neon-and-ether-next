@@ -607,5 +607,73 @@
     ],
     "equipEffects": [],
     "unequipEffects": []
+  },
+  {
+    "id": "wpn_service_pistol",
+    "name": "M-3 Service Pistol",
+    "description": "A dependable compact sidearm built for security work and field survival.",
+    "tags": [
+      "Weapon",
+      "Firearm",
+      "Pistol",
+      "Starter"
+    ],
+    "category": "weapon",
+    "rarity": "Common",
+    "weightKg": 1.0,
+    "valueCredits": 160,
+    "apUseCost": 2,
+    "combatAttackType": "Ranged",
+    "combatDefeatType": "Lethal",
+    "damageRange": [
+      7,
+      11
+    ],
+    "rangeTiles": 6,
+    "icon": "Crosshair",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "primaryWeapon"
+    ],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "wpn_utility_knife",
+    "name": "Carbon Utility Knife",
+    "description": "A balanced field blade suitable for close defense and practical work.",
+    "tags": [
+      "Weapon",
+      "Melee",
+      "Blade",
+      "Starter"
+    ],
+    "category": "weapon",
+    "rarity": "Common",
+    "weightKg": 0.5,
+    "valueCredits": 90,
+    "apUseCost": 2,
+    "combatAttackType": "Melee",
+    "combatDefeatType": "Lethal",
+    "damageRange": [
+      5,
+      8
+    ],
+    "rangeTiles": 1,
+    "icon": "Swords",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "meleeWeapon"
+    ],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": []
   }
 ]

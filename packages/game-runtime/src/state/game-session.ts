@@ -188,6 +188,7 @@ export class GameSession {
       this.effectExecutor.executeBatch(initialBase.globalEffects, { state: this.state, contentRegistry: this.contentRegistry,random:this.diceRoller });
     }
     this.inventorySystem.hydrate(this.state);
+    this.normalizePlayerCapabilities();
   }
 
   // --- State Accessors ---
@@ -1150,17 +1151,20 @@ export class GameSession {
 
   // --- Save / Load & Migration Lifecycle ---
 
-  public createSaveGame(slotName: string = 'Autosave'): SaveGame {
+  public createSaveGame(slotName: string = 'Autosave', saveKind: 'Manual'|'Autosave' = slotName === 'Autosave' ? 'Autosave' : 'Manual', slotId: string = saveKind === 'Autosave' ? 'autosave-1' : slotName.toLowerCase().replace(/[^a-z0-9]+/g, '-')): SaveGame {
     const activeQuestCount = Object.values(this.state.quests).filter((q) => q.status === 'Active').length;
     return {
       metadata: {
-        saveId: `save_${Date.now()}`,
+        saveId: `save_${slotId}`,
+        slotId,
+        saveKind,
         schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
         timestamp: new Date().toISOString(),
         slotName,
         playerName: this.state.player.name,
         playerLevel: this.state.player.level,
         currentMapId: this.state.world.currentMapId,
+        currentLocationName: this.contentRegistry.getMap(this.state.world.currentMapId)?.name,
         playtimeSeconds: this.state.time.elapsedRealSeconds ?? 0,
         activeQuestCount,
       },
@@ -1181,6 +1185,7 @@ export class GameSession {
       this.restorePendingGameplayContext();
       this.diceRoller.restore(this.state.rng);
       this.inventorySystem.hydrate(this.state);
+      this.normalizePlayerCapabilities();
       this.events.emit('STATE_CHANGED', this.state);
       this.logJournal('System', `Game session loaded successfully (Schema v${result.saveGame.metadata.schemaVersion}).`, {
         migrated: result.migrated,
@@ -1189,6 +1194,9 @@ export class GameSession {
     }
     return result;
   }
+
+  /** Migrates authored capability tags out of legacy player-facing trait lists. */
+  private normalizePlayerCapabilities():void { const race=this.contentRegistry.races.get(this.state.player.raceId??'');if(!race)return;const capabilities=new Set([...this.state.player.capabilityTags,...race.capabilityTags]);this.state.player.capabilityTags=[...capabilities];this.state.player.traits=this.state.player.traits.filter((trait)=>!capabilities.has(trait)); }
 
   /** Rebuilds gameplay navigation without persisting any presentation state. */
   private restorePendingGameplayContext(): void {

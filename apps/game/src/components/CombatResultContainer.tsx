@@ -5,8 +5,8 @@
  */
 
 import React, { useState } from 'react';
-import { CombatResolution } from '@neon-ether/game-schema';
-import { Badge, Button, Panel } from '@neon-ether/shared-ui';
+import { CombatResolution, Item } from '@neon-ether/game-schema';
+import { Badge, Button, ItemIcon, Panel } from '@neon-ether/shared-ui';
 import {
   AlertCircle,
   ArrowRight,
@@ -32,6 +32,7 @@ import {
 
 export interface CombatResultContainerProps {
   resolution: CombatResolution;
+  items: Item[];
   onTakeLoot: (selectedItemIds: string[], takeCredits: boolean) => void;
   onExecutePostCombatAction: (
     enemyId: string,
@@ -45,6 +46,7 @@ export interface CombatResultContainerProps {
 
 export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
   resolution,
+  items,
   onTakeLoot,
   onExecutePostCombatAction,
   onDismiss,
@@ -56,8 +58,10 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
   const [selectedItems, setSelectedItems] = useState<string[]>(
     resolution.availableLoot.map((s) => s.itemId)
   );
-  const [activeTab, setActiveTab] = useState<'debrief' | 'loot' | 'prisoners'>('debrief');
+  const [activeTab, setActiveTab] = useState<'debrief' | 'loot' | 'prisoners'>(resolution.victoryStatus === 'Victory' && (resolution.availableLoot.length > 0 || resolution.creditsFound > 0) ? 'loot' : 'debrief');
   const [defeatFeedback, setDefeatFeedback] = useState<string>();
+  const itemMap = new Map(items.map((item) => [item.id, item]));
+  const hasLoot = resolution.availableLoot.length > 0 || resolution.creditsFound > 0;
 
   const toggleItemSelection = (itemId: string) => {
     if (selectedItems.includes(itemId)) {
@@ -254,7 +258,7 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
                               onChange={() => {}}
                               className="accent-amber-400 cursor-pointer"
                             />
-                            <div className="text-xs font-bold">{resolveItemName(slot.itemId)}</div>
+                            <ItemIcon item={itemMap.get(slot.itemId)}/><div className="text-xs font-bold">{resolveItemName(slot.itemId)}</div>
                           </div>
 
                           <Badge variant="amber" size="xs">
@@ -394,6 +398,8 @@ export const CombatResultContainer: React.FC<CombatResultContainerProps> = ({
               variant="primary"
               size="md"
               onClick={onDismiss}
+              disabled={isVictory && activeTab === 'debrief' && hasLoot}
+              title={isVictory && activeTab === 'debrief' && hasLoot ? 'Review recovered loot before continuing.' : undefined}
               leftIcon={<ArrowRight className="w-4 h-4" />}
             >
               {isVictory ? 'PROCEED // CONCLUDE ENCOUNTER' : 'ACCEPT DEFEAT'}

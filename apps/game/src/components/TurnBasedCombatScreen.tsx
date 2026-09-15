@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CombatAction, Combatant, CombatState, Item } from '@neon-ether/game-schema';
 import { type ResolvedCombatAction, type ResolvedCombatCommands } from '@neon-ether/game-runtime';
+import { ItemIcon } from '@neon-ether/shared-ui';
 import { Activity, Crosshair, Footprints, PackageOpen, Shield, SkipForward, Swords, Zap } from 'lucide-react';
 
 export interface TurnBasedCombatScreenProps {
@@ -125,7 +126,7 @@ export const TurnBasedCombatScreen: React.FC<TurnBasedCombatScreenProps> = ({ st
             if (action.type === 'AttemptFlee') { onAttemptFlee(); return; }
             if (action.type === 'UseItem') { if (actor && action.itemId) onCommand({ type: 'UseItem', actorId: actor.id, itemId: action.itemId }); return; }
             setSelectedActionId(action.id);
-          }}>{actionIcon(action)}<span>{action.label}<small>{action.disabledReason ?? `${action.apCost} AP${action.etherCost ? ` · ${action.etherCost} ETH` : ''}${action.quantity !== undefined ? ` · Qty ${action.quantity}` : ''}`}</small></span></button>)}</div>
+          }}>{action.type==='UseItem'?<ItemIcon item={action.itemId?itemMap.get(action.itemId):undefined}/>:actionIcon(action)}<span>{action.label}<small>{action.disabledReason ?? `${action.apCost} AP${action.etherCost ? ` · ${action.etherCost} ETH` : ''}${action.quantity !== undefined ? ` · Qty ${action.quantity}` : ''}`}</small></span></button>)}</div>
           {detailAction&&<aside className="combat-action-detail" aria-live="polite"><header><strong>{detailAction.label}</strong><span>{detailAction.apCost} AP{detailAction.etherCost?` · ${detailAction.etherCost} Ether`:''}</span></header><p>{detailAction.description}</p><dl>{detailAction.rangeTiles!==undefined&&<div><dt>Range</dt><dd>{detailAction.rangeTiles===0?'Self':detailAction.rangeTiles}</dd></div>}{detailAction.targetType&&<div><dt>Target</dt><dd>{detailAction.targetType}</dd></div>}{detailAction.quantity!==undefined&&<div><dt>Quantity</dt><dd>{detailAction.quantity}</dd></div>}</dl>{detailAction.effectSummary?.map((summary)=><small key={summary}>{summary}</small>)}{detailAction.requirements?.map((requirement)=><em key={requirement}>{requirement}</em>)}{detailAction.disabledReason&&<b>{detailAction.disabledReason}</b>}</aside>}
         </div>
 

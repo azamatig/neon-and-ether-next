@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { ActionResolution } from '@neon-ether/game-schema';
-import { Badge, Button, Panel } from '@neon-ether/shared-ui';
+import { ActionResolution, Item } from '@neon-ether/game-schema';
+import { Badge, Button, ItemIcon, Panel } from '@neon-ether/shared-ui';
 import {
   AlertCircle,
   ArrowRight,
@@ -20,15 +20,18 @@ import {
 
 export interface ActionResultModalProps {
   resolution: ActionResolution;
+  items: Item[];
   onDismiss: () => void;
   resolveItemName: (itemId: string) => string;
 }
 
 export const ActionResultModal: React.FC<ActionResultModalProps> = ({
   resolution,
+  items,
   onDismiss,
   resolveItemName,
 }) => {
+  const itemMap = new Map(items.map((item) => [item.id, item]));
   const isSuccess = resolution.status === 'Success';
   const isFailure = resolution.status === 'Failure';
 
@@ -99,7 +102,7 @@ export const ActionResultModal: React.FC<ActionResultModalProps> = ({
                     key={`gained_${idx}`}
                     className="px-2 py-1 bg-cyan-950/50 text-cyan-300 border border-cyan-500/30 rounded flex items-center gap-1 font-bold"
                   >
-                    <Package className="w-3.5 h-3.5" />
+                    <ItemIcon item={itemMap.get(item.itemId)}/>
                     <span>
                       +{item.quantity} {resolveItemName(item.itemId)}
                     </span>
@@ -111,7 +114,7 @@ export const ActionResultModal: React.FC<ActionResultModalProps> = ({
                     key={`lost_${idx}`}
                     className="px-2 py-1 bg-zinc-900 text-zinc-400 border border-zinc-700 rounded flex items-center gap-1"
                   >
-                    <Package className="w-3.5 h-3.5" />
+                    <ItemIcon item={itemMap.get(item.itemId)}/>
                     <span>
                       -{item.quantity} {resolveItemName(item.itemId)}
                     </span>

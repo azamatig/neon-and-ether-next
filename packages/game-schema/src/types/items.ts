@@ -62,6 +62,7 @@ export const ItemSchema = BaseEntitySchema.extend({
   combatAttackType: z.enum(['Ranged', 'Melee']).optional(),
   combatDefeatType: z.enum(['Lethal', 'NonLethal']).default('Lethal'),
   icon: z.string().default('Box'),
+  artwork: z.string().optional(),
 });
 export type Item = z.infer<typeof ItemSchema>;
 export type ItemDefinition = Item;

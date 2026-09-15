@@ -25,6 +25,8 @@ export const handleChangeRelationshipEffect: EffectHandler<ChangeRelationshipEff
       isCompanion: false,
       relationship: { status: 'independent', affinity: 0, trust: 0, fear: 0, loyalty: 0 },
       assignment: { jobId: null, roomId: null, partySlotId: null },
+      equipment: { slots: {}, appliedModifiers: {} },
+      rosterStatus: 'Unavailable',
       flags: {},
     };
   }

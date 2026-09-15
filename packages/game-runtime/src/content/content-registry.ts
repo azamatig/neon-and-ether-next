@@ -32,6 +32,10 @@ import {
   NewGameDefinition,
   MinigameDefinition,
   PerkDefinition,
+  RaceDefinition,
+  ClassDefinition,
+  SpecialPathDefinition,
+  NamePoolDefinition,
   Quest,
   Recipe,
   StatusEffectDefinition,
@@ -128,6 +132,10 @@ export class ContentRegistry {
   public readonly shops = new RegistryCollection<ShopDefinition>('Shop');
   public readonly progressionDefinitions = new RegistryCollection<ProgressionDefinition>('ProgressionDefinition');
   public readonly backgrounds = new RegistryCollection<BackgroundDefinition>('Background');
+  public readonly races = new RegistryCollection<RaceDefinition>('Race');
+  public readonly classes = new RegistryCollection<ClassDefinition>('Class');
+  public readonly specialPaths = new RegistryCollection<SpecialPathDefinition>('SpecialPath');
+  public readonly namePools = new RegistryCollection<NamePoolDefinition>('NamePool');
   public readonly perks = new RegistryCollection<PerkDefinition>('Perk');
   public readonly newGameDefinitions = new RegistryCollection<NewGameDefinition>('NewGameDefinition');
   public readonly minigames=new RegistryCollection<MinigameDefinition>('Minigame');
@@ -190,6 +198,10 @@ export class ContentRegistry {
     for (const shop of content.shops ?? []) this.shops.set(shop.id, shop);
     for (const definition of content.progressionDefinitions ?? []) this.progressionDefinitions.set(definition.id, definition);
     for (const background of content.backgrounds ?? []) this.backgrounds.set(background.id, background);
+    for (const race of content.races ?? []) this.races.set(race.id, race);
+    for (const definition of content.classes ?? []) this.classes.set(definition.id, definition);
+    for (const definition of content.specialPaths ?? []) this.specialPaths.set(definition.id, definition);
+    for (const pool of content.namePools ?? []) this.namePools.set(pool.id, pool);
     for (const perk of content.perks ?? []) this.perks.set(perk.id, perk);
     for (const definition of content.newGameDefinitions ?? []) this.newGameDefinitions.set(definition.id, definition);
     for(const definition of content.minigames??[])this.minigames.set(definition.id,definition);
@@ -291,6 +303,10 @@ export class ContentRegistry {
       shops: this.shops.getAll(),
       progressionDefinitions: this.progressionDefinitions.getAll(),
       backgrounds: this.backgrounds.getAll(),
+      races: this.races.getAll(),
+      classes: this.classes.getAll(),
+      specialPaths: this.specialPaths.getAll(),
+      namePools: this.namePools.getAll(),
       perks: this.perks.getAll(),
       newGameDefinitions: this.newGameDefinitions.getAll(),
       minigames:this.minigames.getAll(),
@@ -327,6 +343,10 @@ export class ContentRegistry {
     this.shops.clear();
     this.progressionDefinitions.clear();
     this.backgrounds.clear();
+    this.races.clear();
+    this.classes.clear();
+    this.specialPaths.clear();
+    this.namePools.clear();
     this.perks.clear();
     this.newGameDefinitions.clear();
     this.minigames.clear();

@@ -1,9 +1,0 @@
-import React from 'react';
-import type { ResolvedEventState } from '@neon-ether/game-runtime';
-import { ArrowRight, ImageOff, UserRound } from 'lucide-react';
-import { Button } from '@neon-ether/shared-ui';
-
-export const EventContainer:React.FC<{eventState:ResolvedEventState;onAdvanceStep:()=>void;onChooseOption:(id:string)=>void;onSkip?:()=>void}>=({eventState,onAdvanceStep,onChooseOption,onSkip})=>{
- const {event,currentStep,stepIndex,totalSteps}=eventState;const artwork=currentStep.image??event.presentation.backgroundImage;const hasChoices=currentStep.resolvedChoices.length>0;
- return <section className="ne-event-screen" data-layout={event.presentation.layoutStyle}><div className="ne-event-art">{artwork?<img src={artwork} alt=""/>:<ImageOff aria-hidden="true"/>}<span>{event.type} event</span></div><div className="ne-event-content"><header><small>{event.name} · Step {stepIndex+1}/{totalSteps}</small>{event.skipOutcome&&onSkip&&<Button variant="ghost" size="sm" onClick={onSkip}>Skip intro</Button>}{currentStep.resolvedSpeaker&&<div><UserRound/><span><strong>{currentStep.resolvedSpeaker.name}</strong><small>{currentStep.resolvedSpeaker.title}</small></span></div>}</header><div className="ne-event-copy">{currentStep.title&&<h1>{currentStep.title}</h1>}<p>{currentStep.text}</p></div><footer>{hasChoices?<div className="ne-event-choices">{currentStep.resolvedChoices.map(choice=><button type="button" key={choice.id} disabled={!choice.isAvailable} title={choice.unmetReason} onClick={()=>onChooseOption(choice.id)}><strong>{choice.text}</strong>{choice.statCheckInfo&&<small>{choice.statCheckInfo.stat} · {choice.statCheckInfo.difficulty}</small>}{!choice.isAvailable&&choice.unmetReason&&<em>{choice.unmetReason}</em>}</button>)}</div>:<Button onClick={onAdvanceStep} rightIcon={<ArrowRight/>}>{currentStep.isFinalStep?'Enter Glassline':'Continue'}</Button>}</footer></div></section>;
-};

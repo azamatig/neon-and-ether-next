@@ -1,5 +1,14 @@
 [
   {
+    "id": "status_tactically_scanned",
+    "name": "Tactically Scanned",
+    "description": "Threat analysis exposes a temporary defensive weakness.",
+    "tags": ["Technical", "Corporate"],
+    "tickTiming": "TurnEnd",
+    "armorModifier": -1,
+    "icon": "ScanLine"
+  },
+  {
     "id": "status_burning",
     "name": "Burning",
     "description": "Thermal residue continues to damage the target.",

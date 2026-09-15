@@ -28,7 +28,7 @@
     "stackable": false,
     "maxStack": 1,
     "equipmentSlots": [
-      "mainHand"
+      "primaryWeapon"
     ],
     "requirements": [
       {
@@ -71,7 +71,7 @@
     "stackable": false,
     "maxStack": 1,
     "equipmentSlots": [
-      "mainHand"
+      "meleeWeapon"
     ],
     "requirements": [
       {
@@ -120,7 +120,7 @@
     "stackable": false,
     "maxStack": 1,
     "equipmentSlots": [
-      "body"
+      "implantNeural"
     ],
     "requirements": [
       {
@@ -155,7 +155,17 @@
     "requirements": [],
     "modifiers": [],
     "equipEffects": [],
-    "unequipEffects": []
+    "unequipEffects": [],
+    "useConditions": [],
+    "useEffects": [
+      {
+        "type": "changeStat",
+        "stat": "currentEther",
+        "delta": 25,
+        "mode": "add"
+      }
+    ],
+    "usableContexts": ["Exploration", "Combat"]
   },
   {
     "id": "itm_cyberware_fiber",
@@ -329,7 +339,17 @@
     "modifiers": [],
     "equipEffects": [],
     "unequipEffects": [],
-    "apUseCost": 1
+    "apUseCost": 1,
+    "useConditions": [],
+    "useEffects": [
+      {
+        "type": "changeStat",
+        "stat": "currentHp",
+        "delta": 20,
+        "mode": "add"
+      }
+    ],
+    "usableContexts": ["Exploration", "Combat"]
   },
   {
     "id": "itm_prologue_ares_security_keycard",
@@ -424,7 +444,7 @@
     "stackable": false,
     "maxStack": 1,
     "equipmentSlots": [
-      "neural"
+      "implantNeural"
     ],
     "requirements": [],
     "modifiers": [
@@ -461,5 +481,199 @@
     "unequipEffects": [],
     "grantedAbilityIds": [],
     "icon": "Brain"
+  },
+  {
+    "id": "fet_bone_signal_charm",
+    "name": "Bone Signal Charm",
+    "description": "A ward of conductive bone that steadies the wearer against hostile ether resonance.",
+    "tags": [
+      "Fetish",
+      "Ether",
+      "Ward"
+    ],
+    "category": "misc",
+    "rarity": "StreetGrade",
+    "weightKg": 0.1,
+    "valueCredits": 180,
+    "icon": "Radio",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "fetish"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "etherResistance",
+        "operation": "add",
+        "value": 2
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "fet_ashglass_eye",
+    "name": "Ashglass Eye",
+    "description": "A smoked lens trinket that highlights tactical flaws in hostile silhouettes.",
+    "tags": [
+      "Fetish",
+      "Technical",
+      "Tactical"
+    ],
+    "category": "misc",
+    "rarity": "MilitarySpec",
+    "weightKg": 0.1,
+    "valueCredits": 360,
+    "icon": "Eye",
+    "grantedAbilityIds": [
+      "ability_tactical_scan"
+    ],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "fetish"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "initiative",
+        "operation": "add",
+        "value": 1
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "fet_spirit_anchor",
+    "name": "Spirit Anchor",
+    "description": "A compact hex coil that stabilizes conventional ether reserves.",
+    "tags": [
+      "Fetish",
+      "Ether",
+      "Utility"
+    ],
+    "category": "misc",
+    "rarity": "Prototype",
+    "weightKg": 0.2,
+    "valueCredits": 540,
+    "icon": "Anchor",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "fetish"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "maxEther",
+        "operation": "add",
+        "value": 4
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "ring_signal_loop",
+    "name": "Signal Loop",
+    "description": "A conductive smart-ring tuned for rapid technical response.",
+    "tags": [
+      "Ring",
+      "Technical"
+    ],
+    "category": "misc",
+    "rarity": "Common",
+    "weightKg": 0.05,
+    "valueCredits": 120,
+    "icon": "Circle",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "ring1",
+      "ring2"
+    ],
+    "requirements": [],
+    "modifiers": [
+      {
+        "target": "etherTech",
+        "operation": "add",
+        "value": 1
+      }
+    ],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "wpn_service_pistol",
+    "name": "M-3 Service Pistol",
+    "description": "A dependable compact sidearm built for security work and field survival.",
+    "tags": [
+      "Weapon",
+      "Firearm",
+      "Pistol",
+      "Starter"
+    ],
+    "category": "weapon",
+    "rarity": "Common",
+    "weightKg": 1.0,
+    "valueCredits": 160,
+    "apUseCost": 2,
+    "combatAttackType": "Ranged",
+    "combatDefeatType": "Lethal",
+    "damageRange": [
+      7,
+      11
+    ],
+    "rangeTiles": 6,
+    "icon": "Crosshair",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "primaryWeapon"
+    ],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": []
+  },
+  {
+    "id": "wpn_utility_knife",
+    "name": "Carbon Utility Knife",
+    "description": "A balanced field blade suitable for close defense and practical work.",
+    "tags": [
+      "Weapon",
+      "Melee",
+      "Blade",
+      "Starter"
+    ],
+    "category": "weapon",
+    "rarity": "Common",
+    "weightKg": 0.5,
+    "valueCredits": 90,
+    "apUseCost": 2,
+    "combatAttackType": "Melee",
+    "combatDefeatType": "Lethal",
+    "damageRange": [
+      5,
+      8
+    ],
+    "rangeTiles": 1,
+    "icon": "Swords",
+    "grantedAbilityIds": [],
+    "stackable": false,
+    "maxStack": 1,
+    "equipmentSlots": [
+      "meleeWeapon"
+    ],
+    "requirements": [],
+    "modifiers": [],
+    "equipEffects": [],
+    "unequipEffects": []
   }
 ]

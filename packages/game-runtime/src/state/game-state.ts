@@ -81,6 +81,9 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
     age: overrides.age,
     portraitId: overrides.portraitId,
     backgroundId: overrides.backgroundId,
+    raceId: overrides.raceId,
+    classId: overrides.classId,
+    specialPathIds: overrides.specialPathIds ?? [],
     title: overrides.title ?? 'Drifter',
     level: overrides.level ?? 1,
     experience: overrides.experience ?? 0,
@@ -114,6 +117,7 @@ export function createInitialPlayerState(overrides: Partial<PlayerState> = {}): 
     inventory: overrides.inventory ?? createInitialInventoryState(),
     equipment: overrides.equipment ?? { slots: {}, appliedModifiers: {} },
     traits: overrides.traits ?? [],
+    capabilityTags: overrides.capabilityTags ?? [],
     perks: overrides.perks ?? [],
     abilityIds:overrides.abilityIds??[],
     temporaryModifiers: overrides.temporaryModifiers ?? [],
@@ -131,6 +135,8 @@ export function createInitialWorldState(overrides: Partial<WorldState> = {}): Wo
     flags: overrides.flags ?? {},
     activeDialogueTreeId: overrides.activeDialogueTreeId ?? null,
     activeDialogueNodeId: overrides.activeDialogueNodeId ?? null,
+    activeDialogueChoiceId: overrides.activeDialogueChoiceId ?? null,
+    dialogueHistory: overrides.dialogueHistory ?? [],
     activeEventId: overrides.activeEventId ?? undefined,
     activeEventStepId: overrides.activeEventStepId ?? undefined,
     activeEncounterId: overrides.activeEncounterId ?? undefined,
@@ -180,6 +186,9 @@ export function createInitialNpcRuntimeState(
       loyalty: 0,
     },
     assignment: overrides.assignment ?? { jobId: null, roomId: null, partySlotId: null },
+    inventory: overrides.inventory,
+    equipment: overrides.equipment ?? { slots: {}, appliedModifiers: {} },
+    rosterStatus: overrides.rosterStatus ?? (overrides.isCompanion ? 'ActiveParty' : 'Unavailable'),
     flags: overrides.flags ?? {},
   };
 }
@@ -305,6 +314,9 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         title: playerBlueprint.title,
         level: playerBlueprint.level,
         progressionDefinitionId: playerBlueprint.progressionDefinitionId,
+        raceId: playerBlueprint.raceId,
+        classId: playerBlueprint.classId,
+        specialPathIds: [...playerBlueprint.specialPathIds],
         factionId: playerBlueprint.factionId,
         attributes: { ...playerBlueprint.attributes },
         skills: { ...playerBlueprint.skills },
@@ -312,6 +324,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         position: { ...playerBlueprint.position },
         facing: playerBlueprint.facing,
         traits: [...playerBlueprint.traits],
+        capabilityTags: [],
         perks: [...playerBlueprint.perks],
         abilityIds:[...playerBlueprint.abilityIds],
         temporaryModifiers: [...playerBlueprint.temporaryModifiers],
@@ -321,6 +334,8 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         }),
       })
     : createInitialPlayerState({ inventory: createInitialInventoryState({ items: [] }) });
+  const equipmentSlots = content.newGameDefinitions[0]?.equipmentSlots ?? [];
+  player.equipment.slots = Object.fromEntries(equipmentSlots.map((slot) => [slot.id, null]));
 
   const pois = Object.fromEntries(content.pois.map((poi) => [poi.id, {
     poiId: poi.id,

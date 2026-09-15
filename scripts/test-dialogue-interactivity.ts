@@ -1,0 +1,25 @@
+import { ContentRegistry, GameSession } from '../packages/game-runtime/src/index.ts';
+import { GAME_CONTENT_MANIFEST } from '../content/index.ts';
+
+const assert: (value: unknown, message: string) => asserts value = (value,message)=>{if(!value)throw new Error(message);};
+const registry=new ContentRegistry();registry.loadManifest(GAME_CONTENT_MANIFEST);
+const session=new GameSession(registry);const configured=session.createSaveGame();configured.state.player.name='Mara Voss';configured.state.player.classId='class_mercenary';configured.state.player.backgroundId='background_street_survivor';configured.state.player.skills.research=0;configured.state.player.specialPathIds=[];assert(session.loadSave(configured).success,'Fixture state failed to load.');
+assert(session.startDialogue('dialogue_prologue_hale_interrogation'),'Dialogue did not start.');
+let view=session.getResolvedDialogueState()!;
+assert(view.choices.find(choice=>choice.id==='operative')?.isAvailable===false,'Class choice ignored identity conditions.');
+assert(view.choices.find(choice=>choice.id==='corporate')?.isAvailable===false,'Origin choice ignored identity conditions.');
+assert(view.choices.find(choice=>choice.id==='research')?.isAvailable===false,'Skill threshold choice was enabled.');
+assert(!view.choices.some(choice=>choice.id==='mind'&&choice.isVisible),'Locked Mindmancer choice was visible.');
+const normal=view.choices.find(choice=>choice.id==='move')!;assert(session.chooseDialogueOption(normal),'Normal Player choice failed.');
+view=session.getResolvedDialogueState()!;assert(view.playerBeat?.speakerName==='Mara Voss'&&view.playerBeat.text==='Then we move now.','Player line was not presented before NPC continuation.');
+assert(session.getState().world.flags['dialogue.hale.moved']===true,'Dialogue effect did not execute.');
+const saved=session.serializeSave();const restored=new GameSession(registry);assert(restored.loadSave(saved).success,'Mid-dialogue save failed to load.');
+assert(restored.getResolvedDialogueState()?.playerBeat?.text==='Then we move now.','Mid-dialogue Player beat did not persist.');
+assert(restored.advanceDialoguePlayerLine()&&restored.getResolvedDialogueState()?.node.id==='closing','Player beat did not continue to NPC response.');
+assert(restored.getState().world.flags['dialogue.hale.moved']===true,'Dialogue effect was not preserved exactly once.');
+const questionSession=new GameSession(registry);questionSession.getState().player.name='Rook';assert(questionSession.startDialogue('dialogue_prologue_hale_interrogation'),'Question dialogue did not start.');
+const question=questionSession.getResolvedDialogueState()!.choices.find(choice=>choice.id==='palimpsest')!;assert(questionSession.chooseDialogueOption(question)&&questionSession.advanceDialoguePlayerLine(),'Question selection failed.');
+assert(questionSession.getResolvedDialogueState()?.node.id==='palimpsest_answer','Question answer was skipped.');assert(questionSession.advanceDialogueNode()&&questionSession.getResolvedDialogueState()?.node.id==='opening','Question did not return to its choice hub.');
+const identitySession=new GameSession(registry);const identitySave=identitySession.createSaveGame();const identity=identitySave.state.player;identity.classId='class_operative';identity.backgroundId='background_corporate_exile';identity.skills.research=2;identity.specialPathIds=['special_path_mindmancer'];assert(identitySession.loadSave(identitySave).success,'Identity fixture failed to load.');assert(identitySession.startDialogue('dialogue_prologue_hale_interrogation'),'Identity dialogue did not start.');
+view=identitySession.getResolvedDialogueState()!;for(const id of ['operative','corporate','research','mind'])assert(view.choices.find(choice=>choice.id===id)?.isAvailable,`Conditional choice ${id} was unavailable.`);
+console.log('Dialogue interactivity regression passed.');

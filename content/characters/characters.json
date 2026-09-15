@@ -71,7 +71,8 @@
     "temporaryModifiers": [],
     "statusEffects": [],
     "progressionDefinitionId": "progression_player",
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "raceId": "race_human"
   },
   {
     "id": "npc_mira_vesk",
@@ -133,7 +134,8 @@
     "temporaryModifiers": [],
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "raceId": "race_elf"
   },
   {
     "id": "npc_doctor_sable",
@@ -194,7 +196,8 @@
     "temporaryModifiers": [],
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "raceId": "race_dark_elf"
   },
   {
     "id": "npc_nix_vale",
@@ -255,7 +258,8 @@
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
     "shopId": "shop_glassline_nightmarket",
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "raceId": "race_dwarf"
   },
   {
     "id": "npc_warden_kest",
@@ -316,7 +320,8 @@
     "temporaryModifiers": [],
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "raceId": "race_human_elf_lineage"
   },
   {
     "id": "npc_ash_crow",
@@ -377,7 +382,8 @@
     "temporaryModifiers": [],
     "statusEffects": [],
     "progressionDefinitionId": "progression_companion",
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "raceId": "race_orc"
   },
   {
     "id": "npc_prologue_companion_female",
@@ -449,7 +455,8 @@
       "loyalty": 10
     },
     "availabilityConditions": [],
-    "combatImage": "/assets/characters/rhea-voss.svg"
+    "combatImage": "/assets/characters/rhea-voss.svg",
+    "raceId": "race_human"
   },
   {
     "id": "npc_prologue_companion_male",
@@ -521,7 +528,8 @@
       "loyalty": 10
     },
     "availabilityConditions": [],
-    "combatImage": "/assets/characters/dax-mercer.svg"
+    "combatImage": "/assets/characters/dax-mercer.svg",
+    "raceId": "race_human"
   },
   {
     "id": "npc_prologue_ares_wounded_officer",
@@ -587,6 +595,7 @@
       "fear": 15,
       "loyalty": 0
     },
-    "availabilityConditions": []
+    "availabilityConditions": [],
+    "raceId": "race_human"
   }
 ]

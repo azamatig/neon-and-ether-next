@@ -15,7 +15,11 @@
     "playtest:slice": "bun scripts/playtest-vertical-slice.ts",
     "test:rng": "bun scripts/test-deterministic-rng.ts",
     "test:pending-resolutions": "bun scripts/test-pending-resolutions.ts",
+    "test:entity-presentation": "bun scripts/test-entity-name-presentation.ts",
+    "test:rpg-core": "bun scripts/test-rpg-core-stabilization.ts",
+    "report:combat-balance": "bun scripts/report-prologue-combat-balance.ts",
     "test:editor-presets": "bun scripts/test-editor-presets.ts",
+    "test:editor-serialization": "bun scripts/test-editor-content-serialization.ts",
     "test:quest-walkthrough": "bun scripts/test-quest-walkthrough.ts",
     "test:telemetry": "bun scripts/test-development-telemetry.ts",
     "test:character-creation": "bun scripts/test-character-creation.ts",
@@ -31,7 +35,9 @@
     "test:combat-resolution": "bun scripts/test-combat-resolution.ts",
     "test:combat-victory-escape": "bun scripts/test-combat-victory-escape.ts",
     "test:combat-save": "bun scripts/test-combat-save-load.ts",
-    "test:combat": "npm run test:combat-roster && npm run test:combat-grid && npm run test:combat-turns && npm run test:combat-abilities && npm run test:combat-ai && npm run test:combat-resolution && npm run test:combat-victory-escape && npm run test:combat-save"
+    "test:combat": "npm run test:combat-roster && npm run test:combat-grid && npm run test:combat-turns && npm run test:combat-abilities && npm run test:combat-ai && npm run test:combat-resolution && npm run test:combat-victory-escape && npm run test:combat-save",
+    "test:companion-loadout": "bun scripts/test-companion-loadout.ts",
+    "test:dialogue": "bun scripts/test-dialogue-interactivity.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

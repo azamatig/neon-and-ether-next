@@ -159,6 +159,17 @@ export type TimeCondition = z.infer<typeof TimeConditionSchema>;
 export const CurrentWeatherConditionSchema = z.object({ type:z.literal('currentWeather'), weatherId:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
 export const WeatherTagConditionSchema = z.object({ type:z.literal('weatherTag'), tag:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
 export const EnvironmentTagConditionSchema = z.object({ type:z.literal('environmentTag'), tag:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
+export const SpecialPathUnlockedConditionSchema = z.object({ type:z.literal('specialPathUnlocked'), specialPathId:z.string().min(1), unlocked:z.boolean().default(true) });
+export type SpecialPathUnlockedCondition = z.infer<typeof SpecialPathUnlockedConditionSchema>;
+export const RaceIsConditionSchema = z.object({ type:z.literal('raceIs'), raceId:z.string().min(1), targetCharacterId:z.string().optional() });
+export const RaceHasTagConditionSchema = z.object({ type:z.literal('raceHasTag'), tag:z.string().min(1), targetCharacterId:z.string().optional() });
+export type RaceCondition = z.infer<typeof RaceIsConditionSchema> | z.infer<typeof RaceHasTagConditionSchema>;
+export const ClassIsConditionSchema = z.object({ type:z.literal('classIs'), classId:z.string().min(1) });
+export const BackgroundIsConditionSchema = z.object({ type:z.literal('backgroundIs'), backgroundId:z.string().min(1) });
+export const HasPerkConditionSchema = z.object({ type:z.literal('hasPerk'), perkId:z.string().min(1) });
+export const HasAbilityConditionSchema = z.object({ type:z.literal('hasAbility'), abilityId:z.string().min(1) });
+export const SkillThresholdConditionSchema = z.object({ type:z.literal('skillThreshold'), skillId:z.string().min(1), operator:ComparisonOperatorSchema.default('>='), value:z.number() });
+export type CharacterIdentityCondition = z.infer<typeof ClassIsConditionSchema>|z.infer<typeof BackgroundIsConditionSchema>|z.infer<typeof HasPerkConditionSchema>|z.infer<typeof HasAbilityConditionSchema>|z.infer<typeof SkillThresholdConditionSchema>;
 
 /**
  * Base atomic condition types union.
@@ -183,6 +194,14 @@ export const AtomicConditionSchema = z.discriminatedUnion('type', [
   CurrentWeatherConditionSchema,
   WeatherTagConditionSchema,
   EnvironmentTagConditionSchema,
+  SpecialPathUnlockedConditionSchema,
+  RaceIsConditionSchema,
+  RaceHasTagConditionSchema,
+  ClassIsConditionSchema,
+  BackgroundIsConditionSchema,
+  HasPerkConditionSchema,
+  HasAbilityConditionSchema,
+  SkillThresholdConditionSchema,
 ]);
 
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;

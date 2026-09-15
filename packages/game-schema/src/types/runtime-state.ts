@@ -62,6 +62,9 @@ export const PlayerStateSchema = z.object({
   age: z.number().int().min(1).optional(),
   portraitId: z.string().optional(),
   backgroundId: z.string().optional(),
+  raceId: z.string().optional(),
+  classId: z.string().optional(),
+  specialPathIds: z.array(z.string()).default([]),
   title: z.string().default('Drifter'),
   level: z.number().int().min(1).default(1),
   experience: z.number().int().min(0).default(0),
@@ -100,6 +103,7 @@ export const PlayerStateSchema = z.object({
   }),
   equipment: EquipmentStateSchema.default({ slots: {}, appliedModifiers: {} }),
   traits: z.array(z.string()).default([]),
+  capabilityTags: z.array(z.string()).default([]),
   perks: z.array(z.string()).default([]),
   abilityIds: z.array(z.string()).default([]),
   temporaryModifiers: z.array(CharacterStatModifierSchema).default([]),
@@ -139,6 +143,8 @@ export const NpcRuntimeStateSchema = z.object({
   relationship: CharacterRelationshipSchema.default({ status: 'independent', affinity: 0, trust: 0, fear: 0, loyalty: 0 }),
   assignment: CharacterAssignmentSchema.default({ jobId: null, roomId: null, partySlotId: null }),
   inventory: InventoryStateSchema.optional(),
+  equipment: EquipmentStateSchema.default({ slots: {}, appliedModifiers: {} }),
+  rosterStatus: z.enum(['ActiveParty','Safehouse','Assigned','Unavailable']).default('Unavailable'),
   flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
 });
 
@@ -303,12 +309,15 @@ export type GameMode = z.infer<typeof GameModeSchema>;
 
 export const WorldStateSchema = z.object({
   currentMapId: z.string().default(''),
+  currentLocationName: z.string().optional(),
   currentPoiId: z.string().nullable().default(null),
   selectedPoiId: z.string().nullable().default(null),
   discoveredMapIds: z.array(z.string()).default([]),
   flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
   activeDialogueTreeId: z.string().nullable().default(null),
   activeDialogueNodeId: z.string().nullable().default(null),
+  activeDialogueChoiceId: z.string().nullable().default(null),
+  dialogueHistory: z.array(z.object({ speaker:z.string(), text:z.string() })).default([]),
   activeEventId: z.string().nullable().default(null),
   activeEventStepId: z.string().nullable().default(null),
   activeEncounterId: z.string().nullable().default(null),
@@ -453,6 +462,8 @@ export type GameState = z.infer<typeof GameStateSchema>;
 
 export const SaveGameMetadataSchema = z.object({
   saveId: z.string(),
+  slotId: z.string().default('autosave-1'),
+  saveKind: z.enum(['Manual','Autosave']).default('Autosave'),
   slotName: z.string().default('AutoSave'),
   schemaVersion: z.number().int().min(1).default(CURRENT_SAVE_SCHEMA_VERSION),
   timestamp: z.string().default(() => new Date().toISOString()),
@@ -460,6 +471,7 @@ export const SaveGameMetadataSchema = z.object({
   playerLevel: z.number().int().min(1).default(1),
   playerName: z.string().default('Player'),
   currentMapId: z.string().default(''),
+  currentLocationName: z.string().optional(),
   activeQuestCount: z.number().int().min(0).default(0),
   screenshotDataUrl: z.string().optional(),
 });

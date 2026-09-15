@@ -63,6 +63,8 @@ import { QuestRuntime, QuestCommandResult, ResolvedQuestState } from '../quests/
 import { CombatEncounterEngine, ResolvedCombatPreview } from '../combat/combat-encounter-engine.ts';
 import type { RuntimeTraceEvent, RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import { InventorySystem, InventoryCommandResult } from '../inventory/inventory-system.ts';
+import { ItemUseSystem, type ItemUseResult } from '../inventory/item-use-system.ts';
+import { ProgressionSystem, type ProgressionView } from '../progression/progression-system.ts';
 import { CharacterStatsSystem } from '../stats/character-stats-system.ts';
 import { NewGameInitializer, type CharacterCreationValidation } from './new-game-initializer.ts';
 import type { CharacterCreationSelection } from '@neon-ether/game-schema';
@@ -91,6 +93,15 @@ export interface ResolvedPOI extends POI {
       isCompleted: boolean;
     }
   >;
+}
+
+export interface ResolvedDialogueChoice extends DialogueChoice { isAvailable:boolean; isVisible:boolean; unmetReason?:string }
+export interface ResolvedDialogueState {
+  tree: ReturnType<ContentRegistry['getDialogue']> extends infer T ? Exclude<T,undefined> : never;
+  node: DialogueNode;
+  choices: ResolvedDialogueChoice[];
+  playerBeat?: { choiceId:string; speakerName:string; text:string };
+  history: Array<{speaker:string;text:string}>;
 }
 
 export interface GameRuntimeEvents {
@@ -136,6 +147,7 @@ export class GameSession {
   private questRuntime: QuestRuntime;
   private combatEncounterEngine: CombatEncounterEngine;
   private inventorySystem: InventorySystem;
+  private itemUseSystem: ItemUseSystem;
   private craftingSystem: CraftingSystem;
   private economySystem: EconomySystem;
   private worldTimeSystem: WorldTimeSystem;
@@ -161,6 +173,7 @@ export class GameSession {
     this.effectRegistry = effectRegistry ?? new EffectRegistry(true);
     this.effectExecutor = new EffectExecutor(this.effectRegistry, report);
     this.inventorySystem = new InventorySystem(contentRegistry, (effects, state) => { this.effectExecutor.executeBatch(effects, { state, contentRegistry,random:this.diceRoller }); });
+    this.itemUseSystem = new ItemUseSystem(contentRegistry, this.conditionRegistry, this.effectExecutor, this.diceRoller);
     this.craftingSystem = new CraftingSystem(contentRegistry, this.conditionRegistry, this.effectExecutor,this.diceRoller);
     this.economySystem = new EconomySystem(contentRegistry, this.conditionRegistry,this.diceRoller);
     this.worldTimeSystem = new WorldTimeSystem();
@@ -184,6 +197,7 @@ export class GameSession {
       this.effectExecutor.executeBatch(initialBase.globalEffects, { state: this.state, contentRegistry: this.contentRegistry,random:this.diceRoller });
     }
     this.inventorySystem.hydrate(this.state);
+    this.normalizePlayerCapabilities();
   }
 
   // --- State Accessors ---
@@ -198,8 +212,11 @@ export class GameSession {
 
   public getCharacterCreationOptions() {
     const initializer = new NewGameInitializer(this.contentRegistry);
-    return { definition: initializer.getDefinition(), backgrounds: this.contentRegistry.backgrounds.getAll(), perks: this.contentRegistry.perks.getAll() };
+    return { definition: initializer.getDefinition(), races: this.contentRegistry.races.getAll(), classes: this.contentRegistry.classes.getAll(), backgrounds: this.contentRegistry.backgrounds.getAll(), perks: this.contentRegistry.perks.getAll() };
   }
+  public generateCharacterName():string { return new NewGameInitializer(this.contentRegistry).generateName(); }
+  public adjustCharacterCreationAttribute(selection:CharacterCreationSelection,attribute:keyof CharacterCreationSelection['attributes'],delta:number):CharacterCreationSelection { return new NewGameInitializer(this.contentRegistry).adjustAttribute(selection,attribute,delta); }
+  public adjustCharacterCreationSkill(selection:CharacterCreationSelection,skillId:string,delta:number):CharacterCreationSelection { return new NewGameInitializer(this.contentRegistry).adjustSkill(selection,skillId,delta); }
   public validateCharacterCreation(selection: CharacterCreationSelection): CharacterCreationValidation {
     return new NewGameInitializer(this.contentRegistry).validate(selection);
   }
@@ -234,10 +251,27 @@ export class GameSession {
     return result;
   }
   public equipInventoryEntry(entryId: string, slot: EquipmentSlot): InventoryCommandResult {
-    const result = this.inventorySystem.equip(this.state, entryId, slot);
+    const authoredSlot = this.getEquipmentSlots().find((candidate) => candidate.id === slot.id);
+    if (!authoredSlot) return { success: false, reason: 'Equipment slot is unavailable.' };
+    const result = this.inventorySystem.equip(this.state, entryId, authoredSlot);
     if (result.success) this.events.emit('STATE_CHANGED', this.state);
     return result;
   }
+  public canEquipInventoryEntry(entryId: string, slotId: string): InventoryCommandResult {
+    const entry = this.state.player.inventory.items.find((candidate) => candidate.entryId === entryId);
+    const item = entry ? this.contentRegistry.getItem(entry.itemId) : undefined;
+    if (!entry || !item) return { success: false, reason: 'Inventory item is unavailable.' };
+    const slot = this.getEquipmentSlots().find((candidate) => candidate.id === slotId);
+    if (!slot) return { success: false, reason: 'Equipment slot is unavailable.' };
+    return this.inventorySystem.canEquip(this.state, item, slot);
+  }
+  public getEquipmentSlots(): EquipmentSlot[] { return this.contentRegistry.newGameDefinitions.getAll()[0]?.equipmentSlots ?? []; }
+  public useInventoryItem(itemId: string): ItemUseResult {
+    const result = this.itemUseSystem.use(this.state, itemId, 'Exploration');
+    if (result.success && result.nextState) { this.state = result.nextState; this.outcomeEngine.bindState(this.state); this.events.emit('STATE_CHANGED', this.state); }
+    return result;
+  }
+  public getPlayerProgressionView(): ProgressionView { return new ProgressionSystem(this.contentRegistry).resolvePlayer(this.state); }
   public unequipSlot(slotId: string): InventoryCommandResult {
     const result = this.inventorySystem.unequip(this.state, slotId);
     if (result.success) this.events.emit('STATE_CHANGED', this.state);
@@ -410,6 +444,9 @@ export class GameSession {
       isMerchant: false,
       isCompanion: false,
       level: p.level,
+      raceId: p.raceId,
+      classId: p.classId,
+      specialPathIds: [...p.specialPathIds],
       attributes: effective.attributes,
       vitals: effective.derivedStats,
       skills: { ...p.skills },
@@ -421,7 +458,7 @@ export class GameSession {
       inventory: p.inventory.items.map((slot) => ({ ...slot })),
       portraitIcon: 'User',
       defaultBehavior: 'Idle',
-      abilityIds: [...new Set([...(this.contentRegistry.getCharacter(p.characterId)?.abilityIds??[]),...p.abilityIds])],
+      abilityIds: [...new Set([...(p.classId ? [] : this.contentRegistry.getCharacter(p.characterId)?.abilityIds??[]),...p.abilityIds])],
       traits: this.contentRegistry.getCharacter(p.characterId)?.traits ?? [],
       availabilityConditions: [],
     };
@@ -437,7 +474,18 @@ export class GameSession {
     if (!blueprint && !runtime) return undefined;
     if (blueprint?.availabilityConditions.length && !this.evaluateConditions(blueprint.availabilityConditions).allMet) return undefined;
 
-    const base: CharacterDefinition = blueprint ?? {
+    const npcClass = blueprint?.classId ? this.contentRegistry.classes.get(blueprint.classId) : undefined;
+    const npcRace = blueprint?.raceId ? this.contentRegistry.races.get(blueprint.raceId) : undefined;
+    const equipmentModifiers=runtime?.inventory?.items.filter(entry=>entry.isEquipped).flatMap(entry=>this.contentRegistry.getItem(entry.itemId)?.modifiers.map((modifier,index)=>({...modifier,id:`equipment_${npcId}_${entry.itemId}_${index}`}))??[])??[];
+    const classResolvedBlueprint = blueprint ? {
+      ...blueprint,
+      tags: [...new Set([...blueprint.tags, ...(npcRace?.tags ?? [])])],
+      skills: Object.fromEntries([...new Set([...Object.keys(blueprint.skills), ...Object.keys(npcClass?.startingSkillModifiers ?? {}), ...Object.keys(npcRace?.skillModifiers ?? {})])].map((id) => [id, (blueprint.skills[id] ?? 0) + (npcClass?.startingSkillModifiers[id] ?? 0) + (npcRace?.skillModifiers[id] ?? 0)])),
+      temporaryModifiers: [...blueprint.temporaryModifiers, ...(npcClass?.startingModifiers ?? []), ...(npcRace?.attributeModifiers ?? []),...equipmentModifiers],
+      traits: [...new Set([...blueprint.traits, ...(npcClass?.grantedTraits ?? []), ...(npcRace?.grantedTraits ?? [])])],
+      abilityIds: [...new Set([...blueprint.abilityIds, ...(npcClass?.startingAbilityIds ?? []), ...(npcRace?.grantedAbilityIds ?? []),...(runtime?.inventory?.items.filter(entry=>entry.isEquipped).flatMap(entry=>this.contentRegistry.getItem(entry.itemId)?.grantedAbilityIds??[])??[])])],
+    } : undefined;
+    const base: CharacterDefinition = classResolvedBlueprint ?? {
       id: npcId,
       name: runtime?.npcId ?? 'Unknown NPC',
       description: 'Sector resident.',
@@ -449,6 +497,8 @@ export class GameSession {
       isMerchant: runtime?.isMerchant ?? false,
       isCompanion: runtime?.isCompanion ?? false,
       level: 1,
+      classId: undefined,
+      specialPathIds: [],
       attributes: { body: 10, reflexes: 10, mind: 10, etherTech: 10, presence: 10 },
       skills: {},
       perks: [],
@@ -475,25 +525,32 @@ export class GameSession {
       availabilityConditions: [],
     };
 
-    if (!runtime) return base;
+    const effectiveBase = new CharacterStatsSystem().resolve(base);
+    const resolvedBase = { ...base, attributes:effectiveBase.attributes, vitals:effectiveBase.derivedStats };
+    if (!runtime) return resolvedBase;
 
     return {
-      ...base,
-      isMerchant: runtime.isMerchant ?? base.isMerchant,
-      isCompanion: runtime.isCompanion ?? base.isCompanion,
-      defaultBehavior: (runtime.behaviorOverride as any) ?? base.defaultBehavior,
-      dialogueTreeId: runtime.dialogueTreeIdOverride ?? base.dialogueTreeId,
+      ...resolvedBase,
+      isMerchant: runtime.isMerchant ?? resolvedBase.isMerchant,
+      isCompanion: runtime.isCompanion ?? resolvedBase.isCompanion,
+      defaultBehavior: (runtime.behaviorOverride as any) ?? resolvedBase.defaultBehavior,
+      dialogueTreeId: runtime.dialogueTreeIdOverride ?? resolvedBase.dialogueTreeId,
       position: { ...runtime.position },
       facing: runtime.facing ?? base.facing,
       vitals: {
-        ...base.vitals,
-        currentHp: runtime.currentHp,
-        maxHp: runtime.maxHp ?? base.vitals.maxHp,
+        ...resolvedBase.vitals,
+        currentHp: Math.min(resolvedBase.vitals.maxHp, runtime.currentHp + (runtime.currentHp === (runtime.maxHp ?? base.vitals.maxHp) ? resolvedBase.vitals.maxHp - base.vitals.maxHp : 0)),
+        maxHp: (runtime.maxHp ?? base.vitals.maxHp) + resolvedBase.vitals.maxHp - base.vitals.maxHp,
       },
-      inventory: runtime.inventory ? runtime.inventory.items.map((slot) => ({ ...slot })) : base.inventory,
+      inventory: runtime.inventory ? runtime.inventory.items.map((slot) => ({ ...slot })) : resolvedBase.inventory,
       credits: runtime.inventory?.credits ?? 0,
     };
   }
+
+  public initializeRosterCharacterLoadout(npcId:string):InventoryCommandResult {const result=this.inventorySystem.initializeNpcLoadout(this.state,npcId);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result;}
+  public equipRosterCharacterItem(npcId:string,entryId:string,slotId:string):InventoryCommandResult {const result=this.inventorySystem.equipNpc(this.state,npcId,entryId,slotId);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result;}
+  public unequipRosterCharacterSlot(npcId:string,slotId:string):InventoryCommandResult {const result=this.inventorySystem.unequipNpc(this.state,npcId,slotId);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result;}
+  public transferRosterItem(from:'player'|string,to:'player'|string,itemId:string,quantity=1):InventoryCommandResult {const result=this.inventorySystem.transfer(this.state,from,to,itemId,quantity);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result;}
 
   // --- World & POI Navigation Architecture ---
 
@@ -947,6 +1004,23 @@ export class GameSession {
 
   public executeCombatAction(action: CombatAction): CombatCommandResult {
     const before=structuredClone(this.state.combat.combatants);
+    if (action.type === 'UseItem') {
+      const used = this.itemUseSystem.use(this.state, action.itemId, 'Combat');
+      if (!used.success || !used.nextState) return { success: false, state: this.state.combat, reason: used.reason };
+      this.state = used.nextState;
+      this.outcomeEngine.bindState(this.state);
+      const actor = this.state.combat.combatants[action.actorId];
+      if (actor?.currentAp === 0) {
+        const ended = this.turnBasedCombatEngine.execute(this.state.combat, { type: 'EndTurn', actorId: actor.id });
+        if (ended.success) this.state.combat = ended.state;
+      }
+      this.resolvePendingAiTurns();
+      this.state.player.vitals.currentHp = this.state.combat.combatants[this.state.player.characterId]?.currentHp ?? this.state.player.vitals.currentHp;
+      this.state.player.vitals.currentEther = this.state.combat.combatants[this.state.player.characterId]?.currentEther ?? this.state.player.vitals.currentEther;
+      this.events.emit('COMBAT_STATE_CHANGED', undefined);
+      this.events.emit('STATE_CHANGED', this.state);
+      return { success: true, state: this.state.combat };
+    }
     let result = this.turnBasedCombatEngine.execute(this.state.combat, action);
     if (!result.success) return result;
     this.state.combat = result.state;
@@ -973,12 +1047,24 @@ export class GameSession {
     if (!encounter || commands.actions.length === 0) return commands;
     const escapeConditionsMet = this.evaluateConditions(encounter.escapeRules.conditions).allMet;
     const actor = commands.actorId ? this.state.combat.combatants[commands.actorId] : undefined;
+    if (actor?.sourceId === this.state.player.characterId) {
+      const consumableIds = [...new Set(this.state.player.inventory.items.filter((entry) => entry.quantity > 0).map((entry) => entry.itemId))];
+      for (const itemId of consumableIds) {
+        const item = this.contentRegistry.getItem(itemId);
+        if (!item || item.category !== 'consumable' || !item.usableContexts.includes('Combat')) continue;
+        const allowed = this.itemUseSystem.canUseDefinition(this.state, item, 'Combat');
+        const effectSummary=item.useEffects.map((effect)=>effect.type==='changeStat'&&effect.stat.toLowerCase()==='currenthp'&&effect.delta?`Restores ${effect.delta} HP.`:effect.type==='changeStat'&&effect.stat.toLowerCase()==='currentether'&&effect.delta?`Restores ${effect.delta} Ether.`:'Applies its authored effect.');
+        const quantity=this.state.player.inventory.items.filter((entry)=>entry.itemId===item.id).reduce((sum,entry)=>sum+entry.quantity,0);
+        commands.actions.push({ id: `item.${item.id}`, type: 'UseItem', category: 'Support', label: item.name, description:item.description, apCost: item.apUseCost ?? 0, etherCost: 0, itemId: item.id, targetType:'Self',effectSummary,requirements:item.useConditions.length?['Use conditions must be met.']:[],quantity, targetIds: [], disabledReason: !allowed.success ? allowed.reason : actor.currentAp < (item.apUseCost ?? 0) ? 'Not enough AP.' : undefined });
+      }
+    }
     const escapeApCost = encounter.escapeRules.check?.apCost ?? 0;
     commands.actions.push({
       id: 'attempt-flee',
       type: 'AttemptFlee',
       category: 'Support',
       label: 'Attempt Flee',
+      description: 'Attempt to disengage from this encounter.',
       apCost: escapeApCost,
       etherCost: 0,
       targetIds: [],
@@ -1080,17 +1166,20 @@ export class GameSession {
 
   // --- Save / Load & Migration Lifecycle ---
 
-  public createSaveGame(slotName: string = 'Autosave'): SaveGame {
+  public createSaveGame(slotName: string = 'Autosave', saveKind: 'Manual'|'Autosave' = slotName === 'Autosave' ? 'Autosave' : 'Manual', slotId: string = saveKind === 'Autosave' ? 'autosave-1' : slotName.toLowerCase().replace(/[^a-z0-9]+/g, '-')): SaveGame {
     const activeQuestCount = Object.values(this.state.quests).filter((q) => q.status === 'Active').length;
     return {
       metadata: {
-        saveId: `save_${Date.now()}`,
+        saveId: `save_${slotId}`,
+        slotId,
+        saveKind,
         schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
         timestamp: new Date().toISOString(),
         slotName,
         playerName: this.state.player.name,
         playerLevel: this.state.player.level,
         currentMapId: this.state.world.currentMapId,
+        currentLocationName: this.contentRegistry.getMap(this.state.world.currentMapId)?.name,
         playtimeSeconds: this.state.time.elapsedRealSeconds ?? 0,
         activeQuestCount,
       },
@@ -1111,6 +1200,7 @@ export class GameSession {
       this.restorePendingGameplayContext();
       this.diceRoller.restore(this.state.rng);
       this.inventorySystem.hydrate(this.state);
+      this.normalizePlayerCapabilities();
       this.events.emit('STATE_CHANGED', this.state);
       this.logJournal('System', `Game session loaded successfully (Schema v${result.saveGame.metadata.schemaVersion}).`, {
         migrated: result.migrated,
@@ -1119,6 +1209,9 @@ export class GameSession {
     }
     return result;
   }
+
+  /** Migrates authored capability tags out of legacy player-facing trait lists. */
+  private normalizePlayerCapabilities():void { const race=this.contentRegistry.races.get(this.state.player.raceId??'');if(!race)return;const capabilities=new Set([...this.state.player.capabilityTags,...race.capabilityTags]);this.state.player.capabilityTags=[...capabilities];this.state.player.traits=this.state.player.traits.filter((trait)=>!capabilities.has(trait)); }
 
   /** Rebuilds gameplay navigation without persisting any presentation state. */
   private restorePendingGameplayContext(): void {
@@ -1170,6 +1263,8 @@ export class GameSession {
 
     this.state.world.activeDialogueTreeId = treeId;
     this.state.world.activeDialogueNodeId = tree.rootNodeId;
+    this.state.world.activeDialogueChoiceId = null;
+    this.state.world.dialogueHistory = [{ speaker:rootNode.speakerName, text:rootNode.text }];
     this.state.world.mode = 'Dialogue';
 
     this.logJournal('Dialogue', `Comm link established with: ${rootNode.speakerName}.`);
@@ -1184,6 +1279,12 @@ export class GameSession {
 
     const tree = this.contentRegistry.getDialogue(activeTreeId);
     if (!tree) return false;
+    const node=tree.nodes[this.state.world.activeDialogueNodeId??''];
+    const authoredChoice=node?.choices.find((entry)=>entry.id===choice.id);
+    if(!authoredChoice||this.state.world.activeDialogueChoiceId)return false;
+    choice=authoredChoice;
+    const availability=this.evaluateConditions(choice.conditions??[]);
+    if(!availability.allMet)return false;
 
     // 1. Resolve stat checks if required
     if (choice.requirement) {
@@ -1231,27 +1332,61 @@ export class GameSession {
       this.logJournal('World', `World flag updated: ${choice.setFlag.key} = ${choice.setFlag.value}`);
     }
 
-    // 5. Advance to next node or end dialogue
-    if (!choice.targetNodeId) {
-      this.endDialogue();
-      return true;
-    }
+    if(choice.effects?.length)this.effectExecutor.executeBatch(choice.effects,{state:this.state,contentRegistry:this.contentRegistry,random:this.diceRoller});
 
-    const nextNode = tree.nodes[choice.targetNodeId];
-    if (!nextNode) {
-      this.endDialogue();
-      return true;
-    }
-
-    this.state.world.activeDialogueNodeId = choice.targetNodeId;
-    this.events.emit('DIALOGUE_NODE_CHANGED', { treeId: activeTreeId, node: nextNode });
-    this.events.emit('STATE_CHANGED', this.state);
+    const playerLine=choice.playerLine??choice.text;
+    this.state.world.dialogueHistory.push({speaker:this.state.player.name,text:playerLine});
+    this.state.world.activeDialogueChoiceId=choice.id;
+    this.events.emit('STATE_CHANGED',this.state);
     return true;
+  }
+
+  public getResolvedDialogueState():ResolvedDialogueState|undefined{
+    const treeId=this.state.world.activeDialogueTreeId,nodeId=this.state.world.activeDialogueNodeId;
+    if(!treeId||!nodeId)return;
+    const tree=this.contentRegistry.getDialogue(treeId),node=tree?.nodes[nodeId];
+    if(!tree||!node)return;
+    const choices=node.choices.map((choice)=>{const result=this.evaluateConditions(choice.conditions??[]);return{...choice,isAvailable:result.allMet,isVisible:result.allMet||choice.unmetBehavior!=='HIDDEN',unmetReason:result.allMet?undefined:choice.disabledReason??result.failedConditions[0]?.reason};});
+    const selected=this.state.world.activeDialogueChoiceId?node.choices.find((entry)=>entry.id===this.state.world.activeDialogueChoiceId):undefined;
+    return{tree,node,choices,playerBeat:selected?{choiceId:selected.id,speakerName:this.state.player.name,text:selected.playerLine??selected.text}:undefined,history:this.state.world.dialogueHistory};
+  }
+
+  public advanceDialoguePlayerLine():boolean{
+    const treeId=this.state.world.activeDialogueTreeId,nodeId=this.state.world.activeDialogueNodeId,choiceId=this.state.world.activeDialogueChoiceId;
+    if(!treeId||!nodeId||!choiceId)return false;
+    const tree=this.contentRegistry.getDialogue(treeId),choice=tree?.nodes[nodeId]?.choices.find((entry)=>entry.id===choiceId);
+    if(!tree||!choice)return false;
+    this.state.world.activeDialogueChoiceId=null;
+    if(choice.outcome){
+      this.state.world.activeDialogueTreeId=null;this.state.world.activeDialogueNodeId=null;this.state.world.dialogueHistory=[];
+      this.outcomeEngine.resolveOutcome(choice.outcome,this.state,this.contentRegistry);this.events.emit('STATE_CHANGED',this.state);return true;
+    }
+    const targetId=choice.targetNodeId??choice.returnToNodeId;
+    if(!targetId||!tree.nodes[targetId]){this.endDialogue();return true;}
+    this.state.world.activeDialogueNodeId=targetId;
+    const nextNode=tree.nodes[targetId];
+    this.state.world.dialogueHistory.push({speaker:nextNode.speakerName,text:nextNode.text});
+    this.events.emit('DIALOGUE_NODE_CHANGED',{treeId,node:nextNode});
+    this.events.emit('STATE_CHANGED',this.state);
+    return true;
+  }
+
+  public advanceDialogueNode():boolean{
+    const treeId=this.state.world.activeDialogueTreeId,nodeId=this.state.world.activeDialogueNodeId;
+    if(!treeId||!nodeId||this.state.world.activeDialogueChoiceId)return false;
+    const tree=this.contentRegistry.getDialogue(treeId),node=tree?.nodes[nodeId];
+    if(!tree||!node||node.choices.length)return false;
+    const targetId=node.returnToNodeId??node.nextNodeId;
+    if(!targetId||!tree.nodes[targetId]){this.endDialogue();return true;}
+    const next=tree.nodes[targetId];this.state.world.activeDialogueNodeId=targetId;this.state.world.dialogueHistory.push({speaker:next.speakerName,text:next.text});
+    this.events.emit('DIALOGUE_NODE_CHANGED',{treeId,node:next});this.events.emit('STATE_CHANGED',this.state);return true;
   }
 
   public endDialogue(): void {
     this.state.world.activeDialogueTreeId = null;
     this.state.world.activeDialogueNodeId = null;
+    this.state.world.activeDialogueChoiceId = null;
+    this.state.world.dialogueHistory = [];
     this.state.world.mode = this.state.world.selectedPoiId ? 'POI' : 'Map';
     this.logJournal('Dialogue', 'Comm link closed.');
     this.events.emit('DIALOGUE_ENDED', undefined);

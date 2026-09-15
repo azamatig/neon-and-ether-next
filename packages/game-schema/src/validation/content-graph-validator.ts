@@ -21,6 +21,8 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     statusEffect: new Set(content.statusEffects.map((value) => value.id)),
     ability:new Set(content.abilities.map(value=>value.id)),
     minigame:new Set(content.minigames.map(value=>value.id)),
+    class:new Set(content.classes.map(value=>value.id)), specialPath:new Set(content.specialPaths.map(value=>value.id)), race:new Set(content.races.map(value=>value.id)),
+    background:new Set(content.backgrounds.map(value=>value.id)), perk:new Set(content.perks.map(value=>value.id)),
   };
   const missing = (set: ReadonlySet<string>, id: string | undefined, kind: string, owner: Owner) => {
     if (id && !set.has(id)) issues.push({ severity: 'error', category: owner.category, targetId: owner.targetId, field: owner.field, message: `Missing ${kind} reference '${id}'` });
@@ -37,10 +39,18 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if (current.type === 'companionPresent') missing(ids.npc, current.companionId, 'NPC', owner);
     if (['factionReputation','factionReputationTier','factionMembership','factionRelation','factionHostile','factionDiscovered'].includes(current.type)) missing(ids.faction, (current as {factionId:string}).factionId, 'faction', owner);
     if(current.type==='factionRelation')missing(ids.faction,current.targetFactionId,'faction',owner);
+    if(current.type==='classIs')missing(ids.class,current.classId,'class',owner);
+    if(current.type==='backgroundIs')missing(ids.background,current.backgroundId,'background',owner);
+    if(current.type==='hasPerk')missing(ids.perk,current.perkId,'perk',owner);
+    if(current.type==='hasAbility')missing(ids.ability,current.abilityId,'ability',owner);
+    if(current.type==='specialPathUnlocked')missing(ids.specialPath,current.specialPathId,'special path',owner);
+    if(current.type==='raceIs')missing(ids.race,current.raceId,'race',owner);
     if(current.type==='factionMembership'){const faction=content.factions.find((entry)=>entry.id===current.factionId);if(faction&&!faction.membershipStatuses.includes(current.membershipStatus))issues.push({severity:'error',category:owner.category,targetId:owner.targetId,field:owner.field,message:`Faction '${current.factionId}' has no membership status '${current.membershipStatus}'`});}
     if(current.type==='factionReputationTier'){const faction=content.factions.find((entry)=>entry.id===current.factionId);if(faction&&!faction.reputationTiers.some((tier)=>tier.id===current.tierId))issues.push({severity:'error',category:owner.category,targetId:owner.targetId,field:owner.field,message:`Faction '${current.factionId}' has no reputation tier '${current.tierId}'`});}
     if (current.type === 'baseRoomExists') missing(ids.room, current.roomId, 'room', owner);
     if (current.type === 'currentWeather') missing(ids.weather, current.weatherId, 'weather', owner);
+    if (current.type === 'specialPathUnlocked') missing(ids.specialPath, current.specialPathId, 'special path', owner);
+    if (current.type === 'raceIs') missing(ids.race, current.raceId, 'race', owner);
   };
   const effect = (value: Effect, owner: Owner): void => {
     const parsed = EffectSchema.safeParse(value);
@@ -68,6 +78,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if (current.type === 'changeWeather') missing(ids.weatherProfile, current.weatherProfileId, 'weather profile', owner);
     if (current.type === 'applyStatusEffect') missing(ids.statusEffect, current.statusEffectId, 'status effect', owner);
     if(current.type==='setAbilityUnlocked')missing(ids.ability,current.abilityId,'ability',owner);
+    if(current.type==='setSpecialPathUnlocked')missing(ids.specialPath,current.specialPathId,'special path',owner);
   };
   const outcome = (value: GameplayOutcome | undefined, owner: Owner): void => {
     if (!value) return;
@@ -112,6 +123,16 @@ export function validateContentGraph(content: GameContent, options: ContentValid
   detectCycles(new Map(content.baseUpgrades.map((upgrade)=>[upgrade.id,upgrade.nextUpgradeId?[upgrade.nextUpgradeId]:[]])),(cycle)=>issues.push({severity:'error',category:'BaseUpgrade',targetId:cycle[0],field:'nextUpgradeId',message:`Circular base upgrade chain: ${cycle.join(' -> ')}`}));
   for(const recipe of content.recipes) lists(recipe.conditions,recipe.effects,{category:'Recipe',targetId:recipe.id,field:'recipe'});
   for(const npc of content.npcs) missing(ids.progression,npc.progressionDefinitionId,'progression definition',{category:'NPC',targetId:npc.id,field:'progressionDefinitionId'});
+  for(const npc of content.npcs){missing(ids.class,npc.classId,'class',{category:'NPC',targetId:npc.id,field:'classId'});missing(ids.race,npc.raceId,'race',{category:'NPC',targetId:npc.id,field:'raceId'});npc.specialPathIds.forEach((id)=>missing(ids.specialPath,id,'special path',{category:'NPC',targetId:npc.id,field:'specialPathIds'}));npc.abilityIds.forEach((id)=>missing(ids.ability,id,'ability',{category:'NPC',targetId:npc.id,field:'abilityIds'}));if(npc.isPlayer&&npc.classId&&content.classes.find((entry)=>entry.id===npc.classId)?.availability==='NPC')issues.push({severity:'error',category:'NPC',targetId:npc.id,field:'classId',message:'Starting Player definition cannot use an NPC-only class'});if(npc.isPlayer&&npc.raceId&&content.races.find((entry)=>entry.id===npc.raceId)?.availability==='NPC')issues.push({severity:'error',category:'NPC',targetId:npc.id,field:'raceId',message:'Starting Player definition cannot use an NPC-only race'});}
+  const mindmancerAbilityIds=new Set(content.abilities.filter((ability)=>ability.tags.includes('Mindmancer')).map((ability)=>ability.id));
+  for(const definition of content.classes){const owner={category:'Class' as const,targetId:definition.id,field:'class'};lists(definition.requirements,definition.startingEffects,owner);definition.startingAbilityIds.forEach((id)=>missing(ids.ability,id,'ability',{...owner,field:'startingAbilityIds'}));definition.startingEquipment.forEach((entry)=>missing(ids.item,entry.itemId,'item',{...owner,field:'startingEquipment'}));const granted=[...definition.startingAbilityIds,...definition.startingEffects.filter((entry)=>entry.type==='setAbilityUnlocked').map((entry)=>entry.abilityId)];if(definition.availability!=='NPC'&&granted.some((id)=>mindmancerAbilityIds.has(id)))issues.push({severity:'error',category:'Class',targetId:definition.id,field:'startingAbilityIds',message:'Starting Player class cannot grant a Mindmancer ability'});}
+  for(const path of content.specialPaths){const owner={category:'SpecialPath' as const,targetId:path.id,field:'specialPath'};lists(path.unlockConditions,[],owner);for(const entry of path.progression){missing(ids.ability,entry.abilityId,'ability',{...owner,field:'progression.abilityId'});lists(entry.unlockConditions,[],{...owner,field:`progression.${entry.abilityId}`});}}
+  for(const ability of content.abilities)for(const entry of ability.effects)missing(ids.statusEffect,entry.statusEffectId,'status effect',{category:'Ability',targetId:ability.id,field:'effects.statusEffectId'});
+  for(const background of content.backgrounds){const grants=background.startingEffects.filter((entry)=>entry.type==='setAbilityUnlocked').map((entry)=>entry.abilityId);if(grants.some((id)=>mindmancerAbilityIds.has(id)))issues.push({severity:'error',category:'Background',targetId:background.id,field:'startingEffects',message:'Starting Background cannot grant a Mindmancer ability'});}
+  for(const race of content.races){const owner={category:'Race' as const,targetId:race.id,field:'race'};lists(race.requirements,race.startingEffects,owner);race.parentRaceIds.forEach((id)=>missing(ids.race,id,'parent race',{...owner,field:'parentRaceIds'}));race.grantedAbilityIds.forEach((id)=>missing(ids.ability,id,'ability',{...owner,field:'grantedAbilityIds'}));const grants=[...race.grantedAbilityIds,...race.startingEffects.filter((entry)=>entry.type==='setAbilityUnlocked').map((entry)=>entry.abilityId)];if(race.availability!=='NPC'&&grants.some((id)=>mindmancerAbilityIds.has(id)))issues.push({severity:'error',category:'Race',targetId:race.id,field:'grantedAbilityIds',message:'Starting Player race cannot grant a Mindmancer ability'});}
+  detectCycles(new Map(content.races.map((race)=>[race.id,race.parentRaceIds])),(cycle)=>issues.push({severity:'error',category:'Race',targetId:cycle[0],field:'parentRaceIds',message:`Circular parent lineage: ${cycle.join(' -> ')}`}));
+  for(const definition of content.newGameDefinitions){missing(ids.race,definition.defaultRaceId,'race',{category:'NewGameDefinition',targetId:definition.id,field:'defaultRaceId'});const race=content.races.find((entry)=>entry.id===definition.defaultRaceId);if(race?.availability==='NPC')issues.push({severity:'error',category:'NewGameDefinition',targetId:definition.id,field:'defaultRaceId',message:'Default Player race is NPC-only'});}
+  for(const item of content.items){for(const requirement of item.requirements)if(requirement.type==='raceIs')missing(ids.race,requirement.raceId,'race',{category:'Item',targetId:item.id,field:'requirements'});validateAsset(item.artwork,false,{category:'Item',targetId:item.id,field:'artwork'},options,issues);}
   for(const npc of content.npcs){missing(ids.faction,npc.factionId,'faction',{category:'NPC',targetId:npc.id,field:'factionId'});npc.factionIds.forEach((id)=>missing(ids.faction,id,'faction',{category:'NPC',targetId:npc.id,field:'factionIds'}));}
   for(const enemy of content.enemies){missing(ids.faction,enemy.factionId,'faction',{category:'Enemy',targetId:enemy.id,field:'factionId'});enemy.factionIds.forEach((id)=>missing(ids.faction,id,'faction',{category:'Enemy',targetId:enemy.id,field:'factionIds'}));}
   for(const npc of content.npcs) missing(ids.shop,npc.shopId,'shop',{category:'NPC',targetId:npc.id,field:'shopId'});
@@ -131,10 +152,26 @@ export function validateContentGraph(content: GameContent, options: ContentValid
   for(const poi of content.pois){missing(ids.faction,poi.controllingFactionId,'faction',{category:'POI',targetId:poi.id,field:'controllingFactionId'});missing(ids.faction,poi.ownerFactionId,'faction',{category:'POI',targetId:poi.id,field:'ownerFactionId'});}
   for(const map of content.maps){missing(ids.faction,map.controllingFactionId,'faction',{category:'Map',targetId:map.id,field:'controllingFactionId'});missing(ids.faction,map.ownerFactionId,'faction',{category:'Map',targetId:map.id,field:'ownerFactionId'});for(const region of map.regions){missing(ids.faction,region.controllingFactionId,'faction',{category:'Map',targetId:map.id,field:`regions.${region.id}.controllingFactionId`});missing(ids.faction,region.ownerFactionId,'faction',{category:'Map',targetId:map.id,field:`regions.${region.id}.ownerFactionId`});}}
   for(const event of content.events){validateAsset(event.presentation.backgroundImage,event.presentation.layoutStyle==='fullscreenScene',{category:'GameEvent',targetId:event.id,field:'presentation.backgroundImage'},options,issues);event.steps.forEach((step)=>validateAsset(step.image,false,{category:'GameEvent',targetId:event.id,field:`steps.${step.id}.image`},options,issues));}
+  for(const tree of content.dialogues){
+    const nodeIds=new Set(Object.keys(tree.nodes));
+    if(!nodeIds.has(tree.rootNodeId))issues.push({severity:'error',category:'Dialogue',targetId:tree.id,field:'rootNodeId',message:`Missing root node '${tree.rootNodeId}'`});
+    for(const [nodeId,node] of Object.entries(tree.nodes)){
+      if(node.nextNodeId&&!nodeIds.has(node.nextNodeId))issues.push({severity:'error',category:'Dialogue',targetId:tree.id,field:`nodes.${nodeId}.nextNodeId`,message:`Broken nextNodeId '${node.nextNodeId}'`});
+      if(node.returnToNodeId&&!nodeIds.has(node.returnToNodeId))issues.push({severity:'error',category:'Dialogue',targetId:tree.id,field:`nodes.${nodeId}.returnToNodeId`,message:`Broken returnToNodeId '${node.returnToNodeId}'`});
+      for(const choice of node.choices){
+      const owner={category:'Dialogue' as const,targetId:tree.id,field:`nodes.${nodeId}.choices.${choice.id}`};
+      lists(choice.conditions,choice.effects,owner);
+      if(choice.targetNodeId&&!nodeIds.has(choice.targetNodeId))issues.push({severity:'error',...owner,message:`Broken nextNodeId '${choice.targetNodeId}'`});
+      if(choice.returnToNodeId&&!nodeIds.has(choice.returnToNodeId))issues.push({severity:'error',...owner,message:`Broken returnToNodeId '${choice.returnToNodeId}'`});
+      if(choice.targetNodeId===nodeId&&!choice.intentionalLoop)issues.push({severity:'warning',...owner,message:'Choice loops to its own node without intentionalLoop metadata'});
+      if(choice.targetNodeId===null&&!choice.outcome&&choice.type!=='Exit')issues.push({severity:'warning',...owner,message:'Choice has no next node or authored outcome'});
+      }
+    }
+  }
   issues.push({severity:'info',category:'Integrity',targetId:'content',message:`Validated ${Object.values(ids).reduce((sum,set)=>sum+set.size,0)} graph entities across ${content.events.length} events and ${content.quests.length} quests.`});
   return deduplicate(issues);
 }
 
 function detectCycles(graph: Map<string,string[]>, report:(cycle:string[])=>void):void { const visited=new Set<string>(),active=new Set<string>(),stack:string[]=[]; const visit=(node:string)=>{visited.add(node);active.add(node);stack.push(node);for(const next of graph.get(node)??[]){if(!graph.has(next))continue;if(!visited.has(next))visit(next);else if(active.has(next))report([...stack.slice(stack.indexOf(next)),next]);}stack.pop();active.delete(node);};for(const node of graph.keys())if(!visited.has(node))visit(node); }
-function validateAsset(asset:string|undefined,required:boolean,owner:Owner,options:ContentValidationOptions,issues:ValidationIssue[]):void { if(required&&!asset?.trim()){issues.push({severity:'error',category:owner.category,targetId:owner.targetId,field:owner.field,message:'Required image/asset is missing'});return;} if(asset&&options.knownAssets&&/^(?:\.?\/|assets\/)/.test(asset)&&!options.knownAssets.has(asset.replace(/^\.?\//,'')))issues.push({severity:required?'error':'warning',category:'Asset',targetId:owner.targetId,field:owner.field,message:`Asset '${asset}' does not exist`}); }
+function validateAsset(asset:string|undefined,required:boolean,owner:Owner,options:ContentValidationOptions,issues:ValidationIssue[]):void { if(required&&!asset?.trim()){issues.push({severity:'error',category:owner.category,targetId:owner.targetId,field:owner.field,message:'Required image/asset is missing'});return;} if(!asset)return;const malformed=asset!==asset.trim()||/[\\\s]/.test(asset)||asset.split('/').includes('..')||/^(?:javascript|vbscript):/i.test(asset);if(malformed){issues.push({severity:'warning',category:'Asset',targetId:owner.targetId,field:owner.field,message:`Asset reference '${asset}' is malformed`});return;}if(options.knownAssets&&/^(?:\.?\/|assets\/)/.test(asset)&&!options.knownAssets.has(asset.replace(/^\.?\//,'')))issues.push({severity:required?'error':'warning',category:'Asset',targetId:owner.targetId,field:owner.field,message:`Asset '${asset}' does not exist`}); }
 function deduplicate(issues:ValidationIssue[]):ValidationIssue[]{const keys=new Set<string>();return issues.filter((issue)=>{const key=`${issue.severity}|${issue.category}|${issue.targetId}|${issue.field}|${issue.message}`;if(keys.has(key))return false;keys.add(key);return true;});}

@@ -6,6 +6,7 @@ import type { Plugin } from 'vite';
 const PRESETS_FILE = 'editor-presets/presets.json';
 
 const EDITABLE_FILES = {
+  dialogues: 'content/dialogues/dialogues.json',
   items: 'content/items/items.json',
   npcs: 'content/characters/characters.json',
   enemies: 'content/enemies/enemies.json',
@@ -24,21 +25,148 @@ const EDITABLE_FILES = {
   weatherDefinitions: 'content/weather/weather.json',
   weatherProfiles: 'content/weather/profiles.json',
   backgrounds: 'content/character-creation/backgrounds.json',
+  races: 'content/character-creation/races.json',
+  classes: 'content/character-creation/classes.json',
+  specialPaths: 'content/character-creation/special-paths.json',
+  namePools: 'content/character-creation/name-pools.json',
   minigames:'content/minigames/minigames.json',
 } as const;
 
 type EditableCategory = keyof typeof EDITABLE_FILES;
+
+type JsonPath = (string | number)[];
+type SourceSpan = { start: number; end: number };
+
+function pathKey(path: JsonPath): string {
+  return JSON.stringify(path);
+}
+
+function escapeCanonicalUnicode(value: string): string {
+  return value.replace(/[\u2018\u2019\u201c\u201d\u2013\u2014]/g, (character) =>
+    `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`,
+  );
+}
+
+function jsonValuesEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left) && Array.isArray(right)
+      && left.length === right.length
+      && left.every((value, index) => jsonValuesEqual(value, right[index]));
+  }
+  if (left && right && typeof left === 'object' && typeof right === 'object') {
+    const leftRecord = left as Record<string, unknown>;
+    const rightRecord = right as Record<string, unknown>;
+    const leftKeys = Object.keys(leftRecord);
+    const rightKeys = Object.keys(rightRecord);
+    return leftKeys.length === rightKeys.length
+      && leftKeys.every((key) => Object.hasOwn(rightRecord, key) && jsonValuesEqual(leftRecord[key], rightRecord[key]));
+  }
+  return false;
+}
+
+function indexPrimitiveSpans(source: string): Map<string, SourceSpan> {
+  const spans = new Map<string, SourceSpan>();
+  let cursor = 0;
+  const skipWhitespace = () => { while (/\s/.test(source[cursor] ?? '')) cursor += 1; };
+  const readString = (): string => {
+    const start = cursor++;
+    while (cursor < source.length) {
+      if (source[cursor] === '\\') cursor += 2;
+      else if (source[cursor++] === '"') break;
+    }
+    return JSON.parse(source.slice(start, cursor)) as string;
+  };
+  const readValue = (path: JsonPath): void => {
+    skipWhitespace();
+    const start = cursor;
+    if (source[cursor] === '{') {
+      cursor += 1;
+      skipWhitespace();
+      while (source[cursor] !== '}') {
+        const key = readString();
+        skipWhitespace();
+        if (source[cursor++] !== ':') throw new Error('Invalid JSON object.');
+        readValue([...path, key]);
+        skipWhitespace();
+        if (source[cursor] === ',') { cursor += 1; skipWhitespace(); }
+        else break;
+      }
+      if (source[cursor++] !== '}') throw new Error('Invalid JSON object.');
+      return;
+    }
+    if (source[cursor] === '[') {
+      cursor += 1;
+      skipWhitespace();
+      let index = 0;
+      while (source[cursor] !== ']') {
+        readValue([...path, index++]);
+        skipWhitespace();
+        if (source[cursor] === ',') { cursor += 1; skipWhitespace(); }
+        else break;
+      }
+      if (source[cursor++] !== ']') throw new Error('Invalid JSON array.');
+      return;
+    }
+    if (source[cursor] === '"') readString();
+    else while (cursor < source.length && !/[\s,\]}]/.test(source[cursor])) cursor += 1;
+    spans.set(pathKey(path), { start, end: cursor });
+  };
+  readValue([]);
+  return spans;
+}
+
+function collectPrimitiveChanges(before: unknown, after: unknown, path: JsonPath, changes: JsonPath[]): boolean {
+  if (jsonValuesEqual(before, after)) return true;
+  if (Array.isArray(before) || Array.isArray(after)) {
+    if (!Array.isArray(before) || !Array.isArray(after) || before.length !== after.length) return false;
+    return before.every((value, index) => collectPrimitiveChanges(value, after[index], [...path, index], changes));
+  }
+  if (before && after && typeof before === 'object' && typeof after === 'object') {
+    const beforeRecord = before as Record<string, unknown>;
+    const afterRecord = after as Record<string, unknown>;
+    const beforeKeys = Object.keys(beforeRecord);
+    if (beforeKeys.length !== Object.keys(afterRecord).length || beforeKeys.some((key) => !Object.hasOwn(afterRecord, key))) return false;
+    return beforeKeys.every((key) => collectPrimitiveChanges(beforeRecord[key], afterRecord[key], [...path, key], changes));
+  }
+  changes.push(path);
+  return true;
+}
+
+/** Preserves untouched source bytes and the repository's escaped typographic punctuation. */
+export function serializeEditableCollection(previousSource: string, nextValue: unknown[]): string {
+  const previousValue = JSON.parse(previousSource) as unknown[];
+  if (jsonValuesEqual(previousValue, nextValue)) return previousSource;
+
+  const changes: JsonPath[] = [];
+  if (collectPrimitiveChanges(previousValue, nextValue, [], changes)) {
+    const spans = indexPrimitiveSpans(previousSource);
+    const replacements = changes.map((path) => {
+      const span = spans.get(pathKey(path));
+      if (!span) throw new Error(`Unable to locate changed JSON value at ${pathKey(path)}.`);
+      let value: unknown = nextValue;
+      for (const segment of path) value = (value as Record<string | number, unknown>)[segment];
+      return { ...span, value: escapeCanonicalUnicode(JSON.stringify(value)) };
+    }).sort((left, right) => right.start - left.start);
+    return replacements.reduce(
+      (result, replacement) => `${result.slice(0, replacement.start)}${replacement.value}${result.slice(replacement.end)}`,
+      previousSource,
+    );
+  }
+
+  return `${escapeCanonicalUnicode(JSON.stringify(nextValue, null, 2))}\n`;
+}
 
 async function readJson(root: string, category: EditableCategory): Promise<unknown[]> {
   return JSON.parse(await fs.readFile(path.join(root, EDITABLE_FILES[category]), 'utf8'));
 }
 
 async function readEditableContent(root: string, gameContent: Record<string, unknown>) {
-  const [items, npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, baseUpgrades, baseJobs, recipes, shops, factions, weatherDefinitions, weatherProfiles, backgrounds,minigames] = await Promise.all([
+  const [items, npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, baseUpgrades, baseJobs, recipes, shops, factions, weatherDefinitions, weatherProfiles, backgrounds,races,classes,specialPaths,namePools,minigames] = await Promise.all([
     readJson(root, 'items'), readJson(root, 'npcs'), readJson(root, 'enemies'), readJson(root, 'pois'), readJson(root, 'events'), readJson(root, 'quests'), readJson(root, 'maps'),
-    readJson(root, 'encounters'), readJson(root, 'rooms'), readJson(root, 'bases'), readJson(root, 'baseUpgrades'), readJson(root, 'baseJobs'), readJson(root, 'recipes'), readJson(root, 'shops'), readJson(root, 'factions'), readJson(root, 'weatherDefinitions'), readJson(root, 'weatherProfiles'), readJson(root, 'backgrounds'),readJson(root,'minigames'),
+    readJson(root, 'encounters'), readJson(root, 'rooms'), readJson(root, 'bases'), readJson(root, 'baseUpgrades'), readJson(root, 'baseJobs'), readJson(root, 'recipes'), readJson(root, 'shops'), readJson(root, 'factions'), readJson(root, 'weatherDefinitions'), readJson(root, 'weatherProfiles'), readJson(root, 'backgrounds'),readJson(root,'races'),readJson(root,'classes'),readJson(root,'specialPaths'),readJson(root,'namePools'),readJson(root,'minigames'),
   ]);
-  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, baseUpgrades, baseJobs, recipes, shops, factions, weatherDefinitions, weatherProfiles, backgrounds,minigames };
+  return { ...gameContent, items, npcs, characters: npcs, enemies, pois, events, quests, maps, encounters, rooms, bases, baseUpgrades, baseJobs, recipes, shops, factions, weatherDefinitions, weatherProfiles, backgrounds,races,classes,specialPaths,namePools,minigames };
 }
 
 async function readKnownAssets(root: string): Promise<string[]> {
@@ -120,11 +248,16 @@ export function editorContentApiPlugin(root: string): Plugin {
               send(response, 422, { error: 'Content validation failed.', report });
               return;
             }
-            await Promise.all(categories.map(async (category) => {
+            const changedCategories = await Promise.all(categories.map(async (category) => {
               const filePath = path.join(root, EDITABLE_FILES[category]);
-              await fs.writeFile(`${filePath}.tmp`, `${JSON.stringify(body.collections?.[category], null, 2)}\n`, 'utf8');
+              const previousSource = await fs.readFile(filePath, 'utf8');
+              const serialized = serializeEditableCollection(previousSource, body.collections?.[category] as unknown[]);
+              if (serialized === previousSource) return null;
+              await fs.writeFile(`${filePath}.tmp`, serialized, 'utf8');
+              return category;
             }));
-            for (const category of categories) {
+            for (const category of changedCategories) {
+              if (!category) continue;
               const filePath = path.join(root, EDITABLE_FILES[category]);
               await fs.rename(`${filePath}.tmp`, filePath);
             }

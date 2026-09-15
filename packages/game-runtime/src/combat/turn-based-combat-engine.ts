@@ -20,18 +20,24 @@ export interface ResolvedCombatCommands {
 
 export interface ResolvedCombatAction {
   id: string;
-  type: 'WeaponAttack' | 'MeleeAttack' | 'Ability' | 'Move' | 'AttemptFlee' | 'EndTurn';
+  type: 'WeaponAttack' | 'MeleeAttack' | 'Ability' | 'UseItem' | 'Move' | 'AttemptFlee' | 'EndTurn';
   category: 'Attacks' | 'Skills' | 'Support';
   label: string;
+  description: string;
   apCost: number;
   etherCost: number;
   rangeTiles?: number;
   abilityId?: string;
+  itemId?: string;
   weaponId?: string;
   defeatType?: 'Lethal' | 'NonLethal';
   targetIds: string[];
   targetRejections?: Record<string, string>;
   disabledReason?: string;
+  targetType?: 'Enemy' | 'Ally' | 'Self';
+  effectSummary?: string[];
+  requirements?: string[];
+  quantity?: number;
 }
 
 /** Framework-agnostic turn-based combat simulation. */
@@ -50,16 +56,19 @@ export class TurnBasedCombatEngine {
     const encounter = this.content.getEncounter(encounterId);
     if (!encounter) return undefined;
     const playerDefinition = this.content.getCharacter(gameState.player.characterId);
+    const playerRace = gameState.player.raceId ? this.content.races.get(gameState.player.raceId) : undefined;
     const equippedItems = gameState.player.inventory.items
       .filter((slot) => slot.isEquipped)
       .map((slot) => this.content.getItem(slot.itemId))
       .filter((item) => item !== undefined);
     const playerAbilities = new Set([
-      ...(playerDefinition?.abilityIds ?? []),
+      ...(gameState.player.classId ? [] : playerDefinition?.abilityIds ?? []),
       ...gameState.player.abilityIds,
       ...equippedItems.flatMap((item) => item.grantedAbilityIds),
     ]);
-    const weapon = equippedItems.find((item) => item.category === 'weapon');
+    const equippedEntry = (slotId: string) => gameState.player.inventory.items.find((entry) => entry.entryId === gameState.player.equipment.slots[slotId]);
+    const primaryWeapon = this.content.getItem(equippedEntry('primaryWeapon')?.itemId ?? '');
+    const meleeWeapon = this.content.getItem(equippedEntry('meleeWeapon')?.itemId ?? '');
     const armor = equippedItems.filter((item) => item.category === 'armor');
     const effectivePlayer = new CharacterStatsSystem().resolve(gameState.player);
     const playerBodyImage = this.content.newGameDefinitions.getAll()
@@ -102,9 +111,11 @@ export class TurnBasedCombatEngine {
         maxAp: effectivePlayer.derivedStats.actionPointsMax,
         initiative: effectivePlayer.derivedStats.initiative,
         armor: effectivePlayer.derivedStats.armorRating,
-        weaponId: weapon?.id,
+        weaponId: primaryWeapon?.id,
+        meleeWeaponId: meleeWeapon?.id,
         armorItemIds: armor.map((item) => item.id),
         abilityIds: [...playerAbilities],
+        capabilityTags: [...new Set([...(playerDefinition?.tags ?? []), ...gameState.player.capabilityTags, ...gameState.player.traits, ...(playerRace?.tags ?? []), ...(playerRace?.capabilityTags ?? [])])],
         statuses: [
           ...gameState.player.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })),
           ...gameState.player.activeStatusEffects
@@ -124,22 +135,26 @@ export class TurnBasedCombatEngine {
       const npc = this.content.getNPC(npcId);
       const runtime = gameState.npcs[npcId];
       if (!npc || runtime?.isAlive === false) return;
-      const effective = new CharacterStatsSystem().resolve(npc);
+      const npcClass = npc.classId ? this.content.classes.get(npc.classId) : undefined;
+      const npcRace = npc.raceId ? this.content.races.get(npc.raceId) : undefined;
+      const equipmentModifiers=runtime?.inventory?.items.filter(entry=>entry.isEquipped).flatMap(entry=>this.content.getItem(entry.itemId)?.modifiers.map((modifier,modifierIndex)=>({...modifier,id:`equipment_${npcId}_${entry.itemId}_${modifierIndex}`}))??[])??[];const effective = new CharacterStatsSystem().resolve({ ...npc, temporaryModifiers:[...npc.temporaryModifiers, ...(npcClass?.startingModifiers ?? []), ...(npcRace?.attributeModifiers ?? []),...equipmentModifiers] });
+      const maxHpDelta = effective.derivedStats.maxHp - npc.vitals.maxHp;
       const inventory = runtime?.inventory?.items ?? npc.inventory;
       const equipped = inventory.filter((slot) => slot.isEquipped).map((slot) => this.content.getItem(slot.itemId)).filter((item) => item !== undefined);
-      const abilities = new Set([...npc.abilityIds, ...equipped.flatMap((item) => item.grantedAbilityIds)]);
+      const abilities = new Set([...npc.abilityIds, ...(npcClass?.startingAbilityIds ?? []), ...(npcRace?.grantedAbilityIds ?? []), ...equipped.flatMap((item) => item.grantedAbilityIds)]);
       combatants[npcId] = {
         id: npcId, sourceId: npcId, name: npc.name, team: 'Player',
         bodyImage: npc.combatImage, portraitIcon: npc.portraitIcon,
-        currentHp: runtime?.currentHp ?? effective.derivedStats.currentHp,
-        maxHp: runtime?.maxHp ?? effective.derivedStats.maxHp,
+        currentHp: Math.min((runtime?.maxHp ?? npc.vitals.maxHp) + maxHpDelta, (runtime?.currentHp ?? npc.vitals.currentHp) + ((runtime?.currentHp ?? npc.vitals.currentHp) === (runtime?.maxHp ?? npc.vitals.maxHp) ? maxHpDelta : 0)),
+        maxHp: (runtime?.maxHp ?? npc.vitals.maxHp) + maxHpDelta,
         currentEther: runtime?.currentEther ?? effective.derivedStats.currentEther,
         maxEther: effective.derivedStats.maxEther,
         currentAp: effective.derivedStats.actionPointsMax, maxAp: effective.derivedStats.actionPointsMax,
         initiative: effective.derivedStats.initiative, armor: effective.derivedStats.armorRating,
-        weaponId: equipped.find((item) => item.category === 'weapon')?.id,
+        weaponId: equipped.find((item) => item.combatAttackType === 'Ranged')?.id,
+        meleeWeaponId: equipped.find((item) => item.combatAttackType === 'Melee')?.id,
         armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
-        abilityIds: [...abilities], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null, resolutionState: 'Alive',
+        abilityIds: [...abilities], capabilityTags:[...new Set([...npc.tags,...npc.traits,...(npcRace?.tags??[]),...(npcRace?.capabilityTags??[])])], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null, resolutionState: 'Alive',
         position: claimDeployment('Player', index + 1), movementRange: 3, movementRemaining: 3,
       };
     });
@@ -161,7 +176,9 @@ export class TurnBasedCombatEngine {
           currentEther: effectiveEnemy.derivedStats.currentEther, maxEther: effectiveEnemy.derivedStats.maxEther,
           currentAp: effectiveEnemy.derivedStats.actionPointsMax, maxAp: effectiveEnemy.derivedStats.actionPointsMax,
           initiative: effectiveEnemy.derivedStats.initiative, armor: effectiveEnemy.derivedStats.armorRating,
-          weaponId: enemy.equippedWeaponId, armorItemIds: [], abilityIds: enemy.abilityIds,
+          weaponId: this.content.getItem(enemy.equippedWeaponId ?? '')?.combatAttackType === 'Ranged' ? enemy.equippedWeaponId : undefined,
+          meleeWeaponId: this.content.getItem(enemy.equippedWeaponId ?? '')?.combatAttackType === 'Melee' ? enemy.equippedWeaponId : undefined,
+          armorItemIds: [], abilityIds: enemy.abilityIds, capabilityTags:[...new Set([...enemy.tags,...enemy.traits])],
           aiProfileId: enemy.combatAIProfileId, statuses: enemy.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, resolutionState: 'Alive',
           position: deployment, movementRange: 3, movementRemaining: 3,
         };
@@ -198,7 +215,8 @@ export class TurnBasedCombatEngine {
     const living = Object.values(state.combatants).filter((unit) => !unit.isDefeated);
     const weapon = actor.weaponId ? this.content.getItem(actor.weaponId) : undefined;
     const rangedWeapon = weapon?.combatAttackType === 'Ranged' ? weapon : undefined;
-    const meleeWeapon = weapon?.combatAttackType === 'Melee' ? weapon : undefined;
+    const dedicatedMeleeWeapon = actor.meleeWeaponId ? this.content.getItem(actor.meleeWeaponId) : undefined;
+    const meleeWeapon = dedicatedMeleeWeapon ?? (weapon?.combatAttackType === 'Melee' ? weapon : undefined);
     const attackRange = rangedWeapon?.rangeTiles ?? 0;
     const attackTargetIds = rangedWeapon ? living.filter((unit) => unit.team !== actor.team && this.distance(actor, unit) <= attackRange && this.hasLineOfSight(state, actor, unit)).map((unit) => unit.id) : [];
     const meleeRange = meleeWeapon?.rangeTiles ?? 1;
@@ -217,13 +235,15 @@ export class TurnBasedCombatEngine {
     }
     const actions: ResolvedCombatAction[] = [
       {
-        id: 'attack.weapon', type: 'WeaponAttack', category: 'Attacks', label: 'Weapon Attack',
+        id: 'attack.weapon', type: 'WeaponAttack', category: 'Attacks', label: rangedWeapon?.name ?? 'Weapon Attack', description: rangedWeapon?.description ?? 'Requires an equipped ranged weapon.',
         apCost: rangedWeapon?.apUseCost ?? 0, etherCost: rangedWeapon?.etherCost ?? 0, rangeTiles: attackRange, weaponId: rangedWeapon?.id, defeatType: rangedWeapon?.combatDefeatType, targetIds: attackTargetIds,
+        targetType:'Enemy',effectSummary:rangedWeapon?.damageRange?[`Deals ${rangedWeapon.damageRange[0]}–${rangedWeapon.damageRange[1]} damage.`]:[],requirements:[],
         disabledReason: !rangedWeapon ? 'Requires an equipped ranged weapon.' : actor.currentAp < (rangedWeapon.apUseCost ?? 0) ? 'Not enough AP.' : actor.currentEther < (rangedWeapon.etherCost ?? 0) ? 'Not enough Ether.' : attackTargetIds.length === 0 ? 'No target in range.' : undefined,
       },
       {
-        id: 'attack.melee', type: 'MeleeAttack', category: 'Attacks', label: 'Melee Attack',
+        id: 'attack.melee', type: 'MeleeAttack', category: 'Attacks', label: meleeWeapon?.name ?? 'Melee Attack', description: meleeWeapon?.description ?? 'Strike an adjacent enemy.',
         apCost: meleeWeapon?.apUseCost ?? 2, etherCost: meleeWeapon?.etherCost ?? 0, rangeTiles: meleeRange, weaponId: meleeWeapon?.id, defeatType: meleeWeapon?.combatDefeatType ?? 'NonLethal', targetIds: meleeTargetIds,
+        targetType:'Enemy',effectSummary:meleeWeapon?.damageRange?[`Deals ${meleeWeapon.damageRange[0]}–${meleeWeapon.damageRange[1]} damage.`]:['Deals unarmed damage.'],requirements:[],
         disabledReason: actor.currentAp < (meleeWeapon?.apUseCost ?? 2) ? 'Not enough AP.' : actor.currentEther < (meleeWeapon?.etherCost ?? 0) ? 'Not enough Ether.' : meleeTargetIds.length === 0 ? 'No adjacent target.' : undefined,
       },
       ...actor.abilityIds.flatMap((abilityId): ResolvedCombatAction[] => {
@@ -232,10 +252,13 @@ export class TurnBasedCombatEngine {
         const targetIds = abilityTargetIds[abilityId] ?? [];
         const category: ResolvedCombatAction['category'] = ability.target !== 'Enemy' || ability.tags.includes('Support')
           ? 'Support' : ability.tags.includes('Weapon') ? 'Attacks' : 'Skills';
-        return [{ id: `ability.${ability.id}`, type: 'Ability', category, label: ability.name, apCost: ability.apCost, etherCost: ability.etherCost, rangeTiles: ability.rangeTiles, abilityId: ability.id, targetIds, targetRejections: abilityTargetRejections[abilityId], disabledReason: actor.currentAp < ability.apCost ? 'Not enough AP.' : actor.currentEther < ability.etherCost ? 'Not enough Ether.' : targetIds.length === 0 ? Object.values(abilityTargetRejections[abilityId] ?? {})[0] ?? 'No valid target.' : undefined }];
+        const effectSummary=ability.effects.map((effect)=>effect.type==='Damage'?`Deals ${effect.min}–${effect.max} damage.`:effect.type==='Heal'?`Restores ${effect.min}–${effect.max} HP.`:effect.statusEffectId?`Applies ${this.content.getStatusEffect(effect.statusEffectId)?.name??'a status effect'}${effect.durationTurns?` for ${effect.durationTurns} turns`:''}.`:'Applies a status effect.');
+        const formatTag=(tag:string)=>tag.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^Has /,'');
+        const requirements=[...ability.requiredTargetTags.map((tag)=>`Target: ${formatTag(tag)}`),...ability.excludedTargetTags.map((tag)=>`Cannot target: ${formatTag(tag)}`)];
+        return [{ id: `ability.${ability.id}`, type: 'Ability', category, label: ability.name, description:ability.description, apCost: ability.apCost, etherCost: ability.etherCost, rangeTiles: ability.rangeTiles, abilityId: ability.id, targetType:ability.target,effectSummary,requirements, targetIds, targetRejections: abilityTargetRejections[abilityId], disabledReason: actor.currentAp < ability.apCost ? 'Not enough AP.' : actor.currentEther < ability.etherCost ? 'Not enough Ether.' : targetIds.length === 0 ? Object.values(abilityTargetRejections[abilityId] ?? {})[0] ?? 'No valid target.' : undefined }];
       }),
-      { id: 'move', type: 'Move', category: 'Support', label: 'Move', apCost: state.grid.movementApCost, etherCost: 0, targetIds: [], disabledReason: legalMoves.length === 0 ? 'No reachable cell.' : undefined },
-      { id: 'end-turn', type: 'EndTurn', category: 'Support', label: 'End Turn', apCost: 0, etherCost: 0, targetIds: [] },
+      { id: 'move', type: 'Move', category: 'Support', label: 'Move', description:'Reposition on the tactical grid.', apCost: state.grid.movementApCost, etherCost: 0, targetIds: [], disabledReason: legalMoves.length === 0 ? 'No reachable cell.' : undefined },
+      { id: 'end-turn', type: 'EndTurn', category: 'Support', label: 'End Turn', description:'Finish the active combatant’s turn.', apCost: 0, etherCost: 0, targetIds: [] },
     ];
     return { actorId, legalMoves, attackTargetIds, abilityTargetIds, actions };
   }
@@ -258,6 +281,7 @@ export class TurnBasedCombatEngine {
     const actor = state.combatants[action.actorId];
     if (!actor || actor.isDefeated || actor.isIncapacitated) return { success: false, state, reason: 'Actor is unavailable.' };
     if (state.activeCombatantId !== actor.id) return { success: false, state, reason: 'It is not this combatant’s turn.' };
+    if (action.type === 'UseItem') return { success: false, state, reason: 'Item use must be executed with inventory context.' };
 
     if (action.type === 'EndTurn') {
       this.advanceTurn(state);
@@ -392,7 +416,7 @@ export class TurnBasedCombatEngine {
     if (ability.target === 'Self' && actor.id !== target.id) return 'Ability targets self.';
     if (ability.target === 'Ally' && actor.team !== target.team) return 'Ability targets an ally.';
     if (ability.target === 'Enemy' && actor.team === target.team) return 'Ability targets an enemy.';
-    const targetDefinition=this.content.getEnemy(target.sourceId)??this.content.getCharacter(target.sourceId);const tags=targetDefinition?.tags??[];
+    const targetDefinition=this.content.getEnemy(target.sourceId)??this.content.getCharacter(target.sourceId);const tags=target.capabilityTags??targetDefinition?.tags??[];
     if(ability.requiredTargetTags.length&&!ability.requiredTargetTags.every(tag=>tags.includes(tag)))return ability.invalidTargetReason ?? 'Target is missing a required capability.';
     if(ability.excludedTargetTags.some(tag=>tags.includes(tag)))return ability.invalidTargetReason ?? 'Target is immune to this ability.';
   }

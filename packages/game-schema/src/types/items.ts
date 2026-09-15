@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { BaseEntitySchema } from './base.ts';
 import { PrimaryStatSchema } from './stats.ts';
 import { EffectSchema } from './effects.ts';
+import { ConditionSchema } from './conditions.ts';
 
 export const ItemRaritySchema = z.enum(['Common','StreetGrade','MilitarySpec','Prototype','EtherArtifact']);
 export type ItemRarity = z.infer<typeof ItemRaritySchema>;
@@ -21,11 +22,14 @@ export const ItemRequirementSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('level'), minimum: z.number().int().min(1) }),
   z.object({ type: z.literal('attribute'), attribute: z.enum(['body','reflexes','mind','etherTech','presence']), minimum: z.number().int().min(1) }),
   z.object({ type: z.literal('flag'), flag: z.string().min(1), expected: z.union([z.string(),z.number(),z.boolean()]).default(true) }),
+  z.object({ type: z.literal('raceIs'), raceId: z.string().min(1) }),
+  z.object({ type: z.literal('raceHasTag'), tag: z.string().min(1) }),
 ]);
 export type ItemRequirement = z.infer<typeof ItemRequirementSchema>;
 
 export const EquipmentSlotSchema = z.object({
   id: z.string().min(1),
+  name: z.string().min(1).optional(),
   acceptsCategories: z.array(ItemCategorySchema).default([]),
   acceptsTags: z.array(z.string()).default([]),
 });
@@ -49,12 +53,16 @@ export const ItemSchema = BaseEntitySchema.extend({
   modifiers: z.array(ItemModifierSchema).default([]),
   equipEffects: z.array(EffectSchema).default([]),
   unequipEffects: z.array(EffectSchema).default([]),
+  useConditions: z.array(ConditionSchema).default([]),
+  useEffects: z.array(EffectSchema).default([]),
+  usableContexts: z.array(z.enum(['Exploration', 'Combat'])).default([]),
   grantedAbilityIds: z.array(z.string()).default([]),
   apUseCost: z.number().int().min(0).optional(), etherCost: z.number().int().min(0).optional(),
   damageRange: z.tuple([z.number().int().min(0),z.number().int().min(0)]).optional(), rangeTiles: z.number().int().min(0).optional(),
   combatAttackType: z.enum(['Ranged', 'Melee']).optional(),
   combatDefeatType: z.enum(['Lethal', 'NonLethal']).default('Lethal'),
   icon: z.string().default('Box'),
+  artwork: z.string().optional(),
 });
 export type Item = z.infer<typeof ItemSchema>;
 export type ItemDefinition = Item;

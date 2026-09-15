@@ -1,0 +1,74 @@
+[
+  {
+    "id": "special_path_mindmancer",
+    "name": "Mindmancer",
+    "description": "A unique cognitive resonance awakened through direct bonding with the vault artifact. It develops alongside, rather than replacing, a primary discipline.",
+    "tags": [
+      "Mindmancer",
+      "Mental",
+      "ArtifactBonded"
+    ],
+    "availability": "Both",
+    "rarity": "unique",
+    "unlockConditions": [
+      {
+        "type": "flag",
+        "flag": "player.mindmancer.unlocked",
+        "operator": "==",
+        "value": true
+      }
+    ],
+    "progression": [
+      {
+        "abilityId": "ability_mindmancer_read_mind",
+        "group": "Perception",
+        "unlockConditions": [
+          {
+            "type": "specialPathUnlocked",
+            "specialPathId": "special_path_mindmancer",
+            "unlocked": true
+          }
+        ]
+      },
+      {
+        "abilityId": "ability_mindmancer_command",
+        "group": "Influence",
+        "unlockConditions": [
+          {
+            "type": "specialPathUnlocked",
+            "specialPathId": "special_path_mindmancer",
+            "unlocked": true
+          }
+        ]
+      },
+      {
+        "abilityId": "ability_mindmancer_suppression",
+        "group": "Suppression",
+        "unlockConditions": [
+          {
+            "type": "specialPathUnlocked",
+            "specialPathId": "special_path_mindmancer",
+            "unlocked": true
+          }
+        ]
+      },
+      {
+        "abilityId": "ability_mindmancer_memory_fracture",
+        "group": "Memory",
+        "unlockConditions": [
+          {
+            "type": "specialPathUnlocked",
+            "specialPathId": "special_path_mindmancer",
+            "unlocked": true
+          },
+          {
+            "type": "flag",
+            "flag": "player.mindmancer.memory_mastery",
+            "operator": "==",
+            "value": true
+          }
+        ]
+      }
+    ]
+  }
+]

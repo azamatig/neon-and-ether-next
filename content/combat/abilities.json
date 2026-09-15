@@ -1,5 +1,29 @@
 [
   {
+    "id": "ability_tactical_scan",
+    "name": "Tactical Scan",
+    "description": "Corporate threat-analysis training identifies a target's exposed defenses.",
+    "tags": [
+      "Technical",
+      "Corporate",
+      "Support"
+    ],
+    "apCost": 2,
+    "etherCost": 0,
+    "target": "Enemy",
+    "effects": [
+      {
+        "type": "ApplyStatus",
+        "min": 0,
+        "max": 0,
+        "statusEffectId": "status_tactically_scanned",
+        "durationTurns": 2
+      }
+    ],
+    "icon": "ScanLine",
+    "rangeTiles": 6
+  },
+  {
     "id": "ability_thermal_burst",
     "name": "Thermal Burst",
     "description": "A focused thermal round that burns through light plating.",
@@ -28,7 +52,7 @@
   {
     "id": "ability_arc_strike",
     "name": "Arc Strike",
-    "description": "A close-range ether discharge delivered through a shock baton.",
+    "description": "A close-range ether discharge delivered through a conductive strike.",
     "tags": [
       "Weapon",
       "Melee",
@@ -75,7 +99,8 @@
     "tags": [
       "Mindmancer",
       "Mental",
-      "SentientOnly"
+      "SentientOnly",
+      "Perception"
     ],
     "apCost": 2,
     "etherCost": 4,
@@ -104,7 +129,8 @@
     "tags": [
       "Mindmancer",
       "Mental",
-      "SentientOnly"
+      "SentientOnly",
+      "Influence"
     ],
     "apCost": 3,
     "etherCost": 8,
@@ -133,7 +159,8 @@
     "tags": [
       "Mindmancer",
       "Mental",
-      "SentientOnly"
+      "SentientOnly",
+      "Memory"
     ],
     "apCost": 3,
     "etherCost": 10,
@@ -167,7 +194,8 @@
     "tags": [
       "Mindmancer",
       "Mental",
-      "SentientOnly"
+      "SentientOnly",
+      "Suppression"
     ],
     "apCost": 4,
     "etherCost": 12,

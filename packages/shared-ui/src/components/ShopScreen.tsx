@@ -3,6 +3,7 @@ import type { InventoryState, Item } from '@neon-ether/game-schema';
 import type { ShopView } from '@neon-ether/game-runtime';
 import { ArrowLeft, Coins, PackageOpen, ShoppingBag } from 'lucide-react';
 import { Button } from './Button.tsx';
+import { ItemIcon } from './ItemIcon.tsx';
 
 interface ShopScreenProps {
   view?: ShopView;
@@ -26,10 +27,10 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ view, inventory, items, 
       <InventoryColumn title="Shop inventory">{view.items.map(({item,quantity,buyPrice})=><ItemEntry key={item.id} item={item} selected={selectedId===item.id} meta={`${buyPrice} cr · ${quantity ?? '∞'} available`} onClick={()=>setSelectedId(item.id)}/>)}</InventoryColumn>
       <InventoryColumn title="Player inventory">{inventory.items.map((slot)=>{const item=itemMap.get(slot.itemId);return item?<ItemEntry key={slot.entryId} item={item} selected={selectedId===item.id} meta={`${slot.quantity} owned · ${shopItem?.sellPrice ?? item.valueCredits} cr sell`} onClick={()=>setSelectedId(item.id)}/>:null})}</InventoryColumn>
     </div>
-    <footer className="ne-context-footer"><div className="ne-item-detail">{selected?<><PackageOpen/><span><strong>{selected.name}</strong><small>{selected.description}</small></span></>:<span>Select an item to inspect.</span>}</div><div>{shopItem&&<Button onClick={()=>onBuy(view.shop.id,shopItem.item.id)} disabled={shopItem.quantity===0 || inventory.credits<shopItem.buyPrice}>Buy · {shopItem.buyPrice}</Button>}{playerItem&&<Button variant="secondary" onClick={()=>onSell(view.shop.id,playerItem.itemId)}>Sell</Button>}<Button variant="ghost" onClick={onReturn} leftIcon={<ArrowLeft/>}>Return</Button></div></footer>
+    <footer className="ne-context-footer"><div className="ne-item-detail">{selected?<><ItemIcon item={selected}/><span><strong>{selected.name}</strong><small>{selected.description}</small></span></>:<span>Select an item to inspect.</span>}</div><div>{shopItem&&<Button onClick={()=>onBuy(view.shop.id,shopItem.item.id)} disabled={shopItem.quantity===0 || inventory.credits<shopItem.buyPrice}>Buy · {shopItem.buyPrice}</Button>}{playerItem&&<Button variant="secondary" onClick={()=>onSell(view.shop.id,playerItem.itemId)}>Sell</Button>}<Button variant="ghost" onClick={onReturn} leftIcon={<ArrowLeft/>}>Return</Button></div></footer>
   </section>;
 };
 
 const InventoryColumn:React.FC<{title:string;children:React.ReactNode}>=({title,children})=><section className="ne-inventory-column"><h2>{title}</h2><div>{children}</div></section>;
-const ItemEntry:React.FC<{item:Item;meta:string;selected:boolean;onClick:()=>void}>=({item,meta,selected,onClick})=><button type="button" data-selected={selected} onClick={onClick}><PackageOpen/><span><strong>{item.name}</strong><small>{item.category} · {item.rarity}</small></span><em>{meta}</em></button>;
+const ItemEntry:React.FC<{item:Item;meta:string;selected:boolean;onClick:()=>void}>=({item,meta,selected,onClick})=><button type="button" data-selected={selected} onClick={onClick}><ItemIcon item={item}/><span><strong>{item.name}</strong><small>{item.category} · {item.rarity}</small></span><em>{meta}</em></button>;
 const ScreenUnavailable:React.FC<{title:string;onReturn:()=>void}>=({title,onReturn})=><section className="ne-context-screen ne-unavailable"><Coins/><h2>{title}</h2><Button variant="secondary" onClick={onReturn}>Return</Button></section>;

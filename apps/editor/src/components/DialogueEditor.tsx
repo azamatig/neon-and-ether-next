@@ -1,144 +1,18 @@
-/**
- * @apps/editor
- * Branching Dialogue Tree & Stat Check Node Inspector.
- */
-
 import React, { useState } from 'react';
-import { DialogueNode, DialogueTree } from '@neon-ether/game-schema';
-import { GAME_CONTENT_MANIFEST } from '@neon-ether/content';
-import { Badge, Button, Panel } from '@neon-ether/shared-ui';
-import { GitBranch, MessageSquare, Plus, ShieldAlert } from 'lucide-react';
+import { DialogueChoiceSchema, type DialogueTree, type GameContent } from '@neon-ether/game-schema';
+import { SchemaPropertyEditor } from './SchemaPropertyEditor.tsx';
 
-export const DialogueEditor: React.FC = () => {
-  const [activeTree, setActiveTree] = useState<DialogueTree>(() => {
-    return GAME_CONTENT_MANIFEST.dialogues[0];
-  });
-
-  const [selectedNodeId, setSelectedNodeId] = useState<string>(activeTree.rootNodeId);
-
-  const currentNode = activeTree.nodes[selectedNodeId];
-
-  return (
-    <div className="flex flex-col lg:flex-row gap-4 h-full">
-      {/* Node Graph List */}
-      <div className="w-full lg:w-80 flex flex-col gap-3">
-        <Panel
-          title="DIALOGUE NODES"
-          subtitle={`TREE: ${activeTree.id}`}
-          headerRight={<Badge variant="purple">{Object.keys(activeTree.nodes).length} NODES</Badge>}
-        >
-          <div className="flex flex-col gap-2 max-h-[460px] overflow-y-auto">
-            {(Object.values(activeTree.nodes) as DialogueNode[]).map((node) => {
-              const isRoot = node.id === activeTree.rootNodeId;
-              const isSelected = node.id === selectedNodeId;
-
-              return (
-                <button
-                  key={node.id}
-                  onClick={() => setSelectedNodeId(node.id)}
-                  className={`p-2.5 text-left border font-mono text-xs transition-colors cursor-pointer flex flex-col gap-1 ${
-                    isSelected
-                      ? 'bg-purple-950/60 border-purple-400 text-purple-200'
-                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-zinc-200">{node.id}</span>
-                    {isRoot && <Badge variant="cyan" size="xs">ROOT</Badge>}
-                  </div>
-                  <span className="text-[10px] text-zinc-500 truncate">
-                    Speaker: {node.speakerName} ({node.choices.length} choices)
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </Panel>
-      </div>
-
-      {/* Node Inspector & Choices */}
-      <div className="flex-1 flex flex-col">
-        {currentNode ? (
-          <Panel
-            title={`NODE INSPECTOR // ${currentNode.id}`}
-            subtitle={`SPEAKER: ${currentNode.speakerName} [${currentNode.speakerTitle ?? 'No title'}]`}
-            glow="purple"
-            className="h-full"
-          >
-            <div className="flex flex-col gap-4">
-              {/* Speaker Text Box */}
-              <div className="flex flex-col gap-1 bg-black/40 p-3 border border-zinc-800">
-                <span className="font-mono text-[10px] uppercase text-zinc-400">
-                  Dialogue Speech Output:
-                </span>
-                <p className="font-sans text-sm text-zinc-100 bg-zinc-900/60 p-3 border border-zinc-800">
-                  "{currentNode.text}"
-                </p>
-              </div>
-
-              {/* Branching Choices */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs uppercase tracking-wider text-zinc-300 font-semibold">
-                    Branching Player Vectors ({currentNode.choices.length}):
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2.5">
-                  {currentNode.choices.map((choice, i) => (
-                    <div
-                      key={choice.id}
-                      className="p-3 bg-zinc-900/80 border border-zinc-800 flex flex-col gap-2"
-                    >
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <span className="font-mono text-xs text-purple-300 font-bold">
-                          [{i + 1}] ID: {choice.id}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {choice.requirement && (
-                            <Badge variant="amber" size="xs">
-                              [{choice.requirement.stat} Check - {choice.requirement.difficulty}]
-                            </Badge>
-                          )}
-                          {choice.costEther && (
-                            <Badge variant="purple" size="xs">
-                              [{choice.costEther} Ether]
-                            </Badge>
-                          )}
-                          <span className="font-mono text-[10px] text-cyan-400 bg-zinc-950 px-2 py-0.5 border border-zinc-800">
-                            Target: {choice.targetNodeId ? `-> ${choice.targetNodeId}` : '[Exit Comm]'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-xs text-zinc-300 font-sans italic">
-                        "{choice.text}"
-                      </p>
-
-                      {choice.targetNodeId && (
-                        <div className="flex justify-end">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setSelectedNodeId(choice.targetNodeId!)}
-                            rightIcon={<GitBranch className="w-3 h-3" />}
-                          >
-                            Jump to Node
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Panel>
-        ) : (
-          <div className="p-8 text-center text-zinc-500 font-mono">
-            No dialogue node selected
-          </div>
-        )}
-      </div>
-    </div>
-  );
+export const DialogueEditor: React.FC<{ tree: DialogueTree; content: GameContent; onChange: (value: DialogueTree) => void }> = ({ tree, content, onChange }) => {
+  const [nodeId, setNodeId] = useState(tree.rootNodeId);
+  const node = tree.nodes[nodeId] ?? Object.values(tree.nodes)[0];
+  if (!node) return <p className="text-slate-400">Add a dialogue node to begin authoring.</p>;
+  const changeNode = (next: typeof node) => onChange({ ...tree, nodes: { ...tree.nodes, [node.id]: next } });
+  const addChoice = () => changeNode({ ...node, choices: [...node.choices, { id: `choice_${node.choices.length + 1}`, text: 'New response', playerLine: 'New response', type: 'Normal', conditions: [], unmetBehavior: 'DISABLED', effects: [], targetNodeId: null, intentionalLoop: false }] });
+  return <div className="space-y-4">
+    <div className="flex flex-wrap gap-2">{(Object.values(tree.nodes) as Array<typeof node>).map((entry) => <button type="button" className={`rounded border px-3 py-1 ${entry.id === node.id ? 'border-cyan-400 text-cyan-200' : 'border-slate-700'}`} onClick={() => setNodeId(entry.id)} key={entry.id}>{entry.id}</button>)}</div>
+    <label className="block text-xs text-slate-400">NPC LINE<textarea className="mt-1 w-full rounded border border-slate-700 bg-slate-950 p-2 text-slate-100" value={node.text} onChange={(event) => changeNode({ ...node, text: event.target.value })} /></label>
+    <div className="rounded border border-violet-500/40 bg-slate-950 p-4"><small className="text-violet-300">CONVERSATION PREVIEW</small><h3 className="mt-2 font-bold">{node.speakerName}</h3><p>{node.text}</p><div className="mt-3 space-y-2">{node.choices.map((choice) => <div className="rounded border border-cyan-500/30 p-2" key={choice.id}>{choice.label && <small className="text-cyan-300">[{choice.label}] </small>}{choice.text}</div>)}</div></div>
+    {node.choices.map((choice, index) => <details open key={choice.id} className="rounded border border-slate-700 p-3"><summary>Choice {index + 1}: {choice.text}</summary><SchemaPropertyEditor schema={DialogueChoiceSchema} value={choice} content={content} onChange={(next) => changeNode({ ...node, choices: node.choices.map((entry) => entry.id === choice.id ? next as typeof choice : entry) })} /></details>)}
+    <button type="button" className="rounded border border-cyan-500 px-3 py-2 text-cyan-200" onClick={addChoice}>ADD PLAYER CHOICE</button>
+  </div>;
 };

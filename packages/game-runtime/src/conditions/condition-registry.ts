@@ -20,6 +20,9 @@ import type { RuntimeTraceSink } from '../observability/runtime-trace.ts';
 import { handleTimeCondition } from './handlers/time-condition.ts';
 import { handleFactionStateCondition } from './handlers/faction-state-condition.ts';
 import { handleWeatherCondition } from './handlers/weather-condition.ts';
+import { handleSpecialPathUnlocked } from './handlers/special-path-condition.ts';
+import { handleRaceCondition } from './handlers/race-condition.ts';
+import { handleCharacterIdentityCondition } from './handlers/character-identity-condition.ts';
 
 export class ConditionRegistry {
   private handlers = new Map<string, ConditionHandler<any>>();
@@ -49,6 +52,10 @@ export class ConditionRegistry {
     this.registerHandler('randomChance', handleRandomChanceCondition);
     this.registerHandler('time', handleTimeCondition);
     for(const type of ['currentWeather','weatherTag','environmentTag']) this.registerHandler(type,handleWeatherCondition);
+    this.registerHandler('specialPathUnlocked', handleSpecialPathUnlocked);
+    this.registerHandler('raceIs', handleRaceCondition);
+    this.registerHandler('raceHasTag', handleRaceCondition);
+    for(const type of ['classIs','backgroundIs','hasPerk','hasAbility','skillThreshold']) this.registerHandler(type,handleCharacterIdentityCondition);
 
     // Combinators
     this.registerHandler('and', handleAndCondition);

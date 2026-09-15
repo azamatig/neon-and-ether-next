@@ -43,6 +43,8 @@ export function createSaveGame(
   state: GameState,
   options: {
     slotName?: string;
+    slotId?: string;
+    saveKind?: 'Manual'|'Autosave';
     saveId?: string;
     playtimeSeconds?: number;
     screenshotDataUrl?: string;
@@ -51,7 +53,9 @@ export function createSaveGame(
   const activeQuests = Object.values(state.quests).filter((q) => q.status === 'Active').length;
 
   const metadata: SaveGameMetadata = {
-    saveId: options.saveId ?? `save_${Date.now()}_${state.rng.draws}`,
+    saveId: options.saveId ?? `save_${options.slotId ?? 'autosave-1'}`,
+    slotId: options.slotId ?? 'autosave-1',
+    saveKind: options.saveKind ?? 'Autosave',
     slotName: options.slotName ?? 'AutoSave',
     schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
     timestamp: new Date().toISOString(),

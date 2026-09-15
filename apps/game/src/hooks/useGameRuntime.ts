@@ -11,10 +11,12 @@ import {
   ResolvedPOI,
   SaveGame,
   SaveLoadResult,
+  serializeSaveGame,
   StatCheckResolution,
 } from '@neon-ether/game-runtime';
 import { GAME_CONTENT_MANIFEST } from '@neon-ether/content';
 import { CharacterDefinition, DialogueChoice, Vector2D } from '@neon-ether/game-schema';
+import { EntityNameResolver } from '../presentation/entity-name-resolver.ts';
 
 export function useGameRuntime() {
   const session = useMemo(() => {
@@ -31,6 +33,7 @@ export function useGameRuntime() {
   const [gameState, setGameState] = useState<GameState>(() => session.getState());
   const [lastCheck, setLastCheck] = useState<StatCheckResolution | null>(null);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const entityNames = useMemo(() => new EntityNameResolver(session.getContentRegistry()), [session]);
 
   useEffect(() => {
     const unsubs = [
@@ -61,6 +64,7 @@ export function useGameRuntime() {
     if (!activeDialogueTree || !gameState.world.activeDialogueNodeId) return null;
     return activeDialogueTree.nodes[gameState.world.activeDialogueNodeId] ?? null;
   }, [activeDialogueTree, gameState.world.activeDialogueNodeId]);
+  const activeDialogueState = useMemo(() => session.getResolvedDialogueState(), [session, gameState.world.activeDialogueTreeId, gameState.world.activeDialogueNodeId, gameState.world.activeDialogueChoiceId, gameState.player]);
 
   const resolvedPlayer = useMemo(() => {
     return session.getResolvedPlayerCharacter();
@@ -111,6 +115,15 @@ export function useGameRuntime() {
   const recipes = session.getContentRegistry().recipes.getAll();
   const availableRecipeIds = new Set(gameState.world.activeScreen === 'Workbench' ? session.getAvailableRecipes(craftingContext).map((recipe) => recipe.id) : []);
   const itemDefinitions = session.getContentRegistry().items.getAll();
+  const equipmentOptions = Object.fromEntries(gameState.player.inventory.items.map((entry) => [entry.entryId ?? entry.itemId, Object.fromEntries((session.getContentRegistry().getItem(entry.itemId)?.equipmentSlots ?? []).map((slotId) => [slotId, session.canEquipInventoryEntry(entry.entryId ?? entry.itemId, slotId)]))]));
+  const equipmentSlots = session.getEquipmentSlots();
+  const playerRace = gameState.player.raceId ? session.getContentRegistry().races.get(gameState.player.raceId) : undefined;
+  const playerBackground = gameState.player.backgroundId ? session.getContentRegistry().backgrounds.get(gameState.player.backgroundId) : undefined;
+  const classNames = Object.fromEntries(session.getContentRegistry().classes.getAll().map((value) => [value.id, value.name]));
+  const raceNames = Object.fromEntries(session.getContentRegistry().races.getAll().map((race) => [race.id, race.name]));
+  const primaryClass = gameState.player.classId ? session.getContentRegistry().classes.get(gameState.player.classId) : undefined;
+  const specialPaths = gameState.player.specialPathIds.flatMap((id) => { const definition = session.getContentRegistry().specialPaths.get(id); return definition ? [definition] : []; });
+  const playerProgression = session.getPlayerProgressionView();
   const characterCreationOptions = useMemo(() => session.getCharacterCreationOptions(), [session]);
   const questDossiers = (Object.values(gameState.quests) as import('@neon-ether/game-schema').QuestRuntimeState[]).map((quest) => ({
     runtime: quest,
@@ -123,16 +136,16 @@ export function useGameRuntime() {
 
   // --- Persistence & Savegame Handlers ---
 
-  const saveToLocalSlot = (slotName: string = 'Slot 1'): SaveGame => {
-    const saveGame = session.createSaveGame(slotName);
-    const jsonStr = session.serializeSave(true);
-    localStorage.setItem(`neon_save_${slotName}`, jsonStr);
+  const saveToLocalSlot = (slotId: string = 'manual-1'): SaveGame => {
+    const slotName = `Manual Slot ${slotId.replace('manual-','')}`;
+    const saveGame = session.createSaveGame(slotName, 'Manual', slotId);
+    localStorage.setItem(`neon_save_${slotId}`, serializeSaveGame(saveGame, true));
     setSaveStatus(`Saved to [${slotName}] at ${new Date().toLocaleTimeString()}`);
     session.logJournal('System', `Game state saved to storage slot "${slotName}".`);
     return saveGame;
   };
 
-  const loadFromLocalSlot = (slotName: string = 'Slot 1'): SaveLoadResult => {
+  const loadFromLocalSlot = (slotName: string = 'manual-1'): SaveLoadResult => {
     const jsonStr = localStorage.getItem(`neon_save_${slotName}`);
     if (!jsonStr) {
       setSaveStatus(`No save data found in [${slotName}]`);
@@ -161,12 +174,13 @@ export function useGameRuntime() {
     return result;
   };
 
-  const baseResidents = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[]).filter((npc) => ['companion','employee'].includes(npc.relationship.status)).map((runtime) => ({ runtime, name: session.getContentRegistry().getNPC(runtime.npcId)?.name ?? runtime.npcId }));
+  const baseResidents = (Object.values(gameState.npcs) as import('@neon-ether/game-schema').NpcRuntimeState[]).filter((npc) => ['companion','employee'].includes(npc.relationship.status)).map((runtime) => ({ runtime, name: entityNames.npc(runtime.npcId) }));
   const baseJobs = session.getContentRegistry().baseJobs.getAll();
   const activeMinigameSession=gameState.world.activeMinigame;const activeMinigame=activeMinigameSession?session.getContentRegistry().minigames.get(activeMinigameSession.definitionId):undefined;const minigameSequenceStates=session.getMinigameSequenceStates();
 
   return {
     session,
+    entityNames,
     gameState,
     resolvedPlayer,
     activeMap,
@@ -177,7 +191,9 @@ export function useGameRuntime() {
     poisForActiveMap,
     selectedPoi,
     stationedNpcsAtSelectedPoi,
+    activeDialogueTree,
     activeDialogueNode,
+    activeDialogueState,
     activeActionResolution,
     activeEventState,
     activeCombatPreview,
@@ -188,7 +204,19 @@ export function useGameRuntime() {
     recipes,
     availableRecipeIds,
     itemDefinitions,
+    equipmentOptions,
+    equipmentSlots,
+    playerRace,
+    playerBackground,
+    raceNames,
+    classNames,
+    primaryClass,
+    specialPaths,
+    playerProgression,
     characterCreationOptions,
+    generateCharacterName: () => session.generateCharacterName(),
+    adjustCharacterCreationAttribute: session.adjustCharacterCreationAttribute.bind(session),
+    adjustCharacterCreationSkill: session.adjustCharacterCreationSkill.bind(session),
     questDossiers,
     partyMembers,
     lastCheck,
@@ -201,6 +229,8 @@ export function useGameRuntime() {
     dismissActionResolution: () => session.dismissActionResolution(),
     startDialogue: (treeId: string) => session.startDialogue(treeId),
     chooseDialogueOption: (choice: DialogueChoice) => session.chooseDialogueOption(choice),
+    advanceDialoguePlayerLine: () => session.advanceDialoguePlayerLine(),
+    advanceDialogueNode: () => session.advanceDialogueNode(),
     endDialogue: () => session.endDialogue(),
     // Event methods
     startEvent: (eventId: string) => session.startEvent(eventId),
@@ -232,8 +262,13 @@ export function useGameRuntime() {
     returnToOrigin: () => session.resolveOutcome({ type: 'returnToOrigin' }),
     selectMinigameCell:(row:number,column:number)=>session.selectMinigameCell(row,column),finishMinigame:()=>session.finishMinigame(),
     equipInventoryEntry: (entryId: string, slotId: string) => session.equipInventoryEntry(entryId, { id: slotId, acceptsCategories: [], acceptsTags: [] }),
+    useInventoryItem: (itemId: string) => session.useInventoryItem(itemId),
     unequipSlot: (slotId: string) => session.unequipSlot(slotId),
     dropInventoryItem: (itemId: string) => session.removeInventoryItem(itemId, 1),
+    initializeRosterCharacterLoadout:(npcId:string)=>session.initializeRosterCharacterLoadout(npcId),
+    equipRosterCharacterItem:(npcId:string,entryId:string,slotId:string)=>session.equipRosterCharacterItem(npcId,entryId,slotId),
+    unequipRosterCharacterSlot:(npcId:string,slotId:string)=>session.unequipRosterCharacterSlot(npcId,slotId),
+    transferRosterItem:(from:'player'|string,to:'player'|string,itemId:string,quantity=1)=>session.transferRosterItem(from,to,itemId,quantity),
     validateCharacterCreation: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.validateCharacterCreation(selection),
     initializeNewGame: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.initializeNewGame(selection),
     previewCharacterCreation: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.previewCharacterCreation(selection),

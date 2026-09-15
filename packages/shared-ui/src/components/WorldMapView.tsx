@@ -18,9 +18,12 @@ const isImageSource = (value?: string) => Boolean(value && /^(https?:|\/|data:|\
 
 const markerTone = (poi: ResolvedPOI): string => {
   if (poi.runtime.isLocked || !poi.isAvailable) return 'locked';
+  if (poi.category === 'Safehouse') return 'safe';
+  if (poi.category === 'Market') return 'utility';
   if (poi.category === 'EtherRift' || poi.category === 'FactionHQ') return 'ether';
   if (poi.category === 'Encounter' || poi.category === 'SecurityNode' || poi.category === 'Vault') return 'danger';
-  if (poi.dangerLevel >= 3 || poi.questIds.length > 0) return 'warning';
+  if (poi.questIds.length > 0) return 'story';
+  if (poi.dangerLevel >= 3) return 'warning';
   return 'navigation';
 };
 

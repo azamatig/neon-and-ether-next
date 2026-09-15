@@ -84,6 +84,8 @@ export class InventorySystem {
       if (requirement.type === 'level' && player.level < requirement.minimum) return { success: false, reason: `Requires level ${requirement.minimum}.` };
       if (requirement.type === 'attribute' && player.attributes[requirement.attribute] < requirement.minimum) return { success: false, reason: `Requires ${requirement.attribute} ${requirement.minimum}.` };
       if (requirement.type === 'flag' && state.world.flags[requirement.flag] !== requirement.expected) return { success: false, reason: `Requires flag '${requirement.flag}'.` };
+      if (requirement.type === 'raceIs' && player.raceId !== requirement.raceId) return { success: false, reason: `Requires ${this.content.races.get(requirement.raceId)?.name ?? 'another lineage'}.` };
+      if (requirement.type === 'raceHasTag' && !this.content.races.get(player.raceId ?? '')?.tags.includes(requirement.tag)) return { success: false, reason: `Requires lineage trait ${requirement.tag}.` };
     }
     return { success: true };
   }

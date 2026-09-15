@@ -56,6 +56,7 @@ export class TurnBasedCombatEngine {
     const encounter = this.content.getEncounter(encounterId);
     if (!encounter) return undefined;
     const playerDefinition = this.content.getCharacter(gameState.player.characterId);
+    const playerRace = gameState.player.raceId ? this.content.races.get(gameState.player.raceId) : undefined;
     const equippedItems = gameState.player.inventory.items
       .filter((slot) => slot.isEquipped)
       .map((slot) => this.content.getItem(slot.itemId))
@@ -114,6 +115,7 @@ export class TurnBasedCombatEngine {
         meleeWeaponId: meleeWeapon?.id,
         armorItemIds: armor.map((item) => item.id),
         abilityIds: [...playerAbilities],
+        capabilityTags: [...new Set([...(playerDefinition?.tags ?? []), ...gameState.player.traits, ...(playerRace?.tags ?? []), ...(playerRace?.grantedTraits ?? [])])],
         statuses: [
           ...gameState.player.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })),
           ...gameState.player.activeStatusEffects
@@ -134,15 +136,17 @@ export class TurnBasedCombatEngine {
       const runtime = gameState.npcs[npcId];
       if (!npc || runtime?.isAlive === false) return;
       const npcClass = npc.classId ? this.content.classes.get(npc.classId) : undefined;
-      const effective = new CharacterStatsSystem().resolve({ ...npc, temporaryModifiers:[...npc.temporaryModifiers, ...(npcClass?.startingModifiers ?? [])] });
+      const npcRace = npc.raceId ? this.content.races.get(npc.raceId) : undefined;
+      const effective = new CharacterStatsSystem().resolve({ ...npc, temporaryModifiers:[...npc.temporaryModifiers, ...(npcClass?.startingModifiers ?? []), ...(npcRace?.attributeModifiers ?? [])] });
+      const maxHpDelta = effective.derivedStats.maxHp - npc.vitals.maxHp;
       const inventory = runtime?.inventory?.items ?? npc.inventory;
       const equipped = inventory.filter((slot) => slot.isEquipped).map((slot) => this.content.getItem(slot.itemId)).filter((item) => item !== undefined);
-      const abilities = new Set([...npc.abilityIds, ...(npcClass?.startingAbilityIds ?? []), ...equipped.flatMap((item) => item.grantedAbilityIds)]);
+      const abilities = new Set([...npc.abilityIds, ...(npcClass?.startingAbilityIds ?? []), ...(npcRace?.grantedAbilityIds ?? []), ...equipped.flatMap((item) => item.grantedAbilityIds)]);
       combatants[npcId] = {
         id: npcId, sourceId: npcId, name: npc.name, team: 'Player',
         bodyImage: npc.combatImage, portraitIcon: npc.portraitIcon,
-        currentHp: runtime?.currentHp ?? effective.derivedStats.currentHp,
-        maxHp: runtime?.maxHp ?? effective.derivedStats.maxHp,
+        currentHp: Math.min((runtime?.maxHp ?? npc.vitals.maxHp) + maxHpDelta, (runtime?.currentHp ?? npc.vitals.currentHp) + ((runtime?.currentHp ?? npc.vitals.currentHp) === (runtime?.maxHp ?? npc.vitals.maxHp) ? maxHpDelta : 0)),
+        maxHp: (runtime?.maxHp ?? npc.vitals.maxHp) + maxHpDelta,
         currentEther: runtime?.currentEther ?? effective.derivedStats.currentEther,
         maxEther: effective.derivedStats.maxEther,
         currentAp: effective.derivedStats.actionPointsMax, maxAp: effective.derivedStats.actionPointsMax,
@@ -150,7 +154,7 @@ export class TurnBasedCombatEngine {
         weaponId: equipped.find((item) => item.combatAttackType === 'Ranged')?.id,
         meleeWeaponId: equipped.find((item) => item.combatAttackType === 'Melee')?.id,
         armorItemIds: equipped.filter((item) => item.category === 'armor').map((item) => item.id),
-        abilityIds: [...abilities], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null, resolutionState: 'Alive',
+        abilityIds: [...abilities], capabilityTags:[...new Set([...npc.tags,...npc.traits,...(npcRace?.tags??[]),...(npcRace?.grantedTraits??[])])], statuses: npc.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, defeatType: null, resolutionState: 'Alive',
         position: claimDeployment('Player', index + 1), movementRange: 3, movementRemaining: 3,
       };
     });
@@ -174,7 +178,7 @@ export class TurnBasedCombatEngine {
           initiative: effectiveEnemy.derivedStats.initiative, armor: effectiveEnemy.derivedStats.armorRating,
           weaponId: this.content.getItem(enemy.equippedWeaponId ?? '')?.combatAttackType === 'Ranged' ? enemy.equippedWeaponId : undefined,
           meleeWeaponId: this.content.getItem(enemy.equippedWeaponId ?? '')?.combatAttackType === 'Melee' ? enemy.equippedWeaponId : undefined,
-          armorItemIds: [], abilityIds: enemy.abilityIds,
+          armorItemIds: [], abilityIds: enemy.abilityIds, capabilityTags:[...new Set([...enemy.tags,...enemy.traits])],
           aiProfileId: enemy.combatAIProfileId, statuses: enemy.statusEffects.map((status) => ({ statusEffectId: status.id, remainingTurns: status.durationTurns })), isDefeated: false, isIncapacitated: false, resolutionState: 'Alive',
           position: deployment, movementRange: 3, movementRemaining: 3,
         };
@@ -412,7 +416,7 @@ export class TurnBasedCombatEngine {
     if (ability.target === 'Self' && actor.id !== target.id) return 'Ability targets self.';
     if (ability.target === 'Ally' && actor.team !== target.team) return 'Ability targets an ally.';
     if (ability.target === 'Enemy' && actor.team === target.team) return 'Ability targets an enemy.';
-    const targetDefinition=this.content.getEnemy(target.sourceId)??this.content.getCharacter(target.sourceId);const tags=targetDefinition?.tags??[];
+    const targetDefinition=this.content.getEnemy(target.sourceId)??this.content.getCharacter(target.sourceId);const tags=target.capabilityTags??targetDefinition?.tags??[];
     if(ability.requiredTargetTags.length&&!ability.requiredTargetTags.every(tag=>tags.includes(tag)))return ability.invalidTargetReason ?? 'Target is missing a required capability.';
     if(ability.excludedTargetTags.some(tag=>tags.includes(tag)))return ability.invalidTargetReason ?? 'Target is immune to this ability.';
   }

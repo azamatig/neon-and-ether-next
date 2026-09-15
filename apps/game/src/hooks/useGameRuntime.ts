@@ -115,6 +115,9 @@ export function useGameRuntime() {
   const itemDefinitions = session.getContentRegistry().items.getAll();
   const equipmentOptions = Object.fromEntries(gameState.player.inventory.items.map((entry) => [entry.entryId ?? entry.itemId, Object.fromEntries((session.getContentRegistry().getItem(entry.itemId)?.equipmentSlots ?? []).map((slotId) => [slotId, session.canEquipInventoryEntry(entry.entryId ?? entry.itemId, slotId)]))]));
   const equipmentSlots = session.getEquipmentSlots();
+  const playerRace = gameState.player.raceId ? session.getContentRegistry().races.get(gameState.player.raceId) : undefined;
+  const playerBackground = gameState.player.backgroundId ? session.getContentRegistry().backgrounds.get(gameState.player.backgroundId) : undefined;
+  const raceNames = Object.fromEntries(session.getContentRegistry().races.getAll().map((race) => [race.id, race.name]));
   const primaryClass = gameState.player.classId ? session.getContentRegistry().classes.get(gameState.player.classId) : undefined;
   const specialPaths = gameState.player.specialPathIds.flatMap((id) => { const definition = session.getContentRegistry().specialPaths.get(id); return definition ? [definition] : []; });
   const playerProgression = session.getPlayerProgressionView();
@@ -199,6 +202,9 @@ export function useGameRuntime() {
     itemDefinitions,
     equipmentOptions,
     equipmentSlots,
+    playerRace,
+    playerBackground,
+    raceNames,
     primaryClass,
     specialPaths,
     playerProgression,

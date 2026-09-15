@@ -434,6 +434,7 @@ export class GameSession {
       isMerchant: false,
       isCompanion: false,
       level: p.level,
+      raceId: p.raceId,
       classId: p.classId,
       specialPathIds: [...p.specialPathIds],
       attributes: effective.attributes,
@@ -464,12 +465,14 @@ export class GameSession {
     if (blueprint?.availabilityConditions.length && !this.evaluateConditions(blueprint.availabilityConditions).allMet) return undefined;
 
     const npcClass = blueprint?.classId ? this.contentRegistry.classes.get(blueprint.classId) : undefined;
+    const npcRace = blueprint?.raceId ? this.contentRegistry.races.get(blueprint.raceId) : undefined;
     const classResolvedBlueprint = blueprint ? {
       ...blueprint,
-      skills: Object.fromEntries([...new Set([...Object.keys(blueprint.skills), ...Object.keys(npcClass?.startingSkillModifiers ?? {})])].map((id) => [id, (blueprint.skills[id] ?? 0) + (npcClass?.startingSkillModifiers[id] ?? 0)])),
-      temporaryModifiers: [...blueprint.temporaryModifiers, ...(npcClass?.startingModifiers ?? [])],
-      traits: [...new Set([...blueprint.traits, ...(npcClass?.grantedTraits ?? [])])],
-      abilityIds: [...new Set([...blueprint.abilityIds, ...(npcClass?.startingAbilityIds ?? [])])],
+      tags: [...new Set([...blueprint.tags, ...(npcRace?.tags ?? [])])],
+      skills: Object.fromEntries([...new Set([...Object.keys(blueprint.skills), ...Object.keys(npcClass?.startingSkillModifiers ?? {}), ...Object.keys(npcRace?.skillModifiers ?? {})])].map((id) => [id, (blueprint.skills[id] ?? 0) + (npcClass?.startingSkillModifiers[id] ?? 0) + (npcRace?.skillModifiers[id] ?? 0)])),
+      temporaryModifiers: [...blueprint.temporaryModifiers, ...(npcClass?.startingModifiers ?? []), ...(npcRace?.attributeModifiers ?? [])],
+      traits: [...new Set([...blueprint.traits, ...(npcClass?.grantedTraits ?? []), ...(npcRace?.grantedTraits ?? [])])],
+      abilityIds: [...new Set([...blueprint.abilityIds, ...(npcClass?.startingAbilityIds ?? []), ...(npcRace?.grantedAbilityIds ?? [])])],
     } : undefined;
     const base: CharacterDefinition = classResolvedBlueprint ?? {
       id: npcId,
@@ -525,8 +528,8 @@ export class GameSession {
       facing: runtime.facing ?? base.facing,
       vitals: {
         ...resolvedBase.vitals,
-        currentHp: runtime.currentHp,
-        maxHp: runtime.maxHp ?? resolvedBase.vitals.maxHp,
+        currentHp: Math.min(resolvedBase.vitals.maxHp, runtime.currentHp + (runtime.currentHp === (runtime.maxHp ?? base.vitals.maxHp) ? resolvedBase.vitals.maxHp - base.vitals.maxHp : 0)),
+        maxHp: (runtime.maxHp ?? base.vitals.maxHp) + resolvedBase.vitals.maxHp - base.vitals.maxHp,
       },
       inventory: runtime.inventory ? runtime.inventory.items.map((slot) => ({ ...slot })) : resolvedBase.inventory,
       credits: runtime.inventory?.credits ?? 0,

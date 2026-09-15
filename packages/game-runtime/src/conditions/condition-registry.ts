@@ -21,6 +21,7 @@ import { handleTimeCondition } from './handlers/time-condition.ts';
 import { handleFactionStateCondition } from './handlers/faction-state-condition.ts';
 import { handleWeatherCondition } from './handlers/weather-condition.ts';
 import { handleSpecialPathUnlocked } from './handlers/special-path-condition.ts';
+import { handleRaceCondition } from './handlers/race-condition.ts';
 
 export class ConditionRegistry {
   private handlers = new Map<string, ConditionHandler<any>>();
@@ -51,6 +52,8 @@ export class ConditionRegistry {
     this.registerHandler('time', handleTimeCondition);
     for(const type of ['currentWeather','weatherTag','environmentTag']) this.registerHandler(type,handleWeatherCondition);
     this.registerHandler('specialPathUnlocked', handleSpecialPathUnlocked);
+    this.registerHandler('raceIs', handleRaceCondition);
+    this.registerHandler('raceHasTag', handleRaceCondition);
 
     // Combinators
     this.registerHandler('and', handleAndCondition);

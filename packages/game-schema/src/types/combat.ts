@@ -84,6 +84,7 @@ export const CombatantSchema = z.object({
   meleeWeaponId: z.string().optional(),
   armorItemIds: z.array(z.string()).default([]),
   abilityIds: z.array(z.string()).default([]),
+  capabilityTags: z.array(z.string()).optional(),
   aiProfileId: z.string().optional(),
   statuses: z.array(CombatantStatusSchema).default([]),
   isDefeated: z.boolean().default(false),

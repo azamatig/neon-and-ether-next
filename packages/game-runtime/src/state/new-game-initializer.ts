@@ -41,7 +41,7 @@ export class NewGameInitializer {
     let attributeSpent=0;for(const rule of config.attributeRules){const value=selection.attributes[rule.attribute]??rule.minimum;if(value<rule.minimum||value>rule.maximum)reasons.push(`${rule.attribute} must be ${rule.minimum}–${rule.maximum}.`);attributeSpent+=(value-rule.minimum)*rule.costPerPoint;}
     let skillSpent=0;for(const rule of config.skillRules){const value=selection.skills[rule.skillId]??rule.minimum;if(value<rule.minimum||value>rule.maximum)reasons.push(`${rule.name} must be ${rule.minimum}–${rule.maximum}.`);skillSpent+=(value-rule.minimum)*rule.costPerRank;}
     const rawAttributeRemaining=config.attributePointBudget-attributeSpent,rawSkillRemaining=config.skillPointBudget-skillSpent;if(rawAttributeRemaining<0)reasons.push('Attribute budget exceeded.');if(rawSkillRemaining<0)reasons.push('Skill budget exceeded.');if(config.requireAllPointsSpent&&(rawAttributeRemaining!==0||rawSkillRemaining!==0))reasons.push('Spend all starting points.');
-    const race=this.content.races.get(selection.raceId);if(!race||!race.isAvailable)reasons.push('Select an available race.');
+    const race=this.content.races.get(selection.raceId);if(!race||race.availability==='NPC')reasons.push('Select a Player-available race.');
     const playerClass=this.content.classes.get(selection.classId);if(!playerClass||playerClass.availability==='NPC')reasons.push('Select a Player-available class.');
     const background=this.content.backgrounds.get(selection.backgroundId);if(!background)reasons.push('Select a valid background.');
     if(selection.perkIds.length!==config.startingPerkCount)reasons.push(`Select ${config.startingPerkCount} starting perk${config.startingPerkCount===1?'':'s'}.`);

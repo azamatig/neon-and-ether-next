@@ -22,6 +22,8 @@ export const ItemRequirementSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('level'), minimum: z.number().int().min(1) }),
   z.object({ type: z.literal('attribute'), attribute: z.enum(['body','reflexes','mind','etherTech','presence']), minimum: z.number().int().min(1) }),
   z.object({ type: z.literal('flag'), flag: z.string().min(1), expected: z.union([z.string(),z.number(),z.boolean()]).default(true) }),
+  z.object({ type: z.literal('raceIs'), raceId: z.string().min(1) }),
+  z.object({ type: z.literal('raceHasTag'), tag: z.string().min(1) }),
 ]);
 export type ItemRequirement = z.infer<typeof ItemRequirementSchema>;
 

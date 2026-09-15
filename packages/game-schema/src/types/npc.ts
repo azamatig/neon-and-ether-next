@@ -23,6 +23,7 @@ export const NPCSchema = BaseEntitySchema.extend({
   isCompanion: z.boolean().default(false),
   level: z.number().int().min(1).default(1),
   progressionDefinitionId: z.string().optional(),
+  raceId: z.string().optional(),
   classId: z.string().optional(),
   specialPathIds: z.array(z.string()).default([]),
   attributes: CharacterAttributesSchema,

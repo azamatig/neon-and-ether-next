@@ -308,6 +308,7 @@ export function createInitialGameStateFromContent(content: GameContent): GameSta
         title: playerBlueprint.title,
         level: playerBlueprint.level,
         progressionDefinitionId: playerBlueprint.progressionDefinitionId,
+        raceId: playerBlueprint.raceId,
         classId: playerBlueprint.classId,
         specialPathIds: [...playerBlueprint.specialPathIds],
         factionId: playerBlueprint.factionId,

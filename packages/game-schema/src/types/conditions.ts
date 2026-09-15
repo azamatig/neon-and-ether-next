@@ -161,6 +161,9 @@ export const WeatherTagConditionSchema = z.object({ type:z.literal('weatherTag')
 export const EnvironmentTagConditionSchema = z.object({ type:z.literal('environmentTag'), tag:z.string().min(1), mapId:z.string().optional(), regionId:z.string().optional() });
 export const SpecialPathUnlockedConditionSchema = z.object({ type:z.literal('specialPathUnlocked'), specialPathId:z.string().min(1), unlocked:z.boolean().default(true) });
 export type SpecialPathUnlockedCondition = z.infer<typeof SpecialPathUnlockedConditionSchema>;
+export const RaceIsConditionSchema = z.object({ type:z.literal('raceIs'), raceId:z.string().min(1), targetCharacterId:z.string().optional() });
+export const RaceHasTagConditionSchema = z.object({ type:z.literal('raceHasTag'), tag:z.string().min(1), targetCharacterId:z.string().optional() });
+export type RaceCondition = z.infer<typeof RaceIsConditionSchema> | z.infer<typeof RaceHasTagConditionSchema>;
 
 /**
  * Base atomic condition types union.
@@ -186,6 +189,8 @@ export const AtomicConditionSchema = z.discriminatedUnion('type', [
   WeatherTagConditionSchema,
   EnvironmentTagConditionSchema,
   SpecialPathUnlockedConditionSchema,
+  RaceIsConditionSchema,
+  RaceHasTagConditionSchema,
 ]);
 
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;

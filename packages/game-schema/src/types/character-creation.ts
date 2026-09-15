@@ -5,8 +5,8 @@ import { EffectSchema } from './effects.ts';
 import { AttributeKeySchema, CharacterStatModifierSchema } from './stats.ts';
 import { EquipmentSlotSchema } from './items.ts';
 
-export const CharacterCreationAttributeRuleSchema = z.object({ attribute: AttributeKeySchema, minimum: z.number().int().min(1), maximum: z.number().int().min(1), costPerPoint: z.number().int().min(1).default(1) });
-export const CharacterCreationSkillRuleSchema = z.object({ skillId: z.string().min(1), name: z.string().min(1), minimum: z.number().int().min(0).default(0), maximum: z.number().int().min(0), costPerRank: z.number().int().min(1).default(1) });
+export const CharacterCreationAttributeRuleSchema = z.object({ attribute: AttributeKeySchema, description:z.string().default(''), minimum: z.number().int().min(1), maximum: z.number().int().min(1), costPerPoint: z.number().int().min(1).default(1) });
+export const CharacterCreationSkillRuleSchema = z.object({ skillId: z.string().min(1), name: z.string().min(1), description:z.string().default(''), minimum: z.number().int().min(0).default(0), maximum: z.number().int().min(0), costPerRank: z.number().int().min(1).default(1) });
 export const StartingItemSchema = z.object({ itemId: z.string().min(1), quantity: z.number().int().min(1).default(1) });
 export const CharacterAvailabilitySchema = z.enum(['Player', 'NPC', 'Both']);
 export const CharacterArchetypeRaritySchema = z.enum(['common', 'uncommon', 'rare', 'unique']);
@@ -51,6 +51,7 @@ export const BackgroundDefinitionSchema = BaseEntitySchema.extend({
 export type BackgroundDefinition = z.infer<typeof BackgroundDefinitionSchema>;
 
 export const PerkDefinitionSchema = BaseEntitySchema.extend({
+  category: z.enum(['Combat','Technical','Social','Survival','Ether','Utility']),
   requirements: z.array(ConditionSchema).default([]), excludedPerkIds: z.array(z.string()).default([]), requiredBackgroundIds: z.array(z.string()).default([]),
   modifiers: z.array(CharacterStatModifierSchema).default([]), startingEffects: z.array(EffectSchema).default([]),
 });

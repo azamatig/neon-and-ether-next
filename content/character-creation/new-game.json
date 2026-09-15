@@ -35,31 +35,36 @@
         "attribute": "body",
         "minimum": 8,
         "maximum": 16,
-        "costPerPoint": 1
+        "costPerPoint": 1,
+        "description": "Physical resilience, health, and close-quarters capability."
       },
       {
         "attribute": "reflexes",
         "minimum": 8,
         "maximum": 16,
-        "costPerPoint": 1
+        "costPerPoint": 1,
+        "description": "Initiative, precision, and rapid physical response."
       },
       {
         "attribute": "mind",
         "minimum": 8,
         "maximum": 16,
-        "costPerPoint": 1
+        "costPerPoint": 1,
+        "description": "Analysis, awareness, and resistance to cognitive pressure."
       },
       {
         "attribute": "etherTech",
         "minimum": 8,
         "maximum": 16,
-        "costPerPoint": 1
+        "costPerPoint": 1,
+        "description": "Ether control, technical interfaces, and anomalous systems."
       },
       {
         "attribute": "presence",
         "minimum": 8,
         "maximum": 16,
-        "costPerPoint": 1
+        "costPerPoint": 1,
+        "description": "Influence, negotiation, and social pressure."
       }
     ],
     "skillPointBudget": 3,
@@ -69,21 +74,24 @@
         "name": "Intrusion",
         "minimum": 0,
         "maximum": 3,
-        "costPerRank": 1
+        "costPerRank": 1,
+        "description": "Bypass security, exploit networks, and control technical systems."
       },
       {
         "skillId": "medicine",
         "name": "Medicine",
         "minimum": 0,
         "maximum": 3,
-        "costPerRank": 1
+        "costPerRank": 1,
+        "description": "Stabilize injuries and understand medical interventions."
       },
       {
         "skillId": "streetwise",
         "name": "Streetwise",
         "minimum": 0,
         "maximum": 3,
-        "costPerRank": 1
+        "costPerRank": 1,
+        "description": "Read urban threats, contacts, and opportunities."
       }
     ],
     "startingPerkCount": 1,

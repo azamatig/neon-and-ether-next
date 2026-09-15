@@ -12,6 +12,7 @@ import { refreshFactionRuntime } from '../factions/faction-state.ts';
 import { createInitialGameStateFromContent, createInitialQuestRuntimeState } from './game-state.ts';
 
 export interface CharacterCreationValidation { valid:boolean; reasons:string[]; attributePointsRemaining:number; skillPointsRemaining:number }
+export interface CharacterCreationPreview { stats:ReturnType<CharacterStatsSystem['resolve']>; skills:Record<string,number>; abilityIds:string[]; inventory:Array<{itemId:string;quantity:number}> }
 
 export class NewGameInitializer {
   constructor(private readonly content:ContentRegistry) {}
@@ -46,7 +47,7 @@ export class NewGameInitializer {
     const background=this.content.backgrounds.get(selection.backgroundId);if(!background)reasons.push('Select a valid background.');
     if(selection.perkIds.length!==config.startingPerkCount)reasons.push(`Select ${config.startingPerkCount} starting perk${config.startingPerkCount===1?'':'s'}.`);
     if(new Set(selection.perkIds).size!==selection.perkIds.length)reasons.push('Starting perks must be unique.');
-    const provisional=createInitialGameStateFromContent(this.content.exportSnapshot());provisional.player.attributes={...selection.attributes};provisional.player.skills={...selection.skills};provisional.player.perks=[...selection.perkIds];if(background)provisional.world.flags={...provisional.world.flags,...background.startingFlags};
+    const provisional=createInitialGameStateFromContent(this.content.exportSnapshot());provisional.player.raceId=selection.raceId;provisional.player.classId=selection.classId;provisional.player.backgroundId=selection.backgroundId;provisional.player.attributes={...selection.attributes};provisional.player.skills={...selection.skills};provisional.player.perks=[...selection.perkIds];if(background)provisional.world.flags={...provisional.world.flags,...background.startingFlags};
     const registry=new ConditionRegistry(true),random=new DiceRoller(1337);if(background){const result=evaluateConditions(background.requirements,{state:provisional,contentRegistry:this.content,rollRandom:(min,max)=>random.integer(min,max)},registry);if(!result.allMet)reasons.push(result.failedConditions[0]?.reason??`${background.name} requirements are not met.`);}
     for(const definition of [race,playerClass])if(definition){const result=evaluateConditions(definition.requirements,{state:provisional,contentRegistry:this.content,rollRandom:(min,max)=>random.integer(min,max)},registry);if(!result.allMet)reasons.push(result.failedConditions[0]?.reason??`${definition.name} requirements are not met.`);}
     for(const id of selection.perkIds){const perk=this.content.perks.get(id);if(!perk){reasons.push('A selected perk is unavailable.');continue;}if(perk.requiredBackgroundIds.length&&!perk.requiredBackgroundIds.includes(selection.backgroundId))reasons.push(`${perk.name} requires a different background.`);if(perk.excludedPerkIds.some(blocked=>selection.perkIds.includes(blocked)))reasons.push(`${perk.name} conflicts with another selected perk.`);const result=evaluateConditions(perk.requirements,{state:provisional,contentRegistry:this.content,rollRandom:(min,max)=>random.integer(min,max)},registry);if(!result.allMet)reasons.push(result.failedConditions[0]?.reason??`${perk.name} requirements are not met.`);}
@@ -55,6 +56,7 @@ export class NewGameInitializer {
   initialize(selection:CharacterCreationSelection):GameState {
     const validation=this.validate(selection),config=this.getDefinition();if(!validation.valid||!config)throw new Error(validation.reasons.join(' '));
     const state=createInitialGameStateFromContent(this.content.exportSnapshot()),background=this.content.backgrounds.get(selection.backgroundId)!,race=this.content.races.get(selection.raceId)!,playerClass=this.content.classes.get(selection.classId)!;
+    state.player.abilityIds=[];state.player.traits=[];state.player.temporaryModifiers=[];state.player.inventory.items=[];
     state.player.name=selection.name.trim();state.player.age=selection.age;state.player.portraitId=selection.portraitId;state.player.raceId=race.id;state.player.classId=playerClass.id;state.player.backgroundId=background.id;state.player.attributes={...selection.attributes};state.player.skills={...selection.skills};
     for(const skills of [race.skillModifiers,playerClass.startingSkillModifiers,background.startingSkills])for(const [skill,value] of Object.entries(skills))state.player.skills[skill]=(state.player.skills[skill]??0)+value;
     state.player.perks=[...selection.perkIds];state.player.traits=[...new Set([...state.player.traits,...race.grantedTraits,...playerClass.grantedTraits,...background.tags])];state.player.temporaryModifiers=[...state.player.temporaryModifiers,...race.attributeModifiers,...playerClass.startingModifiers,...background.startingModifiers,...selection.perkIds.flatMap(id=>this.content.perks.get(id)?.modifiers??[])];state.player.inventory.credits=background.startingMoney;
@@ -65,5 +67,5 @@ export class NewGameInitializer {
     const random=new DiceRoller(1337),executor=new EffectExecutor(new EffectRegistry(true));executor.executeBatch([...race.startingEffects,...playerClass.startingEffects,...abilityEffects,...background.startingEffects,...selection.perkIds.flatMap(id=>this.content.perks.get(id)?.startingEffects??[])],{state,contentRegistry:this.content,random});
     const resolved=new CharacterStatsSystem().resolve(state.player);state.player.vitals={...resolved.derivedStats,currentHp:resolved.derivedStats.maxHp,currentEther:resolved.derivedStats.maxEther};return state;
   }
-  preview(selection:CharacterCreationSelection){const state=this.initialize(selection);return new CharacterStatsSystem().resolve(state.player);}
+  preview(selection:CharacterCreationSelection):CharacterCreationPreview {const state=this.initialize(selection);return {stats:new CharacterStatsSystem().resolve(state.player),skills:{...state.player.skills},abilityIds:[...state.player.abilityIds],inventory:state.player.inventory.items.map(entry=>({itemId:entry.itemId,quantity:entry.quantity}))};}
 }

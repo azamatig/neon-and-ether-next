@@ -62,7 +62,7 @@ export class TurnBasedCombatEngine {
       .map((slot) => this.content.getItem(slot.itemId))
       .filter((item) => item !== undefined);
     const playerAbilities = new Set([
-      ...(playerDefinition?.abilityIds ?? []),
+      ...(gameState.player.classId ? [] : playerDefinition?.abilityIds ?? []),
       ...gameState.player.abilityIds,
       ...equippedItems.flatMap((item) => item.grantedAbilityIds),
     ]);

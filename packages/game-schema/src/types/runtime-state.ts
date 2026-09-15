@@ -316,6 +316,8 @@ export const WorldStateSchema = z.object({
   flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
   activeDialogueTreeId: z.string().nullable().default(null),
   activeDialogueNodeId: z.string().nullable().default(null),
+  activeDialogueChoiceId: z.string().nullable().default(null),
+  dialogueHistory: z.array(z.object({ speaker:z.string(), text:z.string() })).default([]),
   activeEventId: z.string().nullable().default(null),
   activeEventStepId: z.string().nullable().default(null),
   activeEncounterId: z.string().nullable().default(null),

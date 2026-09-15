@@ -6,6 +6,7 @@ import type { Plugin } from 'vite';
 const PRESETS_FILE = 'editor-presets/presets.json';
 
 const EDITABLE_FILES = {
+  dialogues: 'content/dialogues/dialogues.json',
   items: 'content/items/items.json',
   npcs: 'content/characters/characters.json',
   enemies: 'content/enemies/enemies.json',

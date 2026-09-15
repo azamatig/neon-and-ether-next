@@ -95,6 +95,15 @@ export interface ResolvedPOI extends POI {
   >;
 }
 
+export interface ResolvedDialogueChoice extends DialogueChoice { isAvailable:boolean; isVisible:boolean; unmetReason?:string }
+export interface ResolvedDialogueState {
+  tree: ReturnType<ContentRegistry['getDialogue']> extends infer T ? Exclude<T,undefined> : never;
+  node: DialogueNode;
+  choices: ResolvedDialogueChoice[];
+  playerBeat?: { choiceId:string; speakerName:string; text:string };
+  history: Array<{speaker:string;text:string}>;
+}
+
 export interface GameRuntimeEvents {
   STATE_CHANGED: GameState;
   JOURNAL_LOGGED: GameJournalEntry;
@@ -1254,6 +1263,8 @@ export class GameSession {
 
     this.state.world.activeDialogueTreeId = treeId;
     this.state.world.activeDialogueNodeId = tree.rootNodeId;
+    this.state.world.activeDialogueChoiceId = null;
+    this.state.world.dialogueHistory = [{ speaker:rootNode.speakerName, text:rootNode.text }];
     this.state.world.mode = 'Dialogue';
 
     this.logJournal('Dialogue', `Comm link established with: ${rootNode.speakerName}.`);
@@ -1268,6 +1279,12 @@ export class GameSession {
 
     const tree = this.contentRegistry.getDialogue(activeTreeId);
     if (!tree) return false;
+    const node=tree.nodes[this.state.world.activeDialogueNodeId??''];
+    const authoredChoice=node?.choices.find((entry)=>entry.id===choice.id);
+    if(!authoredChoice||this.state.world.activeDialogueChoiceId)return false;
+    choice=authoredChoice;
+    const availability=this.evaluateConditions(choice.conditions??[]);
+    if(!availability.allMet)return false;
 
     // 1. Resolve stat checks if required
     if (choice.requirement) {
@@ -1315,27 +1332,61 @@ export class GameSession {
       this.logJournal('World', `World flag updated: ${choice.setFlag.key} = ${choice.setFlag.value}`);
     }
 
-    // 5. Advance to next node or end dialogue
-    if (!choice.targetNodeId) {
-      this.endDialogue();
-      return true;
-    }
+    if(choice.effects?.length)this.effectExecutor.executeBatch(choice.effects,{state:this.state,contentRegistry:this.contentRegistry,random:this.diceRoller});
 
-    const nextNode = tree.nodes[choice.targetNodeId];
-    if (!nextNode) {
-      this.endDialogue();
-      return true;
-    }
-
-    this.state.world.activeDialogueNodeId = choice.targetNodeId;
-    this.events.emit('DIALOGUE_NODE_CHANGED', { treeId: activeTreeId, node: nextNode });
-    this.events.emit('STATE_CHANGED', this.state);
+    const playerLine=choice.playerLine??choice.text;
+    this.state.world.dialogueHistory.push({speaker:this.state.player.name,text:playerLine});
+    this.state.world.activeDialogueChoiceId=choice.id;
+    this.events.emit('STATE_CHANGED',this.state);
     return true;
+  }
+
+  public getResolvedDialogueState():ResolvedDialogueState|undefined{
+    const treeId=this.state.world.activeDialogueTreeId,nodeId=this.state.world.activeDialogueNodeId;
+    if(!treeId||!nodeId)return;
+    const tree=this.contentRegistry.getDialogue(treeId),node=tree?.nodes[nodeId];
+    if(!tree||!node)return;
+    const choices=node.choices.map((choice)=>{const result=this.evaluateConditions(choice.conditions??[]);return{...choice,isAvailable:result.allMet,isVisible:result.allMet||choice.unmetBehavior!=='HIDDEN',unmetReason:result.allMet?undefined:choice.disabledReason??result.failedConditions[0]?.reason};});
+    const selected=this.state.world.activeDialogueChoiceId?node.choices.find((entry)=>entry.id===this.state.world.activeDialogueChoiceId):undefined;
+    return{tree,node,choices,playerBeat:selected?{choiceId:selected.id,speakerName:this.state.player.name,text:selected.playerLine??selected.text}:undefined,history:this.state.world.dialogueHistory};
+  }
+
+  public advanceDialoguePlayerLine():boolean{
+    const treeId=this.state.world.activeDialogueTreeId,nodeId=this.state.world.activeDialogueNodeId,choiceId=this.state.world.activeDialogueChoiceId;
+    if(!treeId||!nodeId||!choiceId)return false;
+    const tree=this.contentRegistry.getDialogue(treeId),choice=tree?.nodes[nodeId]?.choices.find((entry)=>entry.id===choiceId);
+    if(!tree||!choice)return false;
+    this.state.world.activeDialogueChoiceId=null;
+    if(choice.outcome){
+      this.state.world.activeDialogueTreeId=null;this.state.world.activeDialogueNodeId=null;this.state.world.dialogueHistory=[];
+      this.outcomeEngine.resolveOutcome(choice.outcome,this.state,this.contentRegistry);this.events.emit('STATE_CHANGED',this.state);return true;
+    }
+    const targetId=choice.targetNodeId??choice.returnToNodeId;
+    if(!targetId||!tree.nodes[targetId]){this.endDialogue();return true;}
+    this.state.world.activeDialogueNodeId=targetId;
+    const nextNode=tree.nodes[targetId];
+    this.state.world.dialogueHistory.push({speaker:nextNode.speakerName,text:nextNode.text});
+    this.events.emit('DIALOGUE_NODE_CHANGED',{treeId,node:nextNode});
+    this.events.emit('STATE_CHANGED',this.state);
+    return true;
+  }
+
+  public advanceDialogueNode():boolean{
+    const treeId=this.state.world.activeDialogueTreeId,nodeId=this.state.world.activeDialogueNodeId;
+    if(!treeId||!nodeId||this.state.world.activeDialogueChoiceId)return false;
+    const tree=this.contentRegistry.getDialogue(treeId),node=tree?.nodes[nodeId];
+    if(!tree||!node||node.choices.length)return false;
+    const targetId=node.returnToNodeId??node.nextNodeId;
+    if(!targetId||!tree.nodes[targetId]){this.endDialogue();return true;}
+    const next=tree.nodes[targetId];this.state.world.activeDialogueNodeId=targetId;this.state.world.dialogueHistory.push({speaker:next.speakerName,text:next.text});
+    this.events.emit('DIALOGUE_NODE_CHANGED',{treeId,node:next});this.events.emit('STATE_CHANGED',this.state);return true;
   }
 
   public endDialogue(): void {
     this.state.world.activeDialogueTreeId = null;
     this.state.world.activeDialogueNodeId = null;
+    this.state.world.activeDialogueChoiceId = null;
+    this.state.world.dialogueHistory = [];
     this.state.world.mode = this.state.world.selectedPoiId ? 'POI' : 'Map';
     this.logJournal('Dialogue', 'Comm link closed.');
     this.events.emit('DIALOGUE_ENDED', undefined);

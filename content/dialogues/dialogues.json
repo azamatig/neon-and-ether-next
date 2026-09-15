@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": "dialogue_prologue_hale_interrogation",
+    "title": "Lieutenant Hale",
+    "description": "Interactive authoring reference for identity, skill, question-hub, and Mindmancer choices.",
+    "tags": ["Prologue", "Interactive"],
+    "rootNodeId": "opening",
+    "nodes": {
+      "opening": {
+        "id": "opening",
+        "speakerName": "Lieutenant Hale",
+        "speakerTitle": "ARES RESPONSE OFFICER",
+        "text": "You have seconds before the response net finds this channel.",
+        "choices": [
+          { "id": "move", "text": "Then we move now.", "playerLine": "Then we move now.", "type": "Normal", "tone": "Professional", "conditions": [], "unmetBehavior": "DISABLED", "effects": [{ "type": "setFlag", "flag": "dialogue.hale.moved", "value": true }], "targetNodeId": "closing", "intentionalLoop": false },
+          { "id": "palimpsest", "text": "What is Palimpsest?", "playerLine": "What is Palimpsest?", "type": "Question", "tone": "Curious", "conditions": [], "unmetBehavior": "DISABLED", "effects": [], "targetNodeId": "palimpsest_answer", "intentionalLoop": false },
+          { "id": "operative", "text": "The patrol timing is deliberate.", "playerLine": "Three minutes means you already knew our route.", "type": "Class", "label": "OPERATIVE", "conditions": [{ "type": "classIs", "classId": "class_operative" }], "unmetBehavior": "DISABLED", "disabledReason": "Requires Operative", "effects": [], "targetNodeId": "leak", "intentionalLoop": false },
+          { "id": "corporate", "text": "ARES does not deploy this fast by accident.", "playerLine": "ARES response teams do not deploy this fast by accident.", "type": "Origin", "label": "CORPORATE EXILE", "conditions": [{ "type": "backgroundIs", "backgroundId": "background_corporate_exile" }], "unmetBehavior": "DISABLED", "effects": [], "targetNodeId": "leak", "intentionalLoop": false },
+          { "id": "research", "text": "Read the carrier trace.", "playerLine": "The carrier trace still has an internal signature.", "type": "Skill", "label": "RESEARCH 1", "conditions": [{ "type": "skillThreshold", "skillId": "research", "operator": ">=", "value": 1 }], "unmetBehavior": "DISABLED", "effects": [], "targetNodeId": "leak", "intentionalLoop": false },
+          { "id": "mind", "text": "Reach into his surface thoughts.", "playerLine": "Do not speak. I will find it myself.", "type": "SpecialPath", "label": "MINDMANCER", "conditions": [{ "type": "specialPathUnlocked", "specialPathId": "special_path_mindmancer", "unlocked": true }], "unmetBehavior": "HIDDEN", "effects": [{ "type": "setFlag", "flag": "dialogue.hale.mind_read", "value": true }], "targetNodeId": "leak", "intentionalLoop": false },
+          { "id": "leave", "text": "End the interrogation.", "playerLine": "We are done here.", "type": "Exit", "conditions": [], "unmetBehavior": "DISABLED", "effects": [], "targetNodeId": null, "outcome": { "type": "returnToOrigin" }, "intentionalLoop": false }
+        ]
+      },
+      "palimpsest_answer": { "id": "palimpsest_answer", "speakerName": "Lieutenant Hale", "text": "A name in a dead research ledger. Nothing in the official archive.", "choices": [], "returnToNodeId": "opening" },
+      "leak": { "id": "leak", "speakerName": "Lieutenant Hale", "text": "The route came through an internal dead channel. I never saw the sender.", "choices": [], "nextNodeId": "closing" },
+      "closing": { "id": "closing", "speakerName": "Lieutenant Hale", "text": "Whatever you decide, decide before the carrier reconnects.", "choices": [], "nextNodeId": null }
+    }
+  }
+]

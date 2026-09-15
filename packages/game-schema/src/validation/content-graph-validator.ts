@@ -22,6 +22,7 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     ability:new Set(content.abilities.map(value=>value.id)),
     minigame:new Set(content.minigames.map(value=>value.id)),
     class:new Set(content.classes.map(value=>value.id)), specialPath:new Set(content.specialPaths.map(value=>value.id)), race:new Set(content.races.map(value=>value.id)),
+    background:new Set(content.backgrounds.map(value=>value.id)), perk:new Set(content.perks.map(value=>value.id)),
   };
   const missing = (set: ReadonlySet<string>, id: string | undefined, kind: string, owner: Owner) => {
     if (id && !set.has(id)) issues.push({ severity: 'error', category: owner.category, targetId: owner.targetId, field: owner.field, message: `Missing ${kind} reference '${id}'` });
@@ -38,6 +39,12 @@ export function validateContentGraph(content: GameContent, options: ContentValid
     if (current.type === 'companionPresent') missing(ids.npc, current.companionId, 'NPC', owner);
     if (['factionReputation','factionReputationTier','factionMembership','factionRelation','factionHostile','factionDiscovered'].includes(current.type)) missing(ids.faction, (current as {factionId:string}).factionId, 'faction', owner);
     if(current.type==='factionRelation')missing(ids.faction,current.targetFactionId,'faction',owner);
+    if(current.type==='classIs')missing(ids.class,current.classId,'class',owner);
+    if(current.type==='backgroundIs')missing(ids.background,current.backgroundId,'background',owner);
+    if(current.type==='hasPerk')missing(ids.perk,current.perkId,'perk',owner);
+    if(current.type==='hasAbility')missing(ids.ability,current.abilityId,'ability',owner);
+    if(current.type==='specialPathUnlocked')missing(ids.specialPath,current.specialPathId,'special path',owner);
+    if(current.type==='raceIs')missing(ids.race,current.raceId,'race',owner);
     if(current.type==='factionMembership'){const faction=content.factions.find((entry)=>entry.id===current.factionId);if(faction&&!faction.membershipStatuses.includes(current.membershipStatus))issues.push({severity:'error',category:owner.category,targetId:owner.targetId,field:owner.field,message:`Faction '${current.factionId}' has no membership status '${current.membershipStatus}'`});}
     if(current.type==='factionReputationTier'){const faction=content.factions.find((entry)=>entry.id===current.factionId);if(faction&&!faction.reputationTiers.some((tier)=>tier.id===current.tierId))issues.push({severity:'error',category:owner.category,targetId:owner.targetId,field:owner.field,message:`Faction '${current.factionId}' has no reputation tier '${current.tierId}'`});}
     if (current.type === 'baseRoomExists') missing(ids.room, current.roomId, 'room', owner);
@@ -145,6 +152,22 @@ export function validateContentGraph(content: GameContent, options: ContentValid
   for(const poi of content.pois){missing(ids.faction,poi.controllingFactionId,'faction',{category:'POI',targetId:poi.id,field:'controllingFactionId'});missing(ids.faction,poi.ownerFactionId,'faction',{category:'POI',targetId:poi.id,field:'ownerFactionId'});}
   for(const map of content.maps){missing(ids.faction,map.controllingFactionId,'faction',{category:'Map',targetId:map.id,field:'controllingFactionId'});missing(ids.faction,map.ownerFactionId,'faction',{category:'Map',targetId:map.id,field:'ownerFactionId'});for(const region of map.regions){missing(ids.faction,region.controllingFactionId,'faction',{category:'Map',targetId:map.id,field:`regions.${region.id}.controllingFactionId`});missing(ids.faction,region.ownerFactionId,'faction',{category:'Map',targetId:map.id,field:`regions.${region.id}.ownerFactionId`});}}
   for(const event of content.events){validateAsset(event.presentation.backgroundImage,event.presentation.layoutStyle==='fullscreenScene',{category:'GameEvent',targetId:event.id,field:'presentation.backgroundImage'},options,issues);event.steps.forEach((step)=>validateAsset(step.image,false,{category:'GameEvent',targetId:event.id,field:`steps.${step.id}.image`},options,issues));}
+  for(const tree of content.dialogues){
+    const nodeIds=new Set(Object.keys(tree.nodes));
+    if(!nodeIds.has(tree.rootNodeId))issues.push({severity:'error',category:'Dialogue',targetId:tree.id,field:'rootNodeId',message:`Missing root node '${tree.rootNodeId}'`});
+    for(const [nodeId,node] of Object.entries(tree.nodes)){
+      if(node.nextNodeId&&!nodeIds.has(node.nextNodeId))issues.push({severity:'error',category:'Dialogue',targetId:tree.id,field:`nodes.${nodeId}.nextNodeId`,message:`Broken nextNodeId '${node.nextNodeId}'`});
+      if(node.returnToNodeId&&!nodeIds.has(node.returnToNodeId))issues.push({severity:'error',category:'Dialogue',targetId:tree.id,field:`nodes.${nodeId}.returnToNodeId`,message:`Broken returnToNodeId '${node.returnToNodeId}'`});
+      for(const choice of node.choices){
+      const owner={category:'Dialogue' as const,targetId:tree.id,field:`nodes.${nodeId}.choices.${choice.id}`};
+      lists(choice.conditions,choice.effects,owner);
+      if(choice.targetNodeId&&!nodeIds.has(choice.targetNodeId))issues.push({severity:'error',...owner,message:`Broken nextNodeId '${choice.targetNodeId}'`});
+      if(choice.returnToNodeId&&!nodeIds.has(choice.returnToNodeId))issues.push({severity:'error',...owner,message:`Broken returnToNodeId '${choice.returnToNodeId}'`});
+      if(choice.targetNodeId===nodeId&&!choice.intentionalLoop)issues.push({severity:'warning',...owner,message:'Choice loops to its own node without intentionalLoop metadata'});
+      if(choice.targetNodeId===null&&!choice.outcome&&choice.type!=='Exit')issues.push({severity:'warning',...owner,message:'Choice has no next node or authored outcome'});
+      }
+    }
+  }
   issues.push({severity:'info',category:'Integrity',targetId:'content',message:`Validated ${Object.values(ids).reduce((sum,set)=>sum+set.size,0)} graph entities across ${content.events.length} events and ${content.quests.length} quests.`});
   return deduplicate(issues);
 }

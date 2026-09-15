@@ -36,7 +36,8 @@
     "test:combat-victory-escape": "bun scripts/test-combat-victory-escape.ts",
     "test:combat-save": "bun scripts/test-combat-save-load.ts",
     "test:combat": "npm run test:combat-roster && npm run test:combat-grid && npm run test:combat-turns && npm run test:combat-abilities && npm run test:combat-ai && npm run test:combat-resolution && npm run test:combat-victory-escape && npm run test:combat-save",
-    "test:companion-loadout": "bun scripts/test-companion-loadout.ts"
+    "test:companion-loadout": "bun scripts/test-companion-loadout.ts",
+    "test:dialogue": "bun scripts/test-dialogue-interactivity.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

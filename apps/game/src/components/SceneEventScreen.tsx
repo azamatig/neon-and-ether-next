@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { DialogueNodeSchema, type DialogueChoice, type DialogueNode, type DialogueTree } from '@neon-ether/game-schema';
-import type { ResolvedEventState } from '@neon-ether/game-runtime';
-import { ArrowRight, ImageOff, UserRound, X } from 'lucide-react';
+import { DialogueNodeSchema, type DialogueChoice } from '@neon-ether/game-schema';
+import type { ResolvedDialogueState, ResolvedEventState } from '@neon-ether/game-runtime';
+import { ArrowRight, History, ImageOff, UserRound, X } from 'lucide-react';
 import { Button } from '@neon-ether/shared-ui';
 
 type EventSceneProps = {
@@ -15,9 +15,10 @@ type EventSceneProps = {
 
 type DialogueSceneProps = {
   mode: 'dialogue';
-  tree: DialogueTree;
-  node: DialogueNode;
+  dialogueState: ResolvedDialogueState;
   onChoose: (choice: DialogueChoice) => void;
+  onAdvancePlayerLine: () => void;
+  onAdvanceNode: () => void;
   onClose: () => void;
 };
 
@@ -25,8 +26,10 @@ type SceneParticipant = { key: string; name: string; title?: string; portrait?: 
 
 /** Persistent presentation shell shared by narrative GameEvents and legacy POI dialogue trees. */
 export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = (props) => {
-  const sceneId = props.mode === 'event' ? props.eventState.event.id : props.tree.id;
-  const beatId = props.mode === 'event' ? props.eventState.currentStep.id : props.node.id;
+  const tree=props.mode==='dialogue'?props.dialogueState.tree:undefined;
+  const node=props.mode==='dialogue'?props.dialogueState.node:undefined;
+  const sceneId = props.mode === 'event' ? props.eventState.event.id : tree!.id;
+  const beatId = props.mode === 'event' ? props.eventState.currentStep.id : `${node!.id}:${props.dialogueState.playerBeat?.choiceId??'npc'}`;
   const explicitArtwork = props.mode === 'event' ? props.eventState.currentStep.image : undefined;
   const initialArtwork = props.mode === 'event' ? props.eventState.event.presentation.backgroundImage : undefined;
   const [artwork, setArtwork] = useState(explicitArtwork ?? initialArtwork);
@@ -47,7 +50,7 @@ export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = 
   const participants = useMemo<SceneParticipant[]>(() => {
     if (props.mode === 'dialogue') {
       const unique = new Map<string, SceneParticipant>();
-      Object.values(props.tree.nodes).forEach((candidate) => {
+      Object.values(tree!.nodes).forEach((candidate) => {
         const parsed = DialogueNodeSchema.safeParse(candidate);
         if (!parsed.success) return;
         const node = parsed.data;
@@ -83,12 +86,12 @@ export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = 
 
   const speaker = props.mode === 'event'
     ? props.eventState.currentStep.resolvedSpeaker
-    : { type: 'npc' as const, name: props.node.speakerName, title: props.node.speakerTitle, portrait: props.node.speakerPortrait };
+    : props.dialogueState.playerBeat ? {type:'player' as const,name:props.dialogueState.playerBeat.speakerName,title:'Protagonist'} : { type: 'npc' as const, name: node!.speakerName, title: node!.speakerTitle, portrait: node!.speakerPortrait };
   const activeKey = props.mode === 'event'
     ? speaker?.type === 'player' ? 'player' : props.eventState.currentStep.speaker?.npcId ?? speaker?.name
-    : props.node.speakerName;
+    : props.dialogueState.playerBeat?'player':node!.speakerName;
   const isNarration = !speaker || speaker.type === 'narrator' || speaker.type === 'system';
-  const text = props.mode === 'event' ? props.eventState.currentStep.text : props.node.text;
+  const text = props.mode === 'event' ? props.eventState.currentStep.text : props.dialogueState.playerBeat?.text??node!.text;
   const title = props.mode === 'event' ? props.eventState.currentStep.title : undefined;
   const eventChoices = props.mode === 'event' ? props.eventState.currentStep.resolvedChoices.filter((choice) => choice.isVisible) : [];
   const canContinue = props.mode === 'event' && eventChoices.length === 0;
@@ -110,7 +113,7 @@ export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = 
       {previousArtwork && <img className="ne-scene-art__image ne-scene-art__image--outgoing" src={previousArtwork} alt="" />}
       {artwork ? <img key={artwork} className="ne-scene-art__image" src={artwork} alt="" /> : <ImageOff aria-hidden="true" />}
       <div className="ne-scene-art__shade" />
-      <span>{props.mode === 'event' ? `${props.eventState.event.type} event` : props.tree.title}</span>
+      <span>{props.mode === 'event' ? `${props.eventState.event.type} event` : tree!.title}</span>
     </div>
     {participants.length > 0 && <aside className="ne-scene-cast" aria-label="Scene participants">
       {participants.map((participant) => <div key={participant.key} data-active={participant.key === activeKey}>
@@ -120,7 +123,7 @@ export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = 
     </aside>}
     <div className="ne-scene-panel">
       <header>
-        <small>{props.mode === 'event' ? `${props.eventState.event.name} · ${props.eventState.stepIndex + 1}/${props.eventState.totalSteps}` : props.tree.title}</small>
+        <small>{props.mode === 'event' ? `${props.eventState.event.name} · ${props.eventState.stepIndex + 1}/${props.eventState.totalSteps}` : tree!.title}</small>
         {props.mode === 'event' && props.eventState.event.skipOutcome && props.onSkip && <Button variant="ghost" size="sm" onClick={props.onSkip}>Skip</Button>}
         {props.mode === 'dialogue' && <Button variant="ghost" size="sm" onClick={props.onClose} title="Close dialogue"><X /></Button>}
       </header>
@@ -133,8 +136,11 @@ export const SceneEventScreen: React.FC<EventSceneProps | DialogueSceneProps> = 
         <p>{text}</p>
       </div>
       <footer>
-        {props.mode === 'event' && eventChoices.length > 0 && <div className="ne-scene-choices">{eventChoices.map((choice, index) => <button type="button" key={choice.id} disabled={!choice.isAvailable} title={choice.unmetReason} onClick={() => props.onChoose(choice.id)}><span>{String(index + 1).padStart(2, '0')}</span><div>{choice.statCheckInfo && <small>{choice.statCheckInfo.stat} · {choice.statCheckInfo.difficulty}</small>}<strong>{choice.text}</strong>{!choice.isAvailable && choice.unmetReason && <em>{choice.unmetReason}</em>}</div></button>)}</div>}
-        {props.mode === 'dialogue' && <div className="ne-scene-choices">{props.node.choices.map((choice, index) => <button type="button" key={choice.id} onClick={() => props.onChoose(choice)}><span>{String(index + 1).padStart(2, '0')}</span><div>{choice.requirement && <small>{choice.requirement.stat} · {choice.requirement.difficulty}</small>}<strong>{choice.text}</strong></div></button>)}</div>}
+        {props.mode === 'event' && eventChoices.length > 0 && <div className="ne-scene-choices">{eventChoices.map((choice, index) => <button type="button" key={choice.id} data-choice-type={choice.presentationType} disabled={!choice.isAvailable} title={choice.unmetReason} onClick={() => props.onChoose(choice.id)}><span>{String(index + 1).padStart(2, '0')}</span><div>{(choice.presentationLabel || choice.statCheckInfo) && <small>{choice.presentationLabel ?? `${choice.statCheckInfo!.stat} · ${choice.statCheckInfo!.difficulty}`}</small>}<strong>{choice.text}</strong>{!choice.isAvailable && choice.unmetReason && <em>{choice.unmetReason}</em>}</div></button>)}</div>}
+        {props.mode === 'dialogue' && !props.dialogueState.playerBeat && <div className="ne-scene-choices">{props.dialogueState.choices.filter(choice=>choice.isVisible).map((choice, index) => <button type="button" key={choice.id} data-choice-type={choice.type} disabled={!choice.isAvailable} title={choice.unmetReason} onClick={() => props.onChoose(choice)}><span>{String(index + 1).padStart(2, '0')}</span><div>{(choice.label||choice.requirement)&&<small>{choice.label??`${choice.requirement!.stat} · ${choice.requirement!.difficulty}`}</small>}<strong>{choice.text}</strong>{!choice.isAvailable&&<em>{choice.unmetReason}</em>}</div></button>)}</div>}
+        {props.mode === 'dialogue' && props.dialogueState.playerBeat && <Button onClick={props.onAdvancePlayerLine} rightIcon={<ArrowRight/>}>Continue</Button>}
+        {props.mode === 'dialogue' && !props.dialogueState.playerBeat && props.dialogueState.choices.length===0 && <Button onClick={props.onAdvanceNode} rightIcon={<ArrowRight/>}>Continue</Button>}
+        {props.mode === 'dialogue' && props.dialogueState.history.length>1 && <details className="ne-dialogue-history"><summary><History/> History</summary>{props.dialogueState.history.map((entry,index)=><p key={`${index}-${entry.speaker}`}><strong>{entry.speaker}</strong> {entry.text}</p>)}</details>}
         {canContinue && <Button onClick={props.onAdvance} rightIcon={<ArrowRight />}>{props.eventState.currentStep.isFinalStep ? 'Continue' : 'Next'}</Button>}
       </footer>
     </div>

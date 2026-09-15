@@ -22,6 +22,7 @@ import { handleFactionStateCondition } from './handlers/faction-state-condition.
 import { handleWeatherCondition } from './handlers/weather-condition.ts';
 import { handleSpecialPathUnlocked } from './handlers/special-path-condition.ts';
 import { handleRaceCondition } from './handlers/race-condition.ts';
+import { handleCharacterIdentityCondition } from './handlers/character-identity-condition.ts';
 
 export class ConditionRegistry {
   private handlers = new Map<string, ConditionHandler<any>>();
@@ -54,6 +55,7 @@ export class ConditionRegistry {
     this.registerHandler('specialPathUnlocked', handleSpecialPathUnlocked);
     this.registerHandler('raceIs', handleRaceCondition);
     this.registerHandler('raceHasTag', handleRaceCondition);
+    for(const type of ['classIs','backgroundIs','hasPerk','hasAbility','skillThreshold']) this.registerHandler(type,handleCharacterIdentityCondition);
 
     // Combinators
     this.registerHandler('and', handleAndCondition);

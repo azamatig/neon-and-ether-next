@@ -64,6 +64,7 @@ export function useGameRuntime() {
     if (!activeDialogueTree || !gameState.world.activeDialogueNodeId) return null;
     return activeDialogueTree.nodes[gameState.world.activeDialogueNodeId] ?? null;
   }, [activeDialogueTree, gameState.world.activeDialogueNodeId]);
+  const activeDialogueState = useMemo(() => session.getResolvedDialogueState(), [session, gameState.world.activeDialogueTreeId, gameState.world.activeDialogueNodeId, gameState.world.activeDialogueChoiceId, gameState.player]);
 
   const resolvedPlayer = useMemo(() => {
     return session.getResolvedPlayerCharacter();
@@ -192,6 +193,7 @@ export function useGameRuntime() {
     stationedNpcsAtSelectedPoi,
     activeDialogueTree,
     activeDialogueNode,
+    activeDialogueState,
     activeActionResolution,
     activeEventState,
     activeCombatPreview,
@@ -227,6 +229,8 @@ export function useGameRuntime() {
     dismissActionResolution: () => session.dismissActionResolution(),
     startDialogue: (treeId: string) => session.startDialogue(treeId),
     chooseDialogueOption: (choice: DialogueChoice) => session.chooseDialogueOption(choice),
+    advanceDialoguePlayerLine: () => session.advanceDialoguePlayerLine(),
+    advanceDialogueNode: () => session.advanceDialogueNode(),
     endDialogue: () => session.endDialogue(),
     // Event methods
     startEvent: (eventId: string) => session.startEvent(eventId),

@@ -135,6 +135,8 @@ export function createInitialWorldState(overrides: Partial<WorldState> = {}): Wo
     flags: overrides.flags ?? {},
     activeDialogueTreeId: overrides.activeDialogueTreeId ?? null,
     activeDialogueNodeId: overrides.activeDialogueNodeId ?? null,
+    activeDialogueChoiceId: overrides.activeDialogueChoiceId ?? null,
+    dialogueHistory: overrides.dialogueHistory ?? [],
     activeEventId: overrides.activeEventId ?? undefined,
     activeEventStepId: overrides.activeEventStepId ?? undefined,
     activeEncounterId: overrides.activeEncounterId ?? undefined,

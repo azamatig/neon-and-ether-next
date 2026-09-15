@@ -48,6 +48,9 @@ export type EventChoiceCheck = z.infer<typeof EventChoiceCheckSchema>;
 export const EventChoiceSchema = z.object({
   id: z.string().min(1),
   text: z.string().min(1),
+  playerLine: z.string().min(1).optional(),
+  presentationType: z.enum(['Normal','Question','Skill','Class','Origin','Race','Perk','SpecialPath','Action','Exit']).default('Normal'),
+  presentationLabel: z.string().optional(),
   icon: z.string().optional(),
   conditions: z.array(ConditionSchema).default([]),
   check: EventChoiceCheckSchema.optional(),

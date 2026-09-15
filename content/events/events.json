@@ -182,7 +182,7 @@
       {
         "id": "briefing",
         "type": "choice",
-        "text": "\u201cThe annex is eating people\u2019s memories,\u201d Mira says. \u201cSable heard the security band. We need her frequency map.\u201d",
+        "text": "“The annex is eating people’s memories,” Mira says. “Sable heard the security band. We need her frequency map.”",
         "conditions": [],
         "effects": [],
         "choices": [
@@ -381,7 +381,7 @@
       {
         "id": "echo",
         "type": "choice",
-        "text": "Ash Crow and two scavengers block the flooded platform. \u201cPay, turn back, or prove you are not corporate.\u201d",
+        "text": "Ash Crow and two scavengers block the flooded platform. “Pay, turn back, or prove you are not corporate.”",
         "conditions": [],
         "effects": [],
         "choices": [
@@ -701,7 +701,7 @@
       {
         "id": "choice",
         "type": "choice",
-        "text": "The recovered signal contains erased residents\u2019 identities\u2014and OmniCorp access keys worth a fortune.",
+        "text": "The recovered signal contains erased residents’ identities—and OmniCorp access keys worth a fortune.",
         "conditions": [],
         "effects": [],
         "choices": [
@@ -813,7 +813,7 @@
       {
         "id": "return",
         "type": "narration",
-        "text": "Mira nods toward the safehouse. \u201cWhatever we chose, Glassline will feel it by morning.\u201d",
+        "text": "Mira nods toward the safehouse. “Whatever we chose, Glassline will feel it by morning.”",
         "conditions": [],
         "effects": [],
         "choices": [],
@@ -1060,29 +1060,174 @@
     "steps": [
       {
         "id": "service_rhea",
-        "type": "dialogue",
+        "type": "choice",
         "speaker": {
           "type": "companion",
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cCamera sweeps every twelve seconds. Stay behind me and don\u2019t silhouette the door.\u201d",
+        "text": "“Camera sweeps every twelve seconds. Stay behind me and don’t silhouette the door.”",
         "conditions": [],
         "effects": [],
-        "choices": []
+        "choices": [
+          {
+            "id": "operation_professional",
+            "text": "Keep it clean. We move on your mark.",
+            "playerLine": "Keep it clean. We move on your mark.",
+            "presentationType": "Normal",
+            "effects": [],
+            "conditions": [],
+            "nextStepId": "service_player_professional"
+          },
+          {
+            "id": "operation_question",
+            "text": "What changed in security?",
+            "playerLine": "What changed in security?",
+            "presentationType": "Question",
+            "effects": [],
+            "conditions": [],
+            "nextStepId": "service_player_question"
+          },
+          {
+            "id": "operation_operative",
+            "text": "The sweep cadence is bait. They expect our route.",
+            "playerLine": "The sweep cadence is bait. They expect our route.",
+            "presentationType": "Class",
+            "presentationLabel": "OPERATIVE",
+            "conditions": [
+              {
+                "type": "classIs",
+                "classId": "class_operative"
+              }
+            ],
+            "hideIfUnavailable": false,
+            "disabledReason": "Requires Operative",
+            "effects": [],
+            "nextStepId": "service_player_operative"
+          }
+        ]
+      },
+      {
+        "id": "service_player_professional",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "“Keep it clean. We move on your mark.”",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.attitude.professional",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "service_dax"
+      },
+      {
+        "id": "service_player_question",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "“What changed in security?”",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.asked_security",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "service_dax"
+      },
+      {
+        "id": "service_player_operative",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "“The sweep cadence is bait. They expect our route.”",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.noticed_route_trap",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "service_dax"
       },
       {
         "id": "service_dax",
-        "type": "dialogue",
+        "type": "choice",
         "speaker": {
           "type": "companion",
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cLock 3 is the point of no return. Until then, quiet tools.\u201d",
+        "text": "“Lock 3 is the point of no return. Until then, quiet tools.”",
         "conditions": [],
         "effects": [],
-        "choices": []
+        "choices": [
+          {
+            "id": "dax_joke",
+            "text": "You always know how to improve morale.",
+            "playerLine": "You always know how to improve morale.",
+            "presentationType": "Normal",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "service_dax_joke"
+          },
+          {
+            "id": "dax_concern",
+            "text": "Point of no return sounds optimistic.",
+            "playerLine": "Point of no return sounds optimistic.",
+            "presentationType": "Question",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "service_dax_concern"
+          }
+        ]
+      },
+      {
+        "id": "service_dax_joke",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "“You always know how to improve morale.”",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.dax_attitude",
+            "value": "joking"
+          }
+        ],
+        "choices": [],
+        "nextStepId": "service_bypass_clean"
+      },
+      {
+        "id": "service_dax_concern",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "“Point of no return sounds optimistic.”",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.dax_attitude",
+            "value": "concerned"
+          }
+        ],
+        "choices": [],
+        "nextStepId": "service_bypass_clean"
       },
       {
         "id": "service_bypass_clean",
@@ -1092,7 +1237,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cClean loop. They\u2019ll blame the reader before they blame us.\u201d",
+        "text": "“Clean loop. They’ll blame the reader before they blame us.”",
         "conditions": [
           {
             "type": "flag",
@@ -1112,7 +1257,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cPort logged the splice. We keep moving and make the timestamp useless.\u201d",
+        "text": "“Port logged the splice. We keep moving and make the timestamp useless.”",
         "conditions": [
           {
             "type": "flag",
@@ -1219,7 +1364,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cMaintenance booth is live. A route pull now could buy us cover at Lock 3.\u201d",
+        "text": "“Maintenance booth is live. A route pull now could buy us cover at Lock 3.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1232,7 +1377,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cBaton\u2019s charged. Keep it where you can reach it.\u201d",
+        "text": "“Baton’s charged. Keep it where you can reach it.”",
         "conditions": [
           {
             "type": "flag",
@@ -1252,7 +1397,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cTake patches, cells, one weapon. Anything heavier will slow the exit.\u201d",
+        "text": "“Take patches, cells, one weapon. Anything heavier will slow the exit.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1336,7 +1481,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cRoute is good until the gate cycles. After that, assume every camera is awake.\u201d",
+        "text": "“Route is good until the gate cycles. After that, assume every camera is awake.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1349,7 +1494,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cCharges are seated. Say the word and Lock 3 forgets it was closed.\u201d",
+        "text": "“Charges are seated. Say the word and Lock 3 forgets it was closed.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1438,7 +1583,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cOfficers left. Drone high. Don\u2019t let it pin us.\u201d",
+        "text": "“Officers left. Drone high. Don’t let it pin us.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1451,7 +1596,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cI\u2019ll break their line. Move when I move.\u201d",
+        "text": "“I’ll break their line. Move when I move.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1564,7 +1709,7 @@
         "id": "checkpoint_aftermath",
         "type": "narration",
         "title": "BEYOND THE PERIMETER",
-        "text": "The checkpoint keycard releases an inner bulkhead. Past it, the facility is dark\u2014and already damaged.",
+        "text": "The checkpoint keycard releases an inner bulkhead. Past it, the facility is dark—and already damaged.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1668,7 +1813,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cMachines fought something. People didn\u2019t get the chance.\u201d",
+        "text": "“Machines fought something. People didn’t get the chance.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1681,7 +1826,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cNo wounds, no gas alert. Keep your helmets sealed anyway.\u201d",
+        "text": "“No wounds, no gas alert. Keep your helmets sealed anyway.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1728,12 +1873,104 @@
     "steps": [
       {
         "id": "annex_project",
-        "type": "narration",
+        "type": "choice",
         "title": "PROJECT PALIMPSEST",
-        "text": "The files describe an interface that responds to attention, memory, and expectation\u2014not commands.",
+        "text": "The files describe an interface that responds to attention, memory, and expectation—not commands.",
         "conditions": [],
         "effects": [],
-        "choices": []
+        "choices": [
+          {
+            "id": "ask_palimpsest",
+            "text": "Who—or what—is Palimpsest?",
+            "playerLine": "Who—or what—is Palimpsest?",
+            "presentationType": "Question",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "annex_player_palimpsest"
+          },
+          {
+            "id": "study_records",
+            "text": "Study the exposure records.",
+            "playerLine": "Give me a minute with the exposure records.",
+            "presentationType": "Skill",
+            "presentationLabel": "RESEARCH",
+            "conditions": [
+              {
+                "type": "skillThreshold",
+                "skillId": "research",
+                "operator": ">=",
+                "value": 1
+              }
+            ],
+            "hideIfUnavailable": false,
+            "disabledReason": "Research 1 required",
+            "effects": [],
+            "nextStepId": "annex_player_study"
+          },
+          {
+            "id": "do_not_delay",
+            "text": "We cannot afford to stay.",
+            "playerLine": "We cannot afford to stay.",
+            "presentationType": "Action",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "annex_player_leave"
+          }
+        ]
+      },
+      {
+        "id": "annex_player_palimpsest",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "“Who—or what—is Palimpsest?”",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.asked_palimpsest",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "annex_subjects"
+      },
+      {
+        "id": "annex_player_study",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "“Give me a minute with the exposure records.”",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.studied_annex_records",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "annex_subjects"
+      },
+      {
+        "id": "annex_player_leave",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "“We cannot afford to stay.”",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.refused_annex_delay",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "annex_rhea"
       },
       {
         "id": "annex_subjects",
@@ -1764,7 +2001,7 @@
         "id": "annex_corporate_background",
         "type": "narration",
         "title": "AN INTERNAL BLACK SITE",
-        "text": "The budget codes are buried under routine logistics\u2014exactly how corporate research hides a project from its own auditors.",
+        "text": "The budget codes are buried under routine logistics—exactly how corporate research hides a project from its own auditors.",
         "conditions": [
           {
             "type": "flag",
@@ -1784,7 +2021,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cAres kept putting people in front of it. Whatever answered, they couldn\u2019t shut it back up.\u201d",
+        "text": "“Ares kept putting people in front of it. Whatever answered, they couldn’t shut it back up.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1873,7 +2110,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cThis is where we walk away if we\u2019re walking away.\u201d",
+        "text": "“This is where we walk away if we’re walking away.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1886,7 +2123,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cI\u2019ll hold the seal. You read the chamber, take nothing you can\u2019t carry, and come back.\u201d",
+        "text": "“I’ll hold the seal. You read the chamber, take nothing you can’t carry, and come back.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1966,7 +2203,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea // Surface Thought"
         },
-        "text": "Don\u2019t let it hear me being afraid.",
+        "text": "Don’t let it hear me being afraid.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -1986,7 +2223,7 @@
       },
       {
         "id": "vault_research_recognition",
-        "type": "narration",
+        "type": "choice",
         "title": "THE MISSING DEFINITION",
         "text": "Palimpsest called every subject incompatible. Looking at the object now, you understand the reports were describing refusal.",
         "conditions": [
@@ -1998,7 +2235,90 @@
           }
         ],
         "effects": [],
-        "choices": []
+        "choices": [
+          {
+            "id": "bond_resist",
+            "text": "Resist the presence.",
+            "playerLine": "No. You do not get to enter.",
+            "presentationType": "Action",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "vault_player_resist"
+          },
+          {
+            "id": "bond_observe",
+            "text": "Observe without judgment.",
+            "playerLine": "Hold still. Learn its shape.",
+            "presentationType": "Normal",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "vault_player_observe"
+          },
+          {
+            "id": "bond_reach",
+            "text": "Reach toward the presence.",
+            "playerLine": "If you can hear me, answer.",
+            "presentationType": "SpecialPath",
+            "presentationLabel": "ETHER",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "vault_player_reach"
+          }
+        ]
+      },
+      {
+        "id": "vault_player_resist",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "No. You do not get to enter.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.bond_reaction.resist",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "vault_contact"
+      },
+      {
+        "id": "vault_player_observe",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "Hold still. Learn its shape.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.bond_reaction.observe",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "vault_contact"
+      },
+      {
+        "id": "vault_player_reach",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "If you can hear me, answer.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.bond_reaction.reach",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "vault_contact"
       },
       {
         "id": "vault_street_instinct",
@@ -2020,7 +2340,7 @@
         "id": "vault_contact",
         "type": "effect",
         "title": "CONTACT",
-        "text": "Cold alloy touches your palm. Something meets the shape of your mind\u2014not entering, not speaking, simply recognizing a door.",
+        "text": "Cold alloy touches your palm. Something meets the shape of your mind—not entering, not speaking, simply recognizing a door.",
         "conditions": [],
         "effects": [
           {
@@ -2089,7 +2409,7 @@
           "npcId": "npc_prologue_companion_male",
           "name": "Dax Mercer"
         },
-        "text": "\u201cGo.\u201d",
+        "text": "“Go.”",
         "conditions": [],
         "effects": [
           {
@@ -2179,7 +2499,7 @@
         "id": "response_instinct",
         "type": "narration",
         "title": "MINDS IN THE STATIC",
-        "text": "Human intent brushes your awareness\u2014fear, aim, obedience. The drone gives you nothing at all.",
+        "text": "Human intent brushes your awareness—fear, aim, obedience. The drone gives you nothing at all.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2192,7 +2512,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cThe officers hesitate when you touch them. The drone won\u2019t. I\u2019ll take it.\u201d",
+        "text": "“The officers hesitate when you touch them. The drone won’t. I’ll take it.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2270,14 +2590,64 @@
         "effects": [],
         "choices": [
           {
+            "id": "choice_ask_leak",
+            "text": "Who leaked our route?",
+            "playerLine": "Who leaked our route?",
+            "presentationType": "Question",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "prologue.operation_leak_known",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.resolved",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.officer_outcome",
+                "value": "questioned"
+              }
+            ],
+            "nextStepId": "officer_read_result",
+            "hideIfUnavailable": false
+          },
+          {
+            "id": "choice_ask_palimpsest",
+            "text": "What is Palimpsest?",
+            "playerLine": "What is Palimpsest?",
+            "presentationType": "Question",
+            "conditions": [],
+            "effects": [
+              {
+                "type": "setFlag",
+                "flag": "prologue.asked_hale_palimpsest",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "prologue.officer.resolved",
+                "value": true
+              },
+              {
+                "type": "setFlag",
+                "flag": "player.mindmancer.officer_outcome",
+                "value": "questioned"
+              }
+            ],
+            "nextStepId": "officer_control_result",
+            "hideIfUnavailable": false
+          },
+          {
             "id": "choice_read_mind",
-            "text": "READ MIND \u2014 follow the memory behind his fear.",
+            "text": "READ MIND — follow the memory behind his fear.",
             "conditions": [
               {
-                "type": "flag",
-                "flag": "player.mindmancer.unlocked",
-                "operator": "==",
-                "value": true
+                "type": "hasAbility",
+                "abilityId": "ability_mindmancer_read_mind"
               }
             ],
             "effects": [
@@ -2308,17 +2678,17 @@
               }
             ],
             "nextStepId": "officer_read_result",
-            "hideIfUnavailable": false
+            "hideIfUnavailable": true,
+            "presentationType": "SpecialPath",
+            "presentationLabel": "MINDMANCER"
           },
           {
             "id": "choice_erase_memory",
-            "text": "ERASE MEMORY \u2014 remove the last hour.",
+            "text": "ERASE MEMORY — remove the last hour.",
             "conditions": [
               {
-                "type": "flag",
-                "flag": "player.mindmancer.unlocked",
-                "operator": "==",
-                "value": true
+                "type": "hasAbility",
+                "abilityId": "ability_mindmancer_memory_fracture"
               }
             ],
             "effects": [
@@ -2352,17 +2722,17 @@
               }
             ],
             "nextStepId": "officer_erase_result",
-            "hideIfUnavailable": false
+            "hideIfUnavailable": true,
+            "presentationType": "SpecialPath",
+            "presentationLabel": "MINDMANCER"
           },
           {
             "id": "choice_force_sleep",
-            "text": "FORCE SLEEP \u2014 put him down without killing him.",
+            "text": "FORCE SLEEP — put him down without killing him.",
             "conditions": [
               {
-                "type": "flag",
-                "flag": "player.mindmancer.unlocked",
-                "operator": "==",
-                "value": true
+                "type": "hasAbility",
+                "abilityId": "ability_mindmancer_suppression"
               }
             ],
             "effects": [
@@ -2396,11 +2766,13 @@
               }
             ],
             "nextStepId": "officer_sleep_result",
-            "hideIfUnavailable": false
+            "hideIfUnavailable": true,
+            "presentationType": "SpecialPath",
+            "presentationLabel": "MINDMANCER"
           },
           {
             "id": "choice_kill_officer",
-            "text": "KILL \u2014 leave no conscious witness.",
+            "text": "KILL — leave no conscious witness.",
             "conditions": [],
             "effects": [
               {
@@ -2425,17 +2797,17 @@
               }
             ],
             "nextStepId": "officer_kill_result",
-            "hideIfUnavailable": false
+            "hideIfUnavailable": false,
+            "presentationType": "Action",
+            "presentationLabel": "DANGEROUS"
           },
           {
             "id": "choice_attempt_control",
-            "text": "COMMAND \u2014 try to hold his will.",
+            "text": "COMMAND — try to hold his will.",
             "conditions": [
               {
-                "type": "flag",
-                "flag": "player.mindmancer.unlocked",
-                "operator": "==",
-                "value": true
+                "type": "hasAbility",
+                "abilityId": "ability_mindmancer_command"
               }
             ],
             "effects": [
@@ -2461,14 +2833,16 @@
               }
             ],
             "nextStepId": "officer_control_result",
-            "hideIfUnavailable": false
+            "hideIfUnavailable": true,
+            "presentationType": "SpecialPath",
+            "presentationLabel": "MINDMANCER"
           }
         ]
       },
       {
         "id": "officer_read_result",
         "type": "narration",
-        "title": "A MEMORY THAT ISN\u2019T YOURS",
+        "title": "A MEMORY THAT ISN’T YOURS",
         "text": "Ares had your entry window and team profile before you crossed Gate 6. Hale saw the packet arrive through an internal dead channel. He never saw who sent it.",
         "conditions": [
           {
@@ -2509,7 +2883,7 @@
         "id": "officer_sleep_result",
         "type": "narration",
         "title": "QUIET",
-        "text": "You press against wakefulness until it gives way. Hale\u2019s breathing steadies; the fear goes dark.",
+        "text": "You press against wakefulness until it gives way. Hale’s breathing steadies; the fear goes dark.",
         "conditions": [
           {
             "type": "flag",
@@ -2612,7 +2986,7 @@
         "id": "escape_read_consequence",
         "type": "narration",
         "title": "THE LEAK",
-        "text": "Hale\u2019s stolen memory follows you through the smoke: Ares knew the team was coming.",
+        "text": "Hale’s stolen memory follows you through the smoke: Ares knew the team was coming.",
         "conditions": [
           {
             "type": "flag",
@@ -2628,7 +3002,7 @@
         "id": "escape_erase_consequence",
         "type": "narration",
         "title": "A CLEAN GAP",
-        "text": "Behind you, Hale wakes without the last hour\u2014and without a face to give Ares.",
+        "text": "Behind you, Hale wakes without the last hour—and without a face to give Ares.",
         "conditions": [
           {
             "type": "flag",
@@ -2680,7 +3054,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cThey have both signatures. We split at the runoff trench.\u201d",
+        "text": "“They have both signatures. We split at the runoff trench.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2693,7 +3067,7 @@
           "npcId": "npc_prologue_companion_female",
           "name": "Rhea Voss"
         },
-        "text": "\u201cGo inside when you reach Glassline. I\u2019ll be there.\u201d",
+        "text": "“Go inside when you reach Glassline. I’ll be there.”",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2702,7 +3076,7 @@
         "id": "escape_separation",
         "type": "transition",
         "title": "TWO ROUTES OUT",
-        "text": "Rhea disappears east into the runoff tunnels. You carry Dax\u2019s silence west.",
+        "text": "Rhea disappears east into the runoff tunnels. You carry Dax’s silence west.",
         "conditions": [],
         "effects": [],
         "choices": []
@@ -2818,9 +3192,9 @@
     "steps": [
       {
         "id": "ending_wait",
-        "type": "narration",
+        "type": "choice",
         "title": "SAFEHOUSE // 06:10",
-        "text": "Rain ticks against the shielded windows. Rhea\u2019s channel remains open. The door remains closed.",
+        "text": "Rain ticks against the shielded windows. Rhea’s channel remains open. The door remains closed.",
         "conditions": [],
         "effects": [
           {
@@ -2834,7 +3208,143 @@
             "value": true
           }
         ],
-        "choices": []
+        "choices": [
+          {
+            "id": "trust_rhea",
+            "text": "Rhea will make contact.",
+            "playerLine": "Rhea will make contact.",
+            "presentationType": "Normal",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "ending_player_trust_rhea"
+          },
+          {
+            "id": "suspect_rhea",
+            "text": "Rhea knew more than she said.",
+            "playerLine": "Rhea knew more than she said.",
+            "presentationType": "Normal",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "ending_player_suspect_rhea"
+          },
+          {
+            "id": "focus_artifact",
+            "text": "Focus on the thing bound to your mind.",
+            "playerLine": "Focus on the thing bound to your mind.",
+            "presentationType": "Normal",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "ending_player_focus_artifact"
+          },
+          {
+            "id": "focus_leak",
+            "text": "Find the leak before it finds you.",
+            "playerLine": "Find the leak before it finds you.",
+            "presentationType": "Normal",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "ending_player_focus_leak"
+          },
+          {
+            "id": "try_rest",
+            "text": "Try to rest.",
+            "playerLine": "Try to rest.",
+            "presentationType": "Normal",
+            "conditions": [],
+            "effects": [],
+            "nextStepId": "ending_player_try_rest"
+          }
+        ]
+      },
+      {
+        "id": "ending_player_trust_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "Rhea will make contact.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.trust_rhea",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "ending_no_message"
+      },
+      {
+        "id": "ending_player_suspect_rhea",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "Rhea knew more than she said.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.suspect_rhea",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "ending_no_message"
+      },
+      {
+        "id": "ending_player_focus_artifact",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "Focus on the thing bound to your mind.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.focus_artifact",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "ending_no_message"
+      },
+      {
+        "id": "ending_player_focus_leak",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "Find the leak before it finds you.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.focus_leak",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "ending_no_message"
+      },
+      {
+        "id": "ending_player_try_rest",
+        "type": "dialogue",
+        "speaker": {
+          "type": "player"
+        },
+        "text": "Try to rest.",
+        "conditions": [],
+        "effects": [
+          {
+            "type": "setFlag",
+            "flag": "prologue.safehouse.try_rest",
+            "value": true
+          }
+        ],
+        "choices": [],
+        "nextStepId": "ending_no_message"
       },
       {
         "id": "ending_no_message",
@@ -2896,7 +3406,7 @@
         "id": "ending_read_mind_hook",
         "type": "narration",
         "title": "THE DEAD CHANNEL",
-        "text": "The stolen memory remains intact: timing, profiles, an internal route\u2014and no sender.",
+        "text": "The stolen memory remains intact: timing, profiles, an internal route—and no sender.",
         "conditions": [
           {
             "type": "flag",
@@ -2911,7 +3421,7 @@
       {
         "id": "ending_whisper",
         "type": "narration",
-        "title": "A THOUGHT THAT ISN\u2019T YOURS",
+        "title": "A THOUGHT THAT ISN’T YOURS",
         "text": "As sleep takes you, your own inner voice says: she is not the only mind that knows where you are.",
         "conditions": [],
         "effects": [],

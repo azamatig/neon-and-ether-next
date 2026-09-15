@@ -137,7 +137,7 @@ export class TurnBasedCombatEngine {
       if (!npc || runtime?.isAlive === false) return;
       const npcClass = npc.classId ? this.content.classes.get(npc.classId) : undefined;
       const npcRace = npc.raceId ? this.content.races.get(npc.raceId) : undefined;
-      const effective = new CharacterStatsSystem().resolve({ ...npc, temporaryModifiers:[...npc.temporaryModifiers, ...(npcClass?.startingModifiers ?? []), ...(npcRace?.attributeModifiers ?? [])] });
+      const equipmentModifiers=runtime?.inventory?.items.filter(entry=>entry.isEquipped).flatMap(entry=>this.content.getItem(entry.itemId)?.modifiers.map((modifier,modifierIndex)=>({...modifier,id:`equipment_${npcId}_${entry.itemId}_${modifierIndex}`}))??[])??[];const effective = new CharacterStatsSystem().resolve({ ...npc, temporaryModifiers:[...npc.temporaryModifiers, ...(npcClass?.startingModifiers ?? []), ...(npcRace?.attributeModifiers ?? []),...equipmentModifiers] });
       const maxHpDelta = effective.derivedStats.maxHp - npc.vitals.maxHp;
       const inventory = runtime?.inventory?.items ?? npc.inventory;
       const equipped = inventory.filter((slot) => slot.isEquipped).map((slot) => this.content.getItem(slot.itemId)).filter((item) => item !== undefined);

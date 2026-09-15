@@ -118,6 +118,7 @@ export function useGameRuntime() {
   const equipmentSlots = session.getEquipmentSlots();
   const playerRace = gameState.player.raceId ? session.getContentRegistry().races.get(gameState.player.raceId) : undefined;
   const playerBackground = gameState.player.backgroundId ? session.getContentRegistry().backgrounds.get(gameState.player.backgroundId) : undefined;
+  const classNames = Object.fromEntries(session.getContentRegistry().classes.getAll().map((value) => [value.id, value.name]));
   const raceNames = Object.fromEntries(session.getContentRegistry().races.getAll().map((race) => [race.id, race.name]));
   const primaryClass = gameState.player.classId ? session.getContentRegistry().classes.get(gameState.player.classId) : undefined;
   const specialPaths = gameState.player.specialPathIds.flatMap((id) => { const definition = session.getContentRegistry().specialPaths.get(id); return definition ? [definition] : []; });
@@ -206,6 +207,7 @@ export function useGameRuntime() {
     playerRace,
     playerBackground,
     raceNames,
+    classNames,
     primaryClass,
     specialPaths,
     playerProgression,
@@ -259,6 +261,10 @@ export function useGameRuntime() {
     useInventoryItem: (itemId: string) => session.useInventoryItem(itemId),
     unequipSlot: (slotId: string) => session.unequipSlot(slotId),
     dropInventoryItem: (itemId: string) => session.removeInventoryItem(itemId, 1),
+    initializeRosterCharacterLoadout:(npcId:string)=>session.initializeRosterCharacterLoadout(npcId),
+    equipRosterCharacterItem:(npcId:string,entryId:string,slotId:string)=>session.equipRosterCharacterItem(npcId,entryId,slotId),
+    unequipRosterCharacterSlot:(npcId:string,slotId:string)=>session.unequipRosterCharacterSlot(npcId,slotId),
+    transferRosterItem:(from:'player'|string,to:'player'|string,itemId:string,quantity=1)=>session.transferRosterItem(from,to,itemId,quantity),
     validateCharacterCreation: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.validateCharacterCreation(selection),
     initializeNewGame: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.initializeNewGame(selection),
     previewCharacterCreation: (selection: import('@neon-ether/game-schema').CharacterCreationSelection) => session.previewCharacterCreation(selection),

@@ -143,6 +143,8 @@ export const NpcRuntimeStateSchema = z.object({
   relationship: CharacterRelationshipSchema.default({ status: 'independent', affinity: 0, trust: 0, fear: 0, loyalty: 0 }),
   assignment: CharacterAssignmentSchema.default({ jobId: null, roomId: null, partySlotId: null }),
   inventory: InventoryStateSchema.optional(),
+  equipment: EquipmentStateSchema.default({ slots: {}, appliedModifiers: {} }),
+  rosterStatus: z.enum(['ActiveParty','Safehouse','Assigned','Unavailable']).default('Unavailable'),
   flags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
 });
 

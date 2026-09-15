@@ -1,6 +1,6 @@
 import type { EquipmentSlot, InventoryEntry, InventoryState, ItemDefinition } from '@neon-ether/game-schema';
 import type { ContentRegistry } from '../content/content-registry.ts';
-import type { GameState, PlayerState } from '../state/game-state.ts';
+import type { GameState, NpcRuntimeState, PlayerState } from '../state/game-state.ts';
 import type { Effect } from '@neon-ether/game-schema';
 
 export interface InventoryCommandResult { success: boolean; reason?: string; changedQuantity?: number }
@@ -76,19 +76,30 @@ export class InventorySystem {
   }
 
   public canEquip(state: GameState, item: ItemDefinition, slot: EquipmentSlot): InventoryCommandResult {
-    const player = state.player;
+    return this.canEquipFor(state, item, slot, state.player.level, state.player.attributes, state.player.raceId);
+  }
+
+  private canEquipFor(state:GameState,item:ItemDefinition,slot:EquipmentSlot,level:number,attributes:PlayerState['attributes'],raceId?:string):InventoryCommandResult {
     if (item.equipmentSlots.length && !item.equipmentSlots.includes(slot.id)) return { success: false, reason: `Item cannot use slot '${slot.id}'.` };
     if (slot.acceptsCategories.length && !slot.acceptsCategories.includes(item.category)) return { success: false, reason: 'Item category is not accepted by this slot.' };
     if (slot.acceptsTags.length && !slot.acceptsTags.some((tag) => item.tags.includes(tag))) return { success: false, reason: 'Item tags do not match this slot.' };
     for (const requirement of item.requirements) {
-      if (requirement.type === 'level' && player.level < requirement.minimum) return { success: false, reason: `Requires level ${requirement.minimum}.` };
-      if (requirement.type === 'attribute' && player.attributes[requirement.attribute] < requirement.minimum) return { success: false, reason: `Requires ${requirement.attribute} ${requirement.minimum}.` };
+      if (requirement.type === 'level' && level < requirement.minimum) return { success: false, reason: `Requires level ${requirement.minimum}.` };
+      if (requirement.type === 'attribute' && attributes[requirement.attribute] < requirement.minimum) return { success: false, reason: `Requires ${requirement.attribute} ${requirement.minimum}.` };
       if (requirement.type === 'flag' && state.world.flags[requirement.flag] !== requirement.expected) return { success: false, reason: `Requires flag '${requirement.flag}'.` };
-      if (requirement.type === 'raceIs' && player.raceId !== requirement.raceId) return { success: false, reason: `Requires ${this.content.races.get(requirement.raceId)?.name ?? 'another lineage'}.` };
-      if (requirement.type === 'raceHasTag' && !this.content.races.get(player.raceId ?? '')?.tags.includes(requirement.tag)) return { success: false, reason: `Requires lineage trait ${requirement.tag}.` };
+      if (requirement.type === 'raceIs' && raceId !== requirement.raceId) return { success: false, reason: `Requires ${this.content.races.get(requirement.raceId)?.name ?? 'another lineage'}.` };
+      if (requirement.type === 'raceHasTag' && !this.content.races.get(raceId ?? '')?.tags.includes(requirement.tag)) return { success: false, reason: `Requires lineage trait ${requirement.tag}.` };
     }
     return { success: true };
   }
+
+  public initializeNpcLoadout(state:GameState,npcId:string):InventoryCommandResult { const runtime=state.npcs[npcId],definition=this.content.getCharacter(npcId);if(!runtime||!definition)return{success:false,reason:'Roster character was not found.'};if(runtime.inventory)return{success:true};runtime.inventory={items:[],credits:0,maxSlots:30,maxWeight:100};runtime.equipment={slots:{},appliedModifiers:{}};for(const slot of this.content.newGameDefinitions.getAll()[0]?.equipmentSlots??[])runtime.equipment.slots[slot.id]=null;for(const authored of definition.inventory){this.add(runtime.inventory,authored.itemId,authored.quantity);if(authored.isEquipped){const entry=runtime.inventory.items.find(value=>value.itemId===authored.itemId&&!value.isEquipped),item=this.content.getItem(authored.itemId),slotId=item?.equipmentSlots.find(id=>!runtime.equipment.slots[id]);if(entry&&slotId)this.equipNpc(state,npcId,entry.entryId??entry.itemId,slotId);}}return{success:true}; }
+
+  public equipNpc(state:GameState,npcId:string,entryId:string,slotId:string):InventoryCommandResult { const runtime=state.npcs[npcId],definition=this.content.getCharacter(npcId),slot=this.content.newGameDefinitions.getAll()[0]?.equipmentSlots.find(value=>value.id===slotId);if(!runtime?.inventory||!definition||!slot)return{success:false,reason:'Roster loadout is unavailable.'};const entry=this.findEntry(runtime.inventory,entryId),item=entry&&this.content.getItem(entry.itemId);if(!entry||!item)return{success:false,reason:'Inventory entry not found.'};const allowed=this.canEquipFor(state,item,slot,runtime.level,definition.attributes,definition.raceId);if(!allowed.success)return allowed;const previous=runtime.equipment.slots[slotId];if(previous)this.unequipNpc(state,npcId,slotId);entry.isEquipped=true;entry.slotId=slotId;runtime.equipment.slots[slotId]=entry.entryId??entryId;this.recomputeNpcModifiers(runtime);return{success:true}; }
+
+  public unequipNpc(state:GameState,npcId:string,slotId:string):InventoryCommandResult { const runtime=state.npcs[npcId],entryId=runtime?.equipment.slots[slotId];if(!runtime?.inventory||!entryId)return{success:false,reason:'Equipment slot is empty.'};const entry=this.findEntry(runtime.inventory,entryId);if(entry){entry.isEquipped=false;delete entry.slotId;}runtime.equipment.slots[slotId]=null;this.recomputeNpcModifiers(runtime);return{success:true}; }
+
+  public transfer(state:GameState,from:'player'|string,to:'player'|string,itemId:string,quantity:number):InventoryCommandResult {if(from===to)return{success:false,reason:'Source and destination are the same.'};if(!Number.isInteger(quantity)||quantity<1)return{success:false,reason:'Quantity must be a positive integer.'};const source=from==='player'?state.player.inventory:state.npcs[from]?.inventory,destination=to==='player'?state.player.inventory:state.npcs[to]?.inventory;if(!source||!destination)return{success:false,reason:'Inventory owner is unavailable.'};const available=source.items.filter(entry=>entry.itemId===itemId&&!entry.isEquipped).reduce((sum,entry)=>sum+entry.quantity,0);if(available<quantity)return{success:false,reason:source.items.some(entry=>entry.itemId===itemId&&entry.isEquipped)?'Unequip this item before transferring it.':'Not enough items to transfer.'};const added=this.add(destination,itemId,quantity);if(!added.success)return added;const removed=this.remove(source,itemId,quantity);if(!removed.success){this.remove(destination,itemId,quantity);return removed;}return{success:true,changedQuantity:quantity}; }
 
   public equip(state: GameState, entryId: string, slot: EquipmentSlot): InventoryCommandResult {
     const entry = this.findEntry(state.player.inventory, entryId); if (!entry) return { success: false, reason: 'Inventory entry not found.' };
@@ -123,6 +134,7 @@ export class InventorySystem {
     }
     player.equipment.appliedModifiers = totals;
   }
+  private recomputeNpcModifiers(runtime:NpcRuntimeState):void {const totals:Record<string,number>={};for(const entryId of Object.values(runtime.equipment.slots)){const entry=entryId&&runtime.inventory?this.findEntry(runtime.inventory,entryId):undefined,item=entry&&this.content.getItem(entry.itemId);for(const modifier of item?.modifiers??[])totals[modifier.target]=(totals[modifier.target]??0)+modifier.value;}runtime.equipment.appliedModifiers=totals;}
 
   private findEntry(inventory: InventoryState, id: string): InventoryEntry | undefined { return inventory.items.find((entry) => entry.entryId === id || (!entry.entryId && entry.itemId === id)); }
   private nextEntryId(inventory: InventoryState, itemId: string): string { let index = inventory.items.length + 1; while (inventory.items.some((entry) => entry.entryId === `${itemId}:${index}`)) index++; return `${itemId}:${index}`; }

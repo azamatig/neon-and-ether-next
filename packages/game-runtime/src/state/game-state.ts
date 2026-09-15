@@ -184,6 +184,9 @@ export function createInitialNpcRuntimeState(
       loyalty: 0,
     },
     assignment: overrides.assignment ?? { jobId: null, roomId: null, partySlotId: null },
+    inventory: overrides.inventory,
+    equipment: overrides.equipment ?? { slots: {}, appliedModifiers: {} },
+    rosterStatus: overrides.rosterStatus ?? (overrides.isCompanion ? 'ActiveParty' : 'Unavailable'),
     flags: overrides.flags ?? {},
   };
 }

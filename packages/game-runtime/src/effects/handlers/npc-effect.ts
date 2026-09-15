@@ -1,5 +1,6 @@
 import { ChangeNpcStateEffect, RecruitNpcEffect } from '@neon-ether/game-schema';
 import { EffectHandler } from '../effect-handler.ts';
+import { InventorySystem } from '../../inventory/inventory-system.ts';
 
 export const handleChangeNpcStateEffect: EffectHandler<ChangeNpcStateEffect> = (effect, context) => {
   const npc = context.state.npcs?.[effect.npcId];
@@ -97,6 +98,8 @@ export const handleRecruitNpcEffect: EffectHandler<RecruitNpcEffect> = (effect, 
       npc.assignment.partySlotId = context.contentRegistry?.partySlots.getAll().find((slot) => !occupied.has(slot.id))?.id ?? null;
     }
     if (!asCompanion) npc.assignment.partySlotId = null;
+    npc.rosterStatus = asCompanion ? 'ActiveParty' : 'Safehouse';
+    if (asCompanion && context.contentRegistry) new InventorySystem(context.contentRegistry).initializeNpcLoadout(context.state,effect.npcId);
   }
 
   const npcName = context.contentRegistry?.getCharacter(effect.npcId)?.name ?? effect.npcId;

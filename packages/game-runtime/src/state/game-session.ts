@@ -467,13 +467,14 @@ export class GameSession {
 
     const npcClass = blueprint?.classId ? this.contentRegistry.classes.get(blueprint.classId) : undefined;
     const npcRace = blueprint?.raceId ? this.contentRegistry.races.get(blueprint.raceId) : undefined;
+    const equipmentModifiers=runtime?.inventory?.items.filter(entry=>entry.isEquipped).flatMap(entry=>this.contentRegistry.getItem(entry.itemId)?.modifiers.map((modifier,index)=>({...modifier,id:`equipment_${npcId}_${entry.itemId}_${index}`}))??[])??[];
     const classResolvedBlueprint = blueprint ? {
       ...blueprint,
       tags: [...new Set([...blueprint.tags, ...(npcRace?.tags ?? [])])],
       skills: Object.fromEntries([...new Set([...Object.keys(blueprint.skills), ...Object.keys(npcClass?.startingSkillModifiers ?? {}), ...Object.keys(npcRace?.skillModifiers ?? {})])].map((id) => [id, (blueprint.skills[id] ?? 0) + (npcClass?.startingSkillModifiers[id] ?? 0) + (npcRace?.skillModifiers[id] ?? 0)])),
-      temporaryModifiers: [...blueprint.temporaryModifiers, ...(npcClass?.startingModifiers ?? []), ...(npcRace?.attributeModifiers ?? [])],
+      temporaryModifiers: [...blueprint.temporaryModifiers, ...(npcClass?.startingModifiers ?? []), ...(npcRace?.attributeModifiers ?? []),...equipmentModifiers],
       traits: [...new Set([...blueprint.traits, ...(npcClass?.grantedTraits ?? []), ...(npcRace?.grantedTraits ?? [])])],
-      abilityIds: [...new Set([...blueprint.abilityIds, ...(npcClass?.startingAbilityIds ?? []), ...(npcRace?.grantedAbilityIds ?? [])])],
+      abilityIds: [...new Set([...blueprint.abilityIds, ...(npcClass?.startingAbilityIds ?? []), ...(npcRace?.grantedAbilityIds ?? []),...(runtime?.inventory?.items.filter(entry=>entry.isEquipped).flatMap(entry=>this.contentRegistry.getItem(entry.itemId)?.grantedAbilityIds??[])??[])])],
     } : undefined;
     const base: CharacterDefinition = classResolvedBlueprint ?? {
       id: npcId,
@@ -536,6 +537,11 @@ export class GameSession {
       credits: runtime.inventory?.credits ?? 0,
     };
   }
+
+  public initializeRosterCharacterLoadout(npcId:string):InventoryCommandResult {const result=this.inventorySystem.initializeNpcLoadout(this.state,npcId);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result;}
+  public equipRosterCharacterItem(npcId:string,entryId:string,slotId:string):InventoryCommandResult {const result=this.inventorySystem.equipNpc(this.state,npcId,entryId,slotId);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result;}
+  public unequipRosterCharacterSlot(npcId:string,slotId:string):InventoryCommandResult {const result=this.inventorySystem.unequipNpc(this.state,npcId,slotId);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result;}
+  public transferRosterItem(from:'player'|string,to:'player'|string,itemId:string,quantity=1):InventoryCommandResult {const result=this.inventorySystem.transfer(this.state,from,to,itemId,quantity);if(result.success)this.events.emit('STATE_CHANGED',this.state);return result;}
 
   // --- World & POI Navigation Architecture ---
 
